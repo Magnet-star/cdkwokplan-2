@@ -9,38 +9,162 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedWorkPlansRouteImport } from './routes/_authenticated/work-plans'
+import { Route as AuthenticatedVehicleRequestsRouteImport } from './routes/_authenticated/vehicle-requests'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedDepartmentRouteImport } from './routes/_authenticated/department'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDailyLogRouteImport } from './routes/_authenticated/daily-log'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWorkPlansRoute = AuthenticatedWorkPlansRouteImport.update({
+  id: '/work-plans',
+  path: '/work-plans',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedVehicleRequestsRoute =
+  AuthenticatedVehicleRequestsRouteImport.update({
+    id: '/vehicle-requests',
+    path: '/vehicle-requests',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDepartmentRoute = AuthenticatedDepartmentRouteImport.update({
+  id: '/department',
+  path: '/department',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDailyLogRoute = AuthenticatedDailyLogRouteImport.update({
+  id: '/daily-log',
+  path: '/daily-log',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/daily-log': typeof AuthenticatedDailyLogRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/department': typeof AuthenticatedDepartmentRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
+  '/work-plans': typeof AuthenticatedWorkPlansRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/daily-log': typeof AuthenticatedDailyLogRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/department': typeof AuthenticatedDepartmentRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
+  '/work-plans': typeof AuthenticatedWorkPlansRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/daily-log': typeof AuthenticatedDailyLogRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/department': typeof AuthenticatedDepartmentRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
+  '/_authenticated/work-plans': typeof AuthenticatedWorkPlansRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/admin'
+    | '/daily-log'
+    | '/dashboard'
+    | '/department'
+    | '/reports'
+    | '/vehicle-requests'
+    | '/work-plans'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/admin'
+    | '/daily-log'
+    | '/dashboard'
+    | '/department'
+    | '/reports'
+    | '/vehicle-requests'
+    | '/work-plans'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/admin'
+    | '/_authenticated/daily-log'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/department'
+    | '/_authenticated/reports'
+    | '/_authenticated/vehicle-requests'
+    | '/_authenticated/work-plans'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +172,87 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/work-plans': {
+      id: '/_authenticated/work-plans'
+      path: '/work-plans'
+      fullPath: '/work-plans'
+      preLoaderRoute: typeof AuthenticatedWorkPlansRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/vehicle-requests': {
+      id: '/_authenticated/vehicle-requests'
+      path: '/vehicle-requests'
+      fullPath: '/vehicle-requests'
+      preLoaderRoute: typeof AuthenticatedVehicleRequestsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/department': {
+      id: '/_authenticated/department'
+      path: '/department'
+      fullPath: '/department'
+      preLoaderRoute: typeof AuthenticatedDepartmentRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/daily-log': {
+      id: '/_authenticated/daily-log'
+      path: '/daily-log'
+      fullPath: '/daily-log'
+      preLoaderRoute: typeof AuthenticatedDailyLogRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedDailyLogRoute: typeof AuthenticatedDailyLogRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDepartmentRoute: typeof AuthenticatedDepartmentRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedVehicleRequestsRoute: typeof AuthenticatedVehicleRequestsRoute
+  AuthenticatedWorkPlansRoute: typeof AuthenticatedWorkPlansRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedDailyLogRoute: AuthenticatedDailyLogRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDepartmentRoute: AuthenticatedDepartmentRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedVehicleRequestsRoute: AuthenticatedVehicleRequestsRoute,
+  AuthenticatedWorkPlansRoute: AuthenticatedWorkPlansRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
