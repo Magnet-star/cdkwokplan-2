@@ -14,16 +14,299 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_logs: {
+        Row: {
+          achievements: string | null
+          challenges: string | null
+          created_at: string
+          department_id: string | null
+          id: string
+          log_date: string
+          user_id: string
+        }
+        Insert: {
+          achievements?: string | null
+          challenges?: string | null
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          log_date: string
+          user_id: string
+        }
+        Update: {
+          achievements?: string | null
+          challenges?: string | null
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          log_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_logs_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          hod_id: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          hod_id?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          hod_id?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          position: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          email: string
+          full_name: string
+          id: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicle_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approver_notes: string | null
+          created_at: string
+          date_needed: string
+          department_id: string | null
+          destination: string
+          id: string
+          passengers: number | null
+          purpose: string
+          status: string
+          time_from: string | null
+          time_to: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approver_notes?: string | null
+          created_at?: string
+          date_needed: string
+          department_id?: string | null
+          destination: string
+          id?: string
+          passengers?: number | null
+          purpose: string
+          status?: string
+          time_from?: string | null
+          time_to?: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approver_notes?: string | null
+          created_at?: string
+          date_needed?: string
+          department_id?: string | null
+          destination?: string
+          id?: string
+          passengers?: number | null
+          purpose?: string
+          status?: string
+          time_from?: string | null
+          time_to?: string | null
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_requests_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_plan_items: {
+        Row: {
+          activity: string
+          activity_date: string
+          created_at: string
+          id: string
+          location: string | null
+          money_amount: number | null
+          needs_money: boolean
+          needs_vehicle: boolean
+          notes: string | null
+          work_plan_id: string
+        }
+        Insert: {
+          activity: string
+          activity_date: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          money_amount?: number | null
+          needs_money?: boolean
+          needs_vehicle?: boolean
+          notes?: string | null
+          work_plan_id: string
+        }
+        Update: {
+          activity?: string
+          activity_date?: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          money_amount?: number | null
+          needs_money?: boolean
+          needs_vehicle?: boolean
+          notes?: string | null
+          work_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_plan_items_work_plan_id_fkey"
+            columns: ["work_plan_id"]
+            isOneToOne: false
+            referencedRelation: "work_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_plans: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          id: string
+          signature: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          signature?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          signature?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_plans_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_department: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "hod" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +433,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "hod", "staff"],
+    },
   },
 } as const
