@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWorkPlansRouteImport } from './routes/_authenticated/work-plans'
 import { Route as AuthenticatedVehicleRequestsRouteImport } from './routes/_authenticated/vehicle-requests'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDailyLogRouteImport } from './routes/_authenticated/daily-log'
 
@@ -42,6 +43,11 @@ const AuthenticatedVehicleRequestsRoute =
     path: '/vehicle-requests',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/work-plans': typeof AuthenticatedWorkPlansRoute
 }
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/work-plans': typeof AuthenticatedWorkPlansRoute
 }
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/daily-log': typeof AuthenticatedDailyLogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/_authenticated/work-plans': typeof AuthenticatedWorkPlansRoute
 }
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/daily-log'
     | '/dashboard'
+    | '/reports'
     | '/vehicle-requests'
     | '/work-plans'
   fileRoutesByTo: FileRoutesByTo
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/daily-log'
     | '/dashboard'
+    | '/reports'
     | '/vehicle-requests'
     | '/work-plans'
   id:
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/daily-log'
     | '/_authenticated/dashboard'
+    | '/_authenticated/reports'
     | '/_authenticated/vehicle-requests'
     | '/_authenticated/work-plans'
   fileRoutesById: FileRoutesById
@@ -150,6 +162,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVehicleRequestsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -170,6 +189,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedDailyLogRoute: typeof AuthenticatedDailyLogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedVehicleRequestsRoute: typeof AuthenticatedVehicleRequestsRoute
   AuthenticatedWorkPlansRoute: typeof AuthenticatedWorkPlansRoute
 }
@@ -177,6 +197,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDailyLogRoute: AuthenticatedDailyLogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedVehicleRequestsRoute: AuthenticatedVehicleRequestsRoute,
   AuthenticatedWorkPlansRoute: AuthenticatedWorkPlansRoute,
 }
@@ -193,3 +214,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
