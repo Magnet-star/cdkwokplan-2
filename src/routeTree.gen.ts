@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWorkPlansRouteImport } from './routes/_authenticated/work-plans'
 import { Route as AuthenticatedVehicleRequestsRouteImport } from './routes/_authenticated/vehicle-requests'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDailyLogRouteImport } from './routes/_authenticated/daily-log'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -46,10 +47,16 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDailyLogRoute = AuthenticatedDailyLogRouteImport.update({
+  id: '/daily-log',
+  path: '/daily-log',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/work-plans': typeof AuthenticatedWorkPlansRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/work-plans': typeof AuthenticatedWorkPlansRoute
@@ -66,20 +74,34 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/daily-log': typeof AuthenticatedDailyLogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/_authenticated/work-plans': typeof AuthenticatedWorkPlansRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/vehicle-requests' | '/work-plans'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/daily-log'
+    | '/dashboard'
+    | '/vehicle-requests'
+    | '/work-plans'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/vehicle-requests' | '/work-plans'
+  to:
+    | '/'
+    | '/auth'
+    | '/daily-log'
+    | '/dashboard'
+    | '/vehicle-requests'
+    | '/work-plans'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/daily-log'
     | '/_authenticated/dashboard'
     | '/_authenticated/vehicle-requests'
     | '/_authenticated/work-plans'
@@ -135,16 +157,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/daily-log': {
+      id: '/_authenticated/daily-log'
+      path: '/daily-log'
+      fullPath: '/daily-log'
+      preLoaderRoute: typeof AuthenticatedDailyLogRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedDailyLogRoute: typeof AuthenticatedDailyLogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedVehicleRequestsRoute: typeof AuthenticatedVehicleRequestsRoute
   AuthenticatedWorkPlansRoute: typeof AuthenticatedWorkPlansRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedDailyLogRoute: AuthenticatedDailyLogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedVehicleRequestsRoute: AuthenticatedVehicleRequestsRoute,
   AuthenticatedWorkPlansRoute: AuthenticatedWorkPlansRoute,
