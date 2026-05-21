@@ -81,7 +81,7 @@ function Dashboard() {
         <CardContent className="space-y-3">
           <ChecklistRow done={!!stats?.thisWeekPlan && stats.thisWeekPlan.status === "submitted"} title="Submit your weekly work plan" to="/work-plans" />
           <ChecklistRow done={(stats?.myVehicles ?? 0) > 0} title="Submit vehicle request (if needed)" to="/vehicle-requests" />
-          <ChecklistRow done={false} title="Log daily challenges & achievements" to="/daily-log" />
+          <ChecklistRow done={(stats?.daysLogged ?? 0) > 0} title="Log daily challenges & achievements" to="/daily-log" />
         </CardContent>
       </Card>
 
