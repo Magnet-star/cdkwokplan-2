@@ -113,7 +113,7 @@ function AdminPage() {
   };
 
   const updateVehicle = async (id: string, patch: Record<string, any>) => {
-    const { error } = await supabase.from("vehicle_requests").update(patch).eq("id", id);
+    const { error } = await (supabase.from("vehicle_requests") as any).update(patch).eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Vehicle request updated"); load(); }
   };
 
