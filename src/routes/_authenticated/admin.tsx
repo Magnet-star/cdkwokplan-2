@@ -465,14 +465,59 @@ function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; set
 function WorkPlanReadCard({ plan, userName }: { plan: any; userName: (id: string) => string }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[] | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [status, setStatus] = useState<string>(plan.status);
+
+  const loadItems = async () => {
+    const { data } = await supabase.from("work_plan_items").select("*").eq("work_plan_id", plan.id).order("activity_date");
+    setItems((data as any[]) ?? []);
+  };
+
   const toggle = async () => {
     const next = !open;
     setOpen(next);
-    if (next && items === null) {
-      const { data } = await supabase.from("work_plan_items").select("*").eq("work_plan_id", plan.id).order("activity_date");
-      setItems((data as any[]) ?? []);
-    }
+    if (next && items === null) await loadItems();
   };
+
+  const updateItem = (id: string, patch: Record<string, any>) => {
+    setItems((cur) => (cur ?? []).map((it) => (it.id === id ? { ...it, ...patch } : it)));
+  };
+
+  const saveItem = async (it: any) => {
+    const { error } = await supabase.from("work_plan_items").update({
+      activity_date: it.activity_date,
+      activity: it.activity,
+      location: it.location || null,
+      needs_vehicle: !!it.needs_vehicle,
+      needs_money: !!it.needs_money,
+      money_amount: it.money_amount === "" || it.money_amount == null ? null : Number(it.money_amount),
+      notes: it.notes || null,
+    }).eq("id", it.id);
+    if (error) toast.error(error.message); else toast.success("Activity saved");
+  };
+
+  const deleteItem = async (id: string) => {
+    if (!confirm("Delete this activity?")) return;
+    const { error } = await supabase.from("work_plan_items").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Activity removed"); await loadItems(); }
+  };
+
+  const addItem = async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabase.from("work_plan_items").insert({
+      work_plan_id: plan.id, activity_date: today, activity: "New activity",
+      needs_vehicle: false, needs_money: false,
+    }).select().single();
+    if (error) toast.error(error.message);
+    else setItems((cur) => [...(cur ?? []), data as any]);
+  };
+
+  const setPlanStatus = async (s: string) => {
+    const { error } = await supabase.from("work_plans").update({ status: s }).eq("id", plan.id);
+    if (error) toast.error(error.message); else { setStatus(s); toast.success(`Plan ${s}`); }
+  };
+
   return (
     <Card>
       <CardContent className="p-4">
@@ -482,15 +527,39 @@ function WorkPlanReadCard({ plan, userName }: { plan: any; userName: (id: string
             <p className="text-xs text-muted-foreground">{plan.signature ? `Signed by ${plan.signature}` : "Unsigned"}{plan.submitted_at ? ` · Submitted ${format(parseISO(plan.submitted_at), "PPp")}` : ""}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={plan.status === "submitted" ? "default" : "outline"} className={plan.status === "submitted" ? "bg-success text-success-foreground" : ""}>{plan.status}</Badge>
+            <Badge variant={status === "approved" ? "default" : status === "submitted" ? "secondary" : "outline"} className={status === "approved" ? "bg-success text-success-foreground" : ""}>{status}</Badge>
             {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </div>
         </button>
         {open && (
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {status !== "approved" && <Button size="sm" onClick={() => setPlanStatus("approved")}><Check className="mr-1 h-3.5 w-3.5" /> Approve plan</Button>}
+              {status === "approved" && <Button size="sm" variant="outline" onClick={() => setPlanStatus("submitted")}>Unapprove</Button>}
+              <Button size="sm" variant={editing ? "default" : "outline"} onClick={() => setEditing((e) => !e)}><Pencil className="mr-1 h-3.5 w-3.5" /> {editing ? "Done editing" : "Edit activities"}</Button>
+              {editing && <Button size="sm" variant="outline" onClick={addItem}><Plus className="mr-1 h-3.5 w-3.5" /> Add activity</Button>}
+            </div>
             {items === null && <p className="text-xs text-muted-foreground">Loading…</p>}
             {items?.length === 0 && <p className="text-xs text-muted-foreground italic">No activities recorded.</p>}
-            {items?.map((it) => (
+            {items?.map((it) => editing ? (
+              <div key={it.id} className="rounded-md border border-border bg-muted/30 p-3 text-sm space-y-2">
+                <div className="grid gap-2 md:grid-cols-2">
+                  <div><Label className="text-xs">Date</Label><Input type="date" value={it.activity_date} onChange={(e) => updateItem(it.id, { activity_date: e.target.value })} /></div>
+                  <div><Label className="text-xs">Location</Label><Input value={it.location ?? ""} onChange={(e) => updateItem(it.id, { location: e.target.value })} /></div>
+                  <div className="md:col-span-2"><Label className="text-xs">Activity</Label><Textarea rows={2} value={it.activity} onChange={(e) => updateItem(it.id, { activity: e.target.value })} /></div>
+                  <div className="md:col-span-2"><Label className="text-xs">Notes</Label><Input value={it.notes ?? ""} onChange={(e) => updateItem(it.id, { notes: e.target.value })} /></div>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <label className="flex items-center gap-2 text-xs"><Checkbox checked={!!it.needs_vehicle} onCheckedChange={(v) => updateItem(it.id, { needs_vehicle: !!v })} /> Needs vehicle</label>
+                  <label className="flex items-center gap-2 text-xs"><Checkbox checked={!!it.needs_money} onCheckedChange={(v) => updateItem(it.id, { needs_money: !!v })} /> Needs money</label>
+                  {it.needs_money && <Input type="number" className="w-32" value={it.money_amount ?? ""} onChange={(e) => updateItem(it.id, { money_amount: e.target.value })} placeholder="KES" />}
+                  <div className="ml-auto flex gap-2">
+                    <Button size="sm" onClick={() => saveItem(it)}>Save</Button>
+                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteItem(it.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
               <div key={it.id} className="rounded-md border border-border bg-muted/30 p-3 text-sm">
                 <p className="text-xs font-medium text-muted-foreground">{format(parseISO(it.activity_date), "EEE, MMM d")}</p>
                 <p className="mt-1">{it.activity}</p>
