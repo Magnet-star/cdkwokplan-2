@@ -190,24 +190,25 @@ function AdminPage() {
           <TabsTrigger value="cleanup">Logs & plans</TabsTrigger>
         </TabsList>
 
+      <Tabs defaultValue="vehicles">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
+          <TabsTrigger value="depts">Departments</TabsTrigger>
+          <TabsTrigger value="users">Users & roles</TabsTrigger>
+          <TabsTrigger value="allplans">Work plans</TabsTrigger>
+          <TabsTrigger value="cleanup">Logs & plans</TabsTrigger>
+        </TabsList>
+
         <TabsContent value="vehicles" className="space-y-3 pt-4">
           {vehicles.filter((v) => v.status === "pending").length === 0 && (
             <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No pending vehicle requests.</CardContent></Card>
           )}
           {vehicles.filter((v) => v.status === "pending").map((v) => (
-            <VehicleApproveCard key={v.id} v={v} userName={userName} onDecide={decideVehicle} />
+            <VehicleApproveCard key={v.id} v={v} userName={userName} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
           ))}
-          <h3 className="mt-6 font-serif text-lg">Recent decisions</h3>
-          {vehicles.filter((v) => v.status !== "pending").slice(0, 10).map((v) => (
-            <Card key={v.id}>
-              <CardContent className="flex items-center justify-between p-4 text-sm">
-                <div>
-                  <p className="font-medium">{v.destination} — {userName(v.user_id)}</p>
-                  <p className="text-xs text-muted-foreground">{format(parseISO(v.date_needed), "PPP")}</p>
-                </div>
-                <Badge className={v.status === "approved" ? "bg-success text-success-foreground" : ""} variant={v.status === "rejected" ? "destructive" : "default"}>{v.status}</Badge>
-              </CardContent>
-            </Card>
+          <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
+          {vehicles.filter((v) => v.status !== "pending").map((v) => (
+            <VehicleManageCard key={v.id} v={v} userName={userName} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
           ))}
         </TabsContent>
 
