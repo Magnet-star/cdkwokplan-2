@@ -368,6 +368,14 @@ function AdminPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="allplans" className="space-y-3 pt-4">
+          <p className="text-sm text-muted-foreground">All weekly work plans across the diocese. Click to expand and read the activities.</p>
+          {plans.length === 0 && <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
+          {plans.map((p) => (
+            <WorkPlanReadCard key={p.id} plan={p} userName={userName} />
+          ))}
+        </TabsContent>
       </Tabs>
     </div>
   );
