@@ -381,8 +381,10 @@ function AdminPage() {
   );
 }
 
-function VehicleApproveCard({ v, userName, onDecide }: { v: any; userName: (id: string) => string; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void }) {
+function VehicleApproveCard({ v, userName, onDecide, onDelete, onUpdate }: { v: any; userName: (id: string) => string; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
   const [notes, setNotes] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
   return (
     <Card>
       <CardContent className="space-y-3 p-5">
@@ -393,13 +395,115 @@ function VehicleApproveCard({ v, userName, onDecide }: { v: any; userName: (id: 
           </div>
           <Badge variant="outline">Pending</Badge>
         </div>
-        <p className="text-sm">{v.purpose}</p>
-        <p className="text-xs text-muted-foreground">Passengers: {v.passengers ?? 1}</p>
-        <Textarea rows={2} placeholder="Optional note to requester" value={notes} onChange={(e) => setNotes(e.target.value)} />
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>
-          <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>
+        {!editing ? (
+          <>
+            <p className="text-sm">{v.purpose}</p>
+            <p className="text-xs text-muted-foreground">Passengers: {v.passengers ?? 1}</p>
+            <Textarea rows={2} placeholder="Optional note to requester" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>
+              <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
+              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
+            </div>
+          </>
+        ) : (
+          <VehicleEditFields form={form} setForm={setForm} onSave={() => { onUpdate(v.id, { ...form, time_from: form.time_from || null, time_to: form.time_to || null }); setEditing(false); }} onCancel={() => setEditing(false)} />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function VehicleManageCard({ v, userName, onDelete, onUpdate, onDecide }: { v: any; userName: (id: string) => string; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
+  return (
+    <Card>
+      <CardContent className="space-y-2 p-4 text-sm">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p className="font-medium">{v.destination} — {userName(v.user_id)}</p>
+            <p className="text-xs text-muted-foreground">{format(parseISO(v.date_needed), "PPP")}{v.time_from ? ` · ${v.time_from}–${v.time_to ?? ""}` : ""} · Passengers: {v.passengers ?? 1}</p>
+            {!editing && <p className="mt-1 text-xs">{v.purpose}</p>}
+            {v.approver_notes && !editing && <p className="mt-1 rounded bg-muted px-2 py-1 text-xs"><strong>Note:</strong> {v.approver_notes}</p>}
+          </div>
+          <Badge className={v.status === "approved" ? "bg-success text-success-foreground" : ""} variant={v.status === "rejected" ? "destructive" : "default"}>{v.status}</Badge>
         </div>
+        {editing ? (
+          <VehicleEditFields form={form} setForm={setForm} onSave={() => { onUpdate(v.id, { ...form, time_from: form.time_from || null, time_to: form.time_to || null }); setEditing(false); }} onCancel={() => setEditing(false)} />
+        ) : (
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
+            {v.status !== "approved" && <Button size="sm" onClick={() => onDecide(v.id, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark approved</Button>}
+            {v.status !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecide(v.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark rejected</Button>}
+            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; setForm: (f: any) => void; onSave: () => void; onCancel: () => void }) {
+  return (
+    <div className="grid gap-2 md:grid-cols-2">
+      <div><Label className="text-xs">Destination</Label><Input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} /></div>
+      <div><Label className="text-xs">Date needed</Label><Input type="date" value={form.date_needed} onChange={(e) => setForm({ ...form, date_needed: e.target.value })} /></div>
+      <div><Label className="text-xs">From</Label><Input type="time" value={form.time_from} onChange={(e) => setForm({ ...form, time_from: e.target.value })} /></div>
+      <div><Label className="text-xs">To</Label><Input type="time" value={form.time_to} onChange={(e) => setForm({ ...form, time_to: e.target.value })} /></div>
+      <div><Label className="text-xs">Passengers</Label><Input type="number" min={1} value={form.passengers} onChange={(e) => setForm({ ...form, passengers: Number(e.target.value) })} /></div>
+      <div className="md:col-span-2"><Label className="text-xs">Purpose</Label><Textarea rows={2} value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} /></div>
+      <div className="md:col-span-2 flex gap-2">
+        <Button size="sm" onClick={onSave}>Save changes</Button>
+        <Button size="sm" variant="outline" onClick={onCancel}>Cancel</Button>
+      </div>
+    </div>
+  );
+}
+
+function WorkPlanReadCard({ plan, userName }: { plan: any; userName: (id: string) => string }) {
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<any[] | null>(null);
+  const toggle = async () => {
+    const next = !open;
+    setOpen(next);
+    if (next && items === null) {
+      const { data } = await supabase.from("work_plan_items").select("*").eq("work_plan_id", plan.id).order("activity_date");
+      setItems((data as any[]) ?? []);
+    }
+  };
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <button onClick={toggle} className="flex w-full items-center justify-between gap-3 text-left">
+          <div>
+            <p className="font-medium">{userName(plan.user_id)} · Week of {format(parseISO(plan.week_start_date), "MMM d, yyyy")}</p>
+            <p className="text-xs text-muted-foreground">{plan.signature ? `Signed by ${plan.signature}` : "Unsigned"}{plan.submitted_at ? ` · Submitted ${format(parseISO(plan.submitted_at), "PPp")}` : ""}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={plan.status === "submitted" ? "default" : "outline"} className={plan.status === "submitted" ? "bg-success text-success-foreground" : ""}>{plan.status}</Badge>
+            {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </div>
+        </button>
+        {open && (
+          <div className="mt-4 space-y-2">
+            {items === null && <p className="text-xs text-muted-foreground">Loading…</p>}
+            {items?.length === 0 && <p className="text-xs text-muted-foreground italic">No activities recorded.</p>}
+            {items?.map((it) => (
+              <div key={it.id} className="rounded-md border border-border bg-muted/30 p-3 text-sm">
+                <p className="text-xs font-medium text-muted-foreground">{format(parseISO(it.activity_date), "EEE, MMM d")}</p>
+                <p className="mt-1">{it.activity}</p>
+                {it.location && <p className="text-xs text-muted-foreground">Location: {it.location}</p>}
+                <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                  {it.needs_vehicle && <span>🚗 Needs vehicle</span>}
+                  {it.needs_money && <span>💰 KES {Number(it.money_amount ?? 0).toLocaleString()}</span>}
+                </div>
+                {it.notes && <p className="mt-1 text-xs italic">{it.notes}</p>}
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
