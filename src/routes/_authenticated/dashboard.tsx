@@ -19,10 +19,13 @@ interface Stats {
   daysLogged: number;
 }
 
+interface Submission { kind: "plan" | "log" | "vehicle"; id: string; user: string; when: string; label: string; status?: string }
+
 function Dashboard() {
   const { profile, user, isSuperAdmin, isHod } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [dept, setDept] = useState<string | null>(null);
+  const [feed, setFeed] = useState<Submission[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -41,6 +44,20 @@ function Dashboard() {
       if (isSuperAdmin) {
         const { count } = await supabase.from("vehicle_requests").select("id", { count: "exact", head: true }).eq("status", "pending");
         pendingVehicles = count ?? 0;
+
+        const [{ data: rp }, { data: rl }, { data: rv }, { data: ppl }] = await Promise.all([
+          supabase.from("work_plans").select("id,user_id,week_start_date,submitted_at,status").eq("status", "submitted").order("submitted_at", { ascending: false }).limit(10),
+          supabase.from("daily_logs").select("id,user_id,log_date,created_at").order("created_at", { ascending: false }).limit(10),
+          supabase.from("vehicle_requests").select("id,user_id,destination,date_needed,created_at,status").order("created_at", { ascending: false }).limit(10),
+          supabase.from("profiles").select("id,full_name"),
+        ]);
+        const nameOf = (id: string) => (ppl as any[] | null)?.find((p) => p.id === id)?.full_name ?? "Someone";
+        const subs: Submission[] = [
+          ...((rp as any[]) ?? []).map((p) => ({ kind: "plan" as const, id: p.id, user: nameOf(p.user_id), when: p.submitted_at ?? p.week_start_date, label: `Work plan for week of ${format(new Date(p.week_start_date), "MMM d")}`, status: p.status })),
+          ...((rl as any[]) ?? []).map((l) => ({ kind: "log" as const, id: l.id, user: nameOf(l.user_id), when: l.created_at, label: `Daily log · ${format(new Date(l.log_date), "MMM d")}` })),
+          ...((rv as any[]) ?? []).map((v) => ({ kind: "vehicle" as const, id: v.id, user: nameOf(v.user_id), when: v.created_at, label: `Vehicle: ${v.destination} (${format(new Date(v.date_needed), "MMM d")})`, status: v.status })),
+        ].sort((a, b) => +new Date(b.when) - +new Date(a.when)).slice(0, 12);
+        setFeed(subs);
       }
 
       setStats({
