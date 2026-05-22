@@ -106,6 +106,17 @@ function AdminPage() {
     load();
   };
 
+  const deleteVehicle = async (id: string) => {
+    if (!confirm("Delete this vehicle request? This cannot be undone.")) return;
+    const { error } = await supabase.from("vehicle_requests").delete().eq("id", id);
+    if (error) toast.error(error.message); else { toast.success("Vehicle request deleted"); load(); }
+  };
+
+  const updateVehicle = async (id: string, patch: Record<string, any>) => {
+    const { error } = await supabase.from("vehicle_requests").update(patch).eq("id", id);
+    if (error) toast.error(error.message); else { toast.success("Vehicle request updated"); load(); }
+  };
+
   const genPassword = () => {
     const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
     let out = "";
