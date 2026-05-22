@@ -182,13 +182,6 @@ function AdminPage() {
         <p className="mt-1 text-sm text-muted-foreground">Manage departments, users, roles, vehicle approvals, and data cleanup.</p>
       </div>
 
-      <Tabs defaultValue="vehicles">
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
-          <TabsTrigger value="depts">Departments</TabsTrigger>
-          <TabsTrigger value="users">Users & roles</TabsTrigger>
-          <TabsTrigger value="cleanup">Logs & plans</TabsTrigger>
-        </TabsList>
 
       <Tabs defaultValue="vehicles">
         <TabsList className="flex-wrap">
