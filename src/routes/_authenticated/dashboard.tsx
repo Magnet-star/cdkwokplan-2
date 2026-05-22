@@ -102,6 +102,27 @@ function Dashboard() {
         </CardContent>
       </Card>
 
+      {isSuperAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-serif">Recent submissions</CardTitle>
+            <CardDescription>Latest work plans, daily logs, and vehicle requests across the diocese.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {feed.length === 0 && <p className="text-sm text-muted-foreground">No submissions yet.</p>}
+            {feed.map((s) => (
+              <Link key={`${s.kind}-${s.id}`} to="/admin" className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2 text-sm hover:bg-muted">
+                <div className="min-w-0">
+                  <p className="truncate"><span className="font-medium">{s.user}</span> · {s.label}</p>
+                  <p className="text-xs text-muted-foreground">{format(new Date(s.when), "PPp")}</p>
+                </div>
+                <Badge variant={s.kind === "plan" ? "default" : s.kind === "vehicle" ? "secondary" : "outline"}>{s.kind}{s.status ? ` · ${s.status}` : ""}</Badge>
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {(isHod || isSuperAdmin) && (
         <Card>
           <CardHeader>
