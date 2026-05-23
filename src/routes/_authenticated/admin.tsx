@@ -373,7 +373,7 @@ function AdminPage() {
           <p className="text-sm text-muted-foreground">All weekly work plans across the diocese. Click to expand and read the activities.</p>
           {plans.length === 0 && <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
           {plans.map((p) => (
-            <WorkPlanReadCard key={p.id} plan={p} userName={userName} />
+            <WorkPlanReadCard key={p.id} plan={p} userName={userName} onChanged={load} />
           ))}
         </TabsContent>
       </Tabs>
@@ -462,7 +462,7 @@ function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; set
   );
 }
 
-function WorkPlanReadCard({ plan, userName }: { plan: any; userName: (id: string) => string }) {
+function WorkPlanReadCard({ plan, userName, onChanged }: { plan: any; userName: (id: string) => string; onChanged?: () => void }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[] | null>(null);
   const [editing, setEditing] = useState(false);
@@ -514,8 +514,12 @@ function WorkPlanReadCard({ plan, userName }: { plan: any; userName: (id: string
   };
 
   const setPlanStatus = async (s: string) => {
-    const { error } = await supabase.from("work_plans").update({ status: s }).eq("id", plan.id);
-    if (error) toast.error(error.message); else { setStatus(s); toast.success(`Plan ${s}`); }
+    const { data, error } = await supabase.from("work_plans").update({ status: s }).eq("id", plan.id).select();
+    if (error) { toast.error(error.message); return; }
+    if (!data || data.length === 0) { toast.error("No permission to update this plan"); return; }
+    setStatus(s);
+    toast.success(`Plan ${s}`);
+    onChanged?.();
   };
 
   return (
