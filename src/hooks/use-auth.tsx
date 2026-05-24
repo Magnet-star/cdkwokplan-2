@@ -22,6 +22,7 @@ interface AuthState {
   isSuperAdmin: boolean;
   isAdministrator: boolean;
   isHod: boolean;
+  isDriver: boolean;
   canViewAll: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
