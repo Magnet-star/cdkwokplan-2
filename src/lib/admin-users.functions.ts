@@ -9,7 +9,7 @@ const CreateUserSchema = z.object({
   fullName: z.string().trim().min(1).max(120),
   departmentId: z.string().uuid().nullable().optional(),
   position: z.string().trim().max(120).optional().nullable(),
-  roles: z.array(z.enum(["super_admin", "administrator", "hod", "staff"])).min(1).max(4),
+  roles: z.array(z.enum(["super_admin", "administrator", "hod", "staff", "driver"])).min(1).max(5),
 });
 
 export const adminCreateUser = createServerFn({ method: "POST" })
