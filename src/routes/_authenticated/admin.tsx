@@ -183,6 +183,12 @@ function AdminPage() {
         <h1 className="font-serif text-3xl text-foreground">Administration</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage departments, users, roles, vehicle approvals, and data cleanup.</p>
       </div>
+      {!canEdit && (
+        <div className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+          You are signed in as <strong>Administrator</strong>. You can view all records but cannot make any changes.
+        </div>
+      )}
+
 
 
       <Tabs defaultValue="vehicles">
