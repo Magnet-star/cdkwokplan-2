@@ -20,7 +20,9 @@ interface AuthState {
   roles: AppRole[];
   loading: boolean;
   isSuperAdmin: boolean;
+  isAdministrator: boolean;
   isHod: boolean;
+  canViewAll: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }
