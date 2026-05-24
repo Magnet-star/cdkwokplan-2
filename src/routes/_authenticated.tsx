@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tansta
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2 } from "lucide-react";
+import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -26,6 +26,7 @@ function AuthLayout() {
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
     { to: "/work-plans", label: "Work Plans", icon: ClipboardList, show: true },
     { to: "/vehicle-requests", label: "Vehicle Requests", icon: Car, show: true },
+    { to: "/drivers-log", label: "Drivers Log", icon: Truck, show: true },
     { to: "/daily-log", label: "Daily Log", icon: BookText, show: true },
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart, show: true },
     { to: "/department", label: "My Department", icon: Building2, show: isHod || canViewAll },

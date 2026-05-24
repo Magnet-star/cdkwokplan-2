@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWorkPlansRouteImport } from './routes/_authenticated/work-plans'
 import { Route as AuthenticatedVehicleRequestsRouteImport } from './routes/_authenticated/vehicle-requests'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedDriversLogRouteImport } from './routes/_authenticated/drivers-log'
 import { Route as AuthenticatedDepartmentRouteImport } from './routes/_authenticated/department'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDailyLogRouteImport } from './routes/_authenticated/daily-log'
@@ -50,6 +51,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDriversLogRoute = AuthenticatedDriversLogRouteImport.update({
+  id: '/drivers-log',
+  path: '/drivers-log',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDepartmentRoute = AuthenticatedDepartmentRouteImport.update({
   id: '/department',
   path: '/department',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/department': typeof AuthenticatedDepartmentRoute
+  '/drivers-log': typeof AuthenticatedDriversLogRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/work-plans': typeof AuthenticatedWorkPlansRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/department': typeof AuthenticatedDepartmentRoute
+  '/drivers-log': typeof AuthenticatedDriversLogRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/work-plans': typeof AuthenticatedWorkPlansRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/_authenticated/daily-log': typeof AuthenticatedDailyLogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/department': typeof AuthenticatedDepartmentRoute
+  '/_authenticated/drivers-log': typeof AuthenticatedDriversLogRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/_authenticated/work-plans': typeof AuthenticatedWorkPlansRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/daily-log'
     | '/dashboard'
     | '/department'
+    | '/drivers-log'
     | '/reports'
     | '/vehicle-requests'
     | '/work-plans'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/daily-log'
     | '/dashboard'
     | '/department'
+    | '/drivers-log'
     | '/reports'
     | '/vehicle-requests'
     | '/work-plans'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/_authenticated/daily-log'
     | '/_authenticated/dashboard'
     | '/_authenticated/department'
+    | '/_authenticated/drivers-log'
     | '/_authenticated/reports'
     | '/_authenticated/vehicle-requests'
     | '/_authenticated/work-plans'
@@ -193,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/drivers-log': {
+      id: '/_authenticated/drivers-log'
+      path: '/drivers-log'
+      fullPath: '/drivers-log'
+      preLoaderRoute: typeof AuthenticatedDriversLogRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/department': {
       id: '/_authenticated/department'
       path: '/department'
@@ -229,6 +248,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDailyLogRoute: typeof AuthenticatedDailyLogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDepartmentRoute: typeof AuthenticatedDepartmentRoute
+  AuthenticatedDriversLogRoute: typeof AuthenticatedDriversLogRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedVehicleRequestsRoute: typeof AuthenticatedVehicleRequestsRoute
   AuthenticatedWorkPlansRoute: typeof AuthenticatedWorkPlansRoute
@@ -239,6 +259,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDailyLogRoute: AuthenticatedDailyLogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDepartmentRoute: AuthenticatedDepartmentRoute,
+  AuthenticatedDriversLogRoute: AuthenticatedDriversLogRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedVehicleRequestsRoute: AuthenticatedVehicleRequestsRoute,
   AuthenticatedWorkPlansRoute: AuthenticatedWorkPlansRoute,
