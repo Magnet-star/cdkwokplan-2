@@ -19,6 +19,7 @@ interface Log {
   log_date: string;
   challenges: string | null;
   achievements: string | null;
+  recommendations: string | null;
 }
 
 function DailyLogPage() {
