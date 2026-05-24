@@ -27,6 +27,7 @@ function DailyLogPage() {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [challenges, setChallenges] = useState("");
   const [achievements, setAchievements] = useState("");
+  const [recommendations, setRecommendations] = useState("");
   const [list, setList] = useState<Log[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -35,8 +36,13 @@ function DailyLogPage() {
     const { data } = await supabase.from("daily_logs").select("*").eq("user_id", user.id).order("log_date", { ascending: false }).limit(30);
     setList((data as Log[]) ?? []);
     const existing = (data as Log[] | null)?.find((l) => l.log_date === date);
-    if (existing) { setChallenges(existing.challenges ?? ""); setAchievements(existing.achievements ?? ""); }
-    else { setChallenges(""); setAchievements(""); }
+    if (existing) {
+      setChallenges(existing.challenges ?? "");
+      setAchievements(existing.achievements ?? "");
+      setRecommendations(existing.recommendations ?? "");
+    } else {
+      setChallenges(""); setAchievements(""); setRecommendations("");
+    }
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, date]);
 
@@ -49,6 +55,7 @@ function DailyLogPage() {
       log_date: date,
       challenges: challenges || null,
       achievements: achievements || null,
+      recommendations: recommendations || null,
     }, { onConflict: "user_id,log_date" });
     setBusy(false);
     if (error) toast.error(error.message);
