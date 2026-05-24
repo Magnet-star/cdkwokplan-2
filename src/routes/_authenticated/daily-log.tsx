@@ -90,6 +90,7 @@ function DailyLogPage() {
                 <p className="font-medium">{format(parseISO(l.log_date), "EEEE, MMM d, yyyy")}</p>
                 {l.achievements && <p className="mt-1 text-sm"><span className="font-semibold text-success">Achievements:</span> {l.achievements}</p>}
                 {l.challenges && <p className="mt-1 text-sm"><span className="font-semibold text-destructive">Challenges:</span> {l.challenges}</p>}
+                {l.recommendations && <p className="mt-1 text-sm"><span className="font-semibold text-primary">Recommendations:</span> {l.recommendations}</p>}
               </CardContent>
             </Card>
           ))}
