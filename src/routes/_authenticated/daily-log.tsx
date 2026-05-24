@@ -75,6 +75,7 @@ function DailyLogPage() {
           <div className="max-w-xs"><Label>Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
           <div><Label>Achievements</Label><Textarea rows={4} value={achievements} onChange={(e) => setAchievements(e.target.value)} placeholder="What went well today?" /></div>
           <div><Label>Challenges</Label><Textarea rows={4} value={challenges} onChange={(e) => setChallenges(e.target.value)} placeholder="What got in the way?" /></div>
+          <div><Label>Recommendations</Label><Textarea rows={4} value={recommendations} onChange={(e) => setRecommendations(e.target.value)} placeholder="Suggestions or recommendations going forward?" /></div>
           <Button onClick={save} disabled={busy}>Save entry</Button>
         </CardContent>
       </Card>
