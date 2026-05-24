@@ -79,6 +79,74 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_logs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approver_notes: string | null
+          closing_km: number | null
+          condition_end: string | null
+          condition_start: string | null
+          created_at: string
+          department_id: string | null
+          destination: string
+          id: string
+          log_date: string
+          passengers: number | null
+          start_point: string
+          starting_km: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approver_notes?: string | null
+          closing_km?: number | null
+          condition_end?: string | null
+          condition_start?: string | null
+          created_at?: string
+          department_id?: string | null
+          destination: string
+          id?: string
+          log_date: string
+          passengers?: number | null
+          start_point: string
+          starting_km: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approver_notes?: string | null
+          closing_km?: number | null
+          condition_end?: string | null
+          condition_start?: string | null
+          created_at?: string
+          department_id?: string | null
+          destination?: string
+          id?: string
+          log_date?: string
+          passengers?: number | null
+          start_point?: string
+          starting_km?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_logs_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
