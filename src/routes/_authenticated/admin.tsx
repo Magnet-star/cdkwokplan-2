@@ -62,9 +62,9 @@ function AdminPage() {
     setLogs((l as any) ?? []);
     setPlans((p as any) ?? []);
   };
-  useEffect(() => { if (isSuperAdmin) load(); }, [isSuperAdmin]);
+  useEffect(() => { if (canAccess) load(); }, [canAccess]);
 
-  if (!isSuperAdmin) return <p className="text-muted-foreground">Access denied. Super Admin only.</p>;
+  if (!canAccess) return <p className="text-muted-foreground">Access denied.</p>;
 
   const addDept = async (e: React.FormEvent) => {
     e.preventDefault();
