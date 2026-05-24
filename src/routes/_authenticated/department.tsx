@@ -41,7 +41,7 @@ function DepartmentPage() {
 
   const nameFor = (uid: string) => staff.find((s) => s.id === uid)?.full_name ?? "—";
 
-  if (!isHod && !isSuperAdmin) return <p className="text-muted-foreground">Access denied.</p>;
+  if (!isHod && !isSuperAdmin && !isAdministrator) return <p className="text-muted-foreground">Access denied.</p>;
   if (!deptId) return <p className="text-muted-foreground">You haven't been assigned to a department yet.</p>;
 
   return (
