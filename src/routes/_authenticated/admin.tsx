@@ -316,7 +316,7 @@ function AdminPage() {
                       </Select>
                     </div>
                     <div className="flex flex-wrap items-end gap-2">
-                      {(["super_admin","hod","staff"] as Role[]).map((r) => (
+                      {(["super_admin","administrator","hod","staff"] as Role[]).map((r) => (
                         <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)}>
                           {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
                           {r.replace("_", " ")}
