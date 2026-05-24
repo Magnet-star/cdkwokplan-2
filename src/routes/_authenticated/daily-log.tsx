@@ -19,6 +19,7 @@ interface Log {
   log_date: string;
   challenges: string | null;
   achievements: string | null;
+  recommendations: string | null;
 }
 
 function DailyLogPage() {
@@ -26,6 +27,7 @@ function DailyLogPage() {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [challenges, setChallenges] = useState("");
   const [achievements, setAchievements] = useState("");
+  const [recommendations, setRecommendations] = useState("");
   const [list, setList] = useState<Log[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -34,8 +36,13 @@ function DailyLogPage() {
     const { data } = await supabase.from("daily_logs").select("*").eq("user_id", user.id).order("log_date", { ascending: false }).limit(30);
     setList((data as Log[]) ?? []);
     const existing = (data as Log[] | null)?.find((l) => l.log_date === date);
-    if (existing) { setChallenges(existing.challenges ?? ""); setAchievements(existing.achievements ?? ""); }
-    else { setChallenges(""); setAchievements(""); }
+    if (existing) {
+      setChallenges(existing.challenges ?? "");
+      setAchievements(existing.achievements ?? "");
+      setRecommendations(existing.recommendations ?? "");
+    } else {
+      setChallenges(""); setAchievements(""); setRecommendations("");
+    }
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, date]);
 
@@ -48,6 +55,7 @@ function DailyLogPage() {
       log_date: date,
       challenges: challenges || null,
       achievements: achievements || null,
+      recommendations: recommendations || null,
     }, { onConflict: "user_id,log_date" });
     setBusy(false);
     if (error) toast.error(error.message);
@@ -67,6 +75,7 @@ function DailyLogPage() {
           <div className="max-w-xs"><Label>Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
           <div><Label>Achievements</Label><Textarea rows={4} value={achievements} onChange={(e) => setAchievements(e.target.value)} placeholder="What went well today?" /></div>
           <div><Label>Challenges</Label><Textarea rows={4} value={challenges} onChange={(e) => setChallenges(e.target.value)} placeholder="What got in the way?" /></div>
+          <div><Label>Recommendations</Label><Textarea rows={4} value={recommendations} onChange={(e) => setRecommendations(e.target.value)} placeholder="Suggestions or recommendations going forward?" /></div>
           <Button onClick={save} disabled={busy}>Save entry</Button>
         </CardContent>
       </Card>
@@ -81,6 +90,7 @@ function DailyLogPage() {
                 <p className="font-medium">{format(parseISO(l.log_date), "EEEE, MMM d, yyyy")}</p>
                 {l.achievements && <p className="mt-1 text-sm"><span className="font-semibold text-success">Achievements:</span> {l.achievements}</p>}
                 {l.challenges && <p className="mt-1 text-sm"><span className="font-semibold text-destructive">Challenges:</span> {l.challenges}</p>}
+                {l.recommendations && <p className="mt-1 text-sm"><span className="font-semibold text-primary">Recommendations:</span> {l.recommendations}</p>}
               </CardContent>
             </Card>
           ))}

@@ -21,10 +21,12 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Role = "super_admin" | "hod" | "staff";
+type Role = "super_admin" | "administrator" | "hod" | "staff";
 
 function AdminPage() {
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, isAdministrator } = useAuth();
+  const canEdit = isSuperAdmin;
+  const canAccess = isSuperAdmin || isAdministrator;
   const createUserFn = useServerFn(adminCreateUser);
   const [depts, setDepts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -60,9 +62,9 @@ function AdminPage() {
     setLogs((l as any) ?? []);
     setPlans((p as any) ?? []);
   };
-  useEffect(() => { if (isSuperAdmin) load(); }, [isSuperAdmin]);
+  useEffect(() => { if (canAccess) load(); }, [canAccess]);
 
-  if (!isSuperAdmin) return <p className="text-muted-foreground">Access denied. Super Admin only.</p>;
+  if (!canAccess) return <p className="text-muted-foreground">Access denied.</p>;
 
   const addDept = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,6 +183,12 @@ function AdminPage() {
         <h1 className="font-serif text-3xl text-foreground">Administration</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage departments, users, roles, vehicle approvals, and data cleanup.</p>
       </div>
+      {!canEdit && (
+        <div className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+          You are signed in as <strong>Administrator</strong>. You can view all records but cannot make any changes.
+        </div>
+      )}
+
 
 
       <Tabs defaultValue="vehicles">
@@ -270,7 +278,7 @@ function AdminPage() {
                 <div>
                   <Label>Roles</Label>
                   <div className="flex flex-wrap gap-3 pt-2">
-                    {(["staff","hod","super_admin"] as Role[]).map((r) => (
+                    {(["staff","hod","administrator","super_admin"] as Role[]).map((r) => (
                       <label key={r} className="flex items-center gap-2 text-sm">
                         <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
                         {r.replace("_", " ")}
@@ -314,7 +322,7 @@ function AdminPage() {
                       </Select>
                     </div>
                     <div className="flex flex-wrap items-end gap-2">
-                      {(["super_admin","hod","staff"] as Role[]).map((r) => (
+                      {(["super_admin","administrator","hod","staff"] as Role[]).map((r) => (
                         <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)}>
                           {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
                           {r.replace("_", " ")}

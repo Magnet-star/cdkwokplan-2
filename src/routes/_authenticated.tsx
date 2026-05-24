@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthLayout() {
-  const { user, loading, profile, roles, isSuperAdmin, isHod, signOut } = useAuth();
+  const { user, loading, profile, isSuperAdmin, isAdministrator, isHod, canViewAll, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,11 +28,11 @@ function AuthLayout() {
     { to: "/vehicle-requests", label: "Vehicle Requests", icon: Car, show: true },
     { to: "/daily-log", label: "Daily Log", icon: BookText, show: true },
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart, show: true },
-    { to: "/department", label: "My Department", icon: Building2, show: isHod || isSuperAdmin },
-    { to: "/admin", label: "Administration", icon: Users, show: isSuperAdmin },
+    { to: "/department", label: "My Department", icon: Building2, show: isHod || canViewAll },
+    { to: "/admin", label: "Administration", icon: Users, show: canViewAll },
   ];
 
-  const roleLabel = isSuperAdmin ? "Super Admin" : isHod ? "Head of Department" : "Staff";
+  const roleLabel = isSuperAdmin ? "Super Admin" : isAdministrator ? "Administrator" : isHod ? "Head of Department" : "Staff";
 
   return (
     <div className="flex min-h-screen bg-background">

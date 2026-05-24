@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/department")({
 });
 
 function DepartmentPage() {
-  const { profile, isSuperAdmin, isHod } = useAuth();
+  const { profile, isSuperAdmin, isAdministrator, isHod } = useAuth();
   const [deptId, setDeptId] = useState<string | null>(null);
   const [deptName, setDeptName] = useState<string>("");
   const [staff, setStaff] = useState<any[]>([]);
@@ -41,7 +41,7 @@ function DepartmentPage() {
 
   const nameFor = (uid: string) => staff.find((s) => s.id === uid)?.full_name ?? "—";
 
-  if (!isHod && !isSuperAdmin) return <p className="text-muted-foreground">Access denied.</p>;
+  if (!isHod && !isSuperAdmin && !isAdministrator) return <p className="text-muted-foreground">Access denied.</p>;
   if (!deptId) return <p className="text-muted-foreground">You haven't been assigned to a department yet.</p>;
 
   return (
