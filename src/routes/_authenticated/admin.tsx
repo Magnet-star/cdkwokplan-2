@@ -24,7 +24,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
 type Role = "super_admin" | "administrator" | "hod" | "staff";
 
 function AdminPage() {
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, isAdministrator } = useAuth();
+  const canEdit = isSuperAdmin;
+  const canAccess = isSuperAdmin || isAdministrator;
   const createUserFn = useServerFn(adminCreateUser);
   const [depts, setDepts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
