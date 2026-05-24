@@ -74,7 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles,
     loading,
     isSuperAdmin: roles.includes("super_admin"),
+    isAdministrator: roles.includes("administrator"),
     isHod: roles.includes("hod"),
+    canViewAll: roles.includes("super_admin") || roles.includes("administrator"),
     refresh: async () => { if (user) await loadProfile(user.id); },
     signOut: async () => { await supabase.auth.signOut(); },
   };
