@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tansta
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck } from "lucide-react";
+import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import dioceseLogo from "@/assets/diocese-logo.jpg";
 
@@ -31,6 +31,7 @@ function AuthLayout() {
     { to: "/daily-log", label: "Daily Log", icon: BookText, show: true },
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart, show: true },
     { to: "/department", label: "My Department", icon: Building2, show: true },
+    { to: "/leave-requests", label: "Leave Requests", icon: CalendarDays, show: true },
     { to: "/admin", label: "Administration", icon: Users, show: canViewAll },
   ];
 
