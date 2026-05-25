@@ -20,7 +20,10 @@ export interface VehicleRequester {
   email?: string | null;
   departmentName?: string | null;
   position?: string | null;
+  hodName?: string | null;
 }
+
+const DIOCESAN_SECRETARY = "REV. FR. JAMES ORANGA";
 
 export function downloadVehicleRequestPDF(req: VehicleRequestPDF, requester: VehicleRequester) {
   const doc = new jsPDF();
