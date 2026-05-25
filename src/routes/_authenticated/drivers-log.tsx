@@ -403,7 +403,7 @@ function DriversLogPage() {
                 <div>
                   <p className="font-medium">{l.start_point} → {l.destination}</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)}
+                    {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)} · Vehicle: {vehicleLabel(l.vehicle_id)}
                   </p>
                 </div>
                 <Badge variant={l.status === "approved" ? "default" : l.status === "rejected" ? "destructive" : "secondary"}>
