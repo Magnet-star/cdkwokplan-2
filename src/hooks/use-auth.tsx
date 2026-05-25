@@ -19,6 +19,7 @@ interface AuthState {
   profile: Profile | null;
   roles: AppRole[];
   loading: boolean;
+  rolesLoaded: boolean;
   isSuperAdmin: boolean;
   isAdministrator: boolean;
   isHod: boolean;
