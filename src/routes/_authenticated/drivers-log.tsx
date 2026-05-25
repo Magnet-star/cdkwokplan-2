@@ -282,7 +282,7 @@ function DriversLogPage() {
       {rolesLoaded && (isDriver || isSuperAdmin) && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Truck className="h-5 w-5" /> New journey entry</CardTitle>
+            <CardTitle className="font-serif flex items-center gap-2"><Truck className="h-5 w-5" /> New journey entry</CardTitle>
             <CardDescription>Submit a trip — the HOD of the department using the vehicle will approve it.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -349,7 +349,7 @@ function DriversLogPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All driver logs</CardTitle>
+          <CardTitle className="font-serif">All driver logs</CardTitle>
           <CardDescription>{canViewAll ? "Showing all logs across the diocese." : isHod ? "You can approve logs assigned to your department." : "Read-only view."}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

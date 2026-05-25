@@ -124,7 +124,7 @@ function Dashboard() {
       {/* Welcome */}
       <div className="rounded-xl bg-gradient-to-r from-primary/90 to-[oklch(0.42_0.14_145_/_0.85)] p-5 text-primary-foreground shadow-md">
         <p className="text-sm opacity-80">Welcome back</p>
-        <h1 className="font-serif text-3xl md:text-4xl">{profile?.full_name ?? "Friend"}</h1>
+        <h1 className="font-serif text-3xl md:text-4xl !text-primary-foreground">{profile?.full_name ?? "Friend"}</h1>
         <p className="mt-1 text-sm opacity-90">
           {dept ? <>Department: <span className="font-semibold">{dept}</span> · </> : "No department assigned yet · "}
           Week of {weekLabel}
@@ -142,7 +142,7 @@ function Dashboard() {
       {/* Checklist - Green accent */}
       <Card className="border-t-4 border-t-accent">
         <CardHeader>
-          <CardTitle className="font-serif text-accent">Your Monday Checklist</CardTitle>
+          <CardTitle className="font-serif text-primary">Your Monday Checklist</CardTitle>
           <CardDescription>Complete these every Monday for the week ahead.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

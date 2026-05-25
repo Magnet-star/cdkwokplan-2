@@ -74,7 +74,7 @@ function DepartmentPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="font-serif text-3xl text-foreground">{deptName || "My Department"}</h1>
+        <h1 className="font-serif text-3xl">{deptName || "My Department"}</h1>
         <p className="mt-1 text-sm text-muted-foreground">Review staff, work plans, and daily logs in your department.</p>
       </div>
 

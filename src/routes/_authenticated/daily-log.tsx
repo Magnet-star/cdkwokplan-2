@@ -65,7 +65,7 @@ function DailyLogPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="font-serif text-3xl text-foreground">Daily Log</h1>
+        <h1 className="font-serif text-3xl">Daily Log</h1>
         <p className="mt-1 text-sm text-muted-foreground">Capture challenges and achievements each day. They feed into monthly reports.</p>
       </div>
 
