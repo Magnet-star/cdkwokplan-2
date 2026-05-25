@@ -120,6 +120,28 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-weight: 700;
   }
   h1, h2, h3, .font-serif { font-family: var(--font-serif); letter-spacing: -0.01em; }
+}
+
+@layer utilities {
+  /* Force all content text to bold black for visibility */
+  .text-primary:not(.text-primary-foreground),
+  .text-accent:not(.text-accent-foreground),
+  .text-success:not(.text-success-foreground),
+  .text-destructive:not(.text-destructive-foreground),
+  .text-warning:not(.text-warning-foreground),
+  .text-secondary:not(.text-secondary-foreground) {
+    color: #000000 !important;
+  }
+
+  /* Catch opacity variants like text-primary/80 */
+  [class*="text-primary/"],
+  [class*="text-accent/"],
+  [class*="text-success/"],
+  [class*="text-destructive/"],
+  [class*="text-warning/"] {
+    color: #000000 !important;
+  }
 }
