@@ -234,11 +234,59 @@ function AdminPage() {
       <Tabs defaultValue="vehicles">
         <TabsList className="flex-wrap">
           <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
+          <TabsTrigger value="fleet">Fleet</TabsTrigger>
           <TabsTrigger value="depts">Departments</TabsTrigger>
           <TabsTrigger value="users">Users & roles</TabsTrigger>
           <TabsTrigger value="allplans">Work plans</TabsTrigger>
           <TabsTrigger value="cleanup">Logs & plans</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="fleet" className="space-y-4 pt-4">
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif">Add vehicle</CardTitle>
+                <CardDescription>Register a vehicle drivers can select when filling the driver log.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={addVehicle} className="grid gap-3 md:grid-cols-3 md:items-end">
+                  <div><Label>Registration *</Label><Input required value={newVehicle.registration} onChange={(e) => setNewVehicle({ ...newVehicle, registration: e.target.value })} placeholder="KAA 123A" /></div>
+                  <div><Label>Make / model</Label><Input value={newVehicle.make_model} onChange={(e) => setNewVehicle({ ...newVehicle, make_model: e.target.value })} placeholder="Toyota Hiace" /></div>
+                  <div><Label>Notes</Label><Input value={newVehicle.notes} onChange={(e) => setNewVehicle({ ...newVehicle, notes: e.target.value })} /></div>
+                  <Button type="submit" className="md:col-span-3 w-fit"><Plus className="mr-1 h-4 w-4" />Add vehicle</Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {fleet.length === 0 && (
+            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No vehicles yet. {canEdit && "Add one above."}</CardContent></Card>
+          )}
+          {fleet.map((vh) => (
+            <Card key={vh.id}>
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <div>
+                  <p className="font-medium">{vh.registration} {vh.make_model && <span className="text-muted-foreground">· {vh.make_model}</span>}</p>
+                  {vh.notes && <p className="text-xs text-muted-foreground">{vh.notes}</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={vh.active ? "default" : "secondary"}>{vh.active ? "Active" : "Inactive"}</Badge>
+                  {canEdit && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => toggleVehicleActive(vh.id, vh.active)}>
+                        {vh.active ? "Deactivate" : "Activate"}
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeVehicle(vh.id)}>
+                        <Trash2 className="mr-1 h-4 w-4" />Delete
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
 
         <TabsContent value="vehicles" className="space-y-3 pt-4">
           {vehicles.filter((v) => v.status === "pending").length === 0 && (
