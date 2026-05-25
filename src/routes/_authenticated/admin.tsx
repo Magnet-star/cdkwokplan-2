@@ -79,6 +79,29 @@ function AdminPage() {
     else { toast.success("Department created"); setNewDept({ name: "", description: "" }); load(); }
   };
 
+  const addVehicle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newVehicle.registration.trim()) return;
+    const { error } = await supabase.from("vehicles").insert({
+      registration: newVehicle.registration.trim(),
+      make_model: newVehicle.make_model.trim() || null,
+      notes: newVehicle.notes.trim() || null,
+    });
+    if (error) toast.error(error.message);
+    else { toast.success("Vehicle added"); setNewVehicle({ registration: "", make_model: "", notes: "" }); load(); }
+  };
+
+  const toggleVehicleActive = async (id: string, active: boolean) => {
+    const { error } = await supabase.from("vehicles").update({ active: !active }).eq("id", id);
+    if (error) toast.error(error.message); else load();
+  };
+
+  const removeVehicle = async (id: string) => {
+    if (!window.confirm("Delete this vehicle from the fleet?")) return;
+    const { error } = await supabase.from("vehicles").delete().eq("id", id);
+    if (error) toast.error(error.message); else { toast.success("Removed"); load(); }
+  };
+
   const setHod = async (deptId: string, userId: string | null) => {
     await supabase.from("departments").update({ hod_id: userId }).eq("id", deptId);
     if (userId) {
