@@ -589,6 +589,7 @@ function VehicleApproveCard({ v, userName, onDecide, onDelete, onUpdate }: { v: 
               <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>
               <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>
               <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
+              <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, { fullName: userName(v.user_id) })}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
               <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
             </div>
           </>
