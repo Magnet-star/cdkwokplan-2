@@ -8,7 +8,10 @@ export interface ReportTarget {
   fullName: string;
   departmentName: string | null;
   position: string | null;
+  hodName?: string | null;
 }
+
+const DIOCESAN_SECRETARY = "REV. FR. JAMES ORANGA";
 
 export type ReportPeriod =
   | { kind: "monthly"; year: number; monthIdx0: number }
@@ -134,6 +137,21 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
     if (l.achievements) { const lines = doc.splitTextToSize(`Achievements: ${l.achievements}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 1; }
     if (l.challenges) { const lines = doc.splitTextToSize(`Challenges: ${l.challenges}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 2; }
   });
+
+  // Signature block (on last page)
+  let sigY = y + 20;
+  const pageH = doc.internal.pageSize.getHeight();
+  if (sigY > pageH - 40) { doc.addPage(); sigY = 40; }
+  doc.setTextColor(40, 30, 30);
+  doc.setDrawColor(120);
+  doc.line(14, sigY, 90, sigY);
+  doc.line(pageW - 90, sigY, pageW - 14, sigY);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+  doc.text(target.hodName ?? "—", 14, sigY + 5);
+  doc.text(DIOCESAN_SECRETARY, pageW - 90, sigY + 5);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(80);
+  doc.text(`HOD — ${target.departmentName ?? "Department"}`, 14, sigY + 10);
+  doc.text("Diocesan Secretary", pageW - 90, sigY + 10);
 
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {

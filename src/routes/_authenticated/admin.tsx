@@ -242,6 +242,18 @@ function AdminPage() {
   };
 
   const userName = (id: string) => users.find((u) => u.id === id)?.full_name ?? "—";
+  const userMeta = (id: string) => {
+    const u = users.find((x) => x.id === id);
+    const dept = u?.department_id ? depts.find((d: any) => d.id === u.department_id) : null;
+    const hod = dept?.hod_id ? users.find((x) => x.id === dept.hod_id) : null;
+    return {
+      fullName: u?.full_name ?? "—",
+      email: u?.email ?? null,
+      position: u?.position ?? null,
+      departmentName: dept?.name ?? null,
+      hodName: hod?.full_name ?? null,
+    };
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -377,11 +389,11 @@ function AdminPage() {
             <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No pending vehicle requests.</CardContent></Card>
           )}
           {vehicles.filter((v) => v.status === "pending").map((v) => (
-            <VehicleApproveCard key={v.id} v={v} userName={userName} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
+            <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
           ))}
           <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
           {vehicles.filter((v) => v.status !== "pending").map((v) => (
-            <VehicleManageCard key={v.id} v={v} userName={userName} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
+            <VehicleManageCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
           ))}
         </TabsContent>
 
@@ -566,7 +578,7 @@ function AdminPage() {
   );
 }
 
-function VehicleApproveCard({ v, userName, onDecide, onDelete, onUpdate }: { v: any; userName: (id: string) => string; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
+function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdate }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
   const [notes, setNotes] = useState("");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
@@ -589,7 +601,7 @@ function VehicleApproveCard({ v, userName, onDecide, onDelete, onUpdate }: { v: 
               <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>
               <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>
               <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
-              <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, { fullName: userName(v.user_id) })}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
+              <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
               <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
             </div>
           </>
@@ -601,7 +613,7 @@ function VehicleApproveCard({ v, userName, onDecide, onDelete, onUpdate }: { v: 
   );
 }
 
-function VehicleManageCard({ v, userName, onDelete, onUpdate, onDecide }: { v: any; userName: (id: string) => string; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void }) {
+function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
   return (
@@ -623,7 +635,7 @@ function VehicleManageCard({ v, userName, onDelete, onUpdate, onDecide }: { v: a
             <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
             {v.status !== "approved" && <Button size="sm" onClick={() => onDecide(v.id, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark approved</Button>}
             {v.status !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecide(v.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark rejected</Button>}
-            <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, { fullName: userName(v.user_id) })}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
+            <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
             <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
           </div>
         )}

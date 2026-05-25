@@ -35,6 +35,8 @@ interface VR {
 function VehicleRequestsPage() {
   const { user, profile } = useAuth();
   const [list, setList] = useState<VR[]>([]);
+  const [deptName, setDeptName] = useState<string | null>(null);
+  const [hodName, setHodName] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     date_needed: format(new Date(), "yyyy-MM-dd"),
@@ -50,8 +52,16 @@ function VehicleRequestsPage() {
     if (!user) return;
     const { data } = await supabase.from("vehicle_requests").select("*").eq("user_id", user.id).order("date_needed", { ascending: false });
     setList((data as VR[]) ?? []);
+    if (profile?.department_id) {
+      const { data: dept } = await supabase.from("departments").select("name,hod_id").eq("id", profile.department_id).maybeSingle();
+      setDeptName(dept?.name ?? null);
+      if (dept?.hod_id) {
+        const { data: hod } = await supabase.from("profiles").select("full_name").eq("id", dept.hod_id).maybeSingle();
+        setHodName(hod?.full_name ?? null);
+      } else setHodName(null);
+    }
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, profile?.department_id]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,6 +149,8 @@ function VehicleRequestsPage() {
                     fullName: profile?.full_name ?? "—",
                     email: profile?.email,
                     position: profile?.position,
+                    departmentName: deptName,
+                    hodName: hodName,
                   })}
                 >
                   <Download className="mr-1 h-4 w-4" />Download PDF
