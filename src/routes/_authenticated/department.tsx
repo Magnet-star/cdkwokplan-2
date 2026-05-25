@@ -19,6 +19,8 @@ function DepartmentPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
+  const [trips, setTrips] = useState<any[]>([]);
+  const [vehicles, setVehicles] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -26,22 +28,47 @@ function DepartmentPage() {
       const id = profile.department_id;
       if (!id) return;
       setDeptId(id);
-      const [{ data: dept }, { data: members }, { data: weekPlans }, { data: recentLogs }] = await Promise.all([
+      const [{ data: dept }, { data: members }, { data: weekPlans }, { data: recentLogs }, { data: deptTrips }, { data: fleet }] = await Promise.all([
         supabase.from("departments").select("name").eq("id", id).maybeSingle(),
         supabase.from("profiles").select("id,full_name,email,position").eq("department_id", id),
         supabase.from("work_plans").select("id,user_id,week_start_date,status,submitted_at").eq("department_id", id).order("week_start_date", { ascending: false }).limit(20),
         supabase.from("daily_logs").select("id,user_id,log_date,achievements,challenges").eq("department_id", id).order("log_date", { ascending: false }).limit(15),
+        supabase.from("driver_logs").select("id,user_id,log_date,start_point,destination,starting_km,closing_km,passengers,status,vehicle_id").eq("department_id", id).order("log_date", { ascending: false }).limit(50),
+        supabase.from("vehicles").select("id,registration,make_model"),
       ]);
       setDeptName((dept as any)?.name ?? "");
       setStaff((members as any) ?? []);
       setPlans((weekPlans as any) ?? []);
       setLogs((recentLogs as any) ?? []);
+      setTrips((deptTrips as any) ?? []);
+      setVehicles((fleet as any) ?? []);
     })();
   }, [profile]);
 
   const nameFor = (uid: string) => staff.find((s) => s.id === uid)?.full_name ?? "—";
+  const vehicleLabel = (vid: string | null) => {
+    if (!vid) return "—";
+    const v = vehicles.find((x) => x.id === vid);
+    if (!v) return "—";
+    return v.make_model ? `${v.registration} · ${v.make_model}` : v.registration;
+  };
+  const distance = (t: any) => (t.closing_km != null && t.starting_km != null ? Number(t.closing_km) - Number(t.starting_km) : null);
 
-  if (!isHod && !isSuperAdmin && !isAdministrator) return <p className="text-muted-foreground">Access denied.</p>;
+  const myTripCount = trips.filter((t) => t.user_id === profile?.id).length;
+  const myDistance = trips
+    .filter((t) => t.user_id === profile?.id)
+    .reduce((sum, t) => sum + (distance(t) ?? 0), 0);
+  const totalDeptDistance = trips.reduce((sum, t) => sum + (distance(t) ?? 0), 0);
+  const tripsByStaff = staff
+    .map((s) => {
+      const userTrips = trips.filter((t) => t.user_id === s.id);
+      const dist = userTrips.reduce((sum, t) => sum + (distance(t) ?? 0), 0);
+      return { ...s, tripCount: userTrips.length, distance: dist };
+    })
+    .filter((s) => s.tripCount > 0)
+    .sort((a, b) => b.tripCount - a.tripCount);
+
+  if (!profile) return <p className="text-muted-foreground">Loading…</p>;
   if (!deptId) return <p className="text-muted-foreground">You haven't been assigned to a department yet.</p>;
 
   return (
