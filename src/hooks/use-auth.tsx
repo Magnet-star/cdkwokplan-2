@@ -48,12 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles(((r as { role: AppRole }[] | null) ?? []).map((x) => x.role));
     setRolesLoaded(true);
   };
-      supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", uid),
-    ]);
-    setProfile(p as Profile | null);
-    setRoles(((r as { role: AppRole }[] | null) ?? []).map((x) => x.role));
-  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, sess) => {
