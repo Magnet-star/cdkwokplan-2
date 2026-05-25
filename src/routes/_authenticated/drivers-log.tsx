@@ -438,9 +438,9 @@ function DriversLogPage() {
               ) : (
                 <>
                   {(l.condition_start || l.condition_end) && (
-                    <div className="mt-2 grid gap-2 text-sm md:grid-cols-2">
-                      {l.condition_start && <div><span className="text-muted-foreground">Condition (start):</span> {l.condition_start}</div>}
-                      {l.condition_end && <div><span className="text-muted-foreground">Condition (end):</span> {l.condition_end}</div>}
+                    <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                      {l.condition_start && <div className="break-words"><span className="text-muted-foreground">Condition (start):</span> {l.condition_start}</div>}
+                      {l.condition_end && <div className="break-words"><span className="text-muted-foreground">Condition (end):</span> {l.condition_end}</div>}
                     </div>
                   )}
                   {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
