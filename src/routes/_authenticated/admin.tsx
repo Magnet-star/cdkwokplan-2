@@ -277,7 +277,12 @@ function AdminPage() {
           <TabsTrigger value="users">Users & roles</TabsTrigger>
           <TabsTrigger value="allplans">Work plans</TabsTrigger>
           <TabsTrigger value="cleanup">Logs & plans</TabsTrigger>
+          <TabsTrigger value="attendance">Office attendance</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="attendance" className="space-y-3 pt-4">
+          <AttendanceLogPanel users={users} depts={depts} />
+        </TabsContent>
 
         <TabsContent value="events" className="space-y-4 pt-4">
           {canEdit && (
