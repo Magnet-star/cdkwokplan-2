@@ -37,8 +37,8 @@ function AuthLayout() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
-        <div className="flex items-center gap-2 border-b border-sidebar-border px-5 py-5">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex" style={{ backgroundColor: '#660000' }}>
+        <div className="flex items-center gap-2 border-b border-white/20 px-5 py-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
             <Church className="h-5 w-5" />
           </div>
