@@ -245,7 +245,7 @@ function AdminPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="font-serif text-3xl text-foreground">Administration</h1>
+        <h1 className="font-serif text-3xl">Administration</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage departments, users, roles, vehicle approvals, and data cleanup.</p>
       </div>
       {!canEdit && (

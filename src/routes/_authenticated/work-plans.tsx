@@ -149,7 +149,7 @@ function WorkPlansPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-serif text-3xl text-foreground">Weekly Work Plan</h1>
+          <h1 className="font-serif text-3xl">Weekly Work Plan</h1>
           <p className="mt-1 text-sm text-muted-foreground">Plan day-by-day. Submit on Monday with your signature.</p>
         </div>
         <div className="flex items-center gap-2">

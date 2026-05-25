@@ -83,7 +83,7 @@ function VehicleRequestsPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-serif text-3xl text-foreground">Vehicle Requests</h1>
+          <h1 className="font-serif text-3xl">Vehicle Requests</h1>
           <p className="mt-1 text-sm text-muted-foreground">Approved by the Diocesan Secretary.</p>
         </div>
         <Button onClick={() => setShowForm((s) => !s)}><Plus className="mr-1 h-4 w-4" />New request</Button>

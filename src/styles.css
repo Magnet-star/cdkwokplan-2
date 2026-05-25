@@ -123,25 +123,26 @@
     font-weight: 700;
   }
   h1, h2, h3, .font-serif { font-family: var(--font-serif); letter-spacing: -0.01em; }
+  .font-serif { color: var(--primary) !important; }
 }
 
 @layer utilities {
   /* Force all content text to bold black for visibility */
-  .text-primary:not(.text-primary-foreground),
-  .text-accent:not(.text-accent-foreground),
-  .text-success:not(.text-success-foreground),
-  .text-destructive:not(.text-destructive-foreground),
-  .text-warning:not(.text-warning-foreground),
-  .text-secondary:not(.text-secondary-foreground) {
+  .text-primary:not(.text-primary-foreground):not(.font-serif),
+  .text-accent:not(.text-accent-foreground):not(.font-serif),
+  .text-success:not(.text-success-foreground):not(.font-serif),
+  .text-destructive:not(.text-destructive-foreground):not(.font-serif),
+  .text-warning:not(.text-warning-foreground):not(.font-serif),
+  .text-secondary:not(.text-secondary-foreground):not(.font-serif) {
     color: #000000 !important;
   }
 
   /* Catch opacity variants like text-primary/80 */
-  [class*="text-primary/"],
-  [class*="text-accent/"],
-  [class*="text-success/"],
-  [class*="text-destructive/"],
-  [class*="text-warning/"] {
+  [class*="text-primary/"]:not(.font-serif),
+  [class*="text-accent/"]:not(.font-serif),
+  [class*="text-success/"]:not(.font-serif),
+  [class*="text-destructive/"]:not(.font-serif),
+  [class*="text-warning/"]:not(.font-serif) {
     color: #000000 !important;
   }
 }

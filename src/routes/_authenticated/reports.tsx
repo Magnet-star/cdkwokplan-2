@@ -69,7 +69,7 @@ function ReportsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="font-serif text-3xl text-foreground">Reports</h1>
+        <h1 className="font-serif text-3xl">Reports</h1>
         <p className="mt-1 text-sm text-muted-foreground">Auto-summarized from your weekly work plans, vehicle requests, and daily logs.</p>
       </div>
 
