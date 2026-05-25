@@ -77,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     roles,
     loading,
+    rolesLoaded,
     isSuperAdmin: roles.includes("super_admin"),
     isAdministrator: roles.includes("administrator"),
     isHod: roles.includes("hod"),
