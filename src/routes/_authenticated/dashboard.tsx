@@ -69,6 +69,16 @@ function Dashboard() {
         daysLogged: logs.data?.length ?? 0,
       });
       setDept((deptRow.data as { name: string } | null)?.name ?? null);
+
+      const today = format(new Date(), "yyyy-MM-dd");
+      const [{ data: evs }, { data: allDepts }] = await Promise.all([
+        supabase.from("diocesan_events").select("*").gte("event_date", today).order("event_date", { ascending: true }).limit(10),
+        supabase.from("departments").select("id,name"),
+      ]);
+      setEvents((evs as any) ?? []);
+      const map: Record<string, string> = {};
+      ((allDepts as any[]) ?? []).forEach((d) => { map[d.id] = d.name; });
+      setEventDepts(map);
     })();
   }, [user, profile?.department_id, isSuperAdmin]);
 
