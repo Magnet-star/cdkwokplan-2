@@ -8,7 +8,10 @@ export interface ReportTarget {
   fullName: string;
   departmentName: string | null;
   position: string | null;
+  hodName?: string | null;
 }
+
+const DIOCESAN_SECRETARY = "REV. FR. JAMES ORANGA";
 
 export type ReportPeriod =
   | { kind: "monthly"; year: number; monthIdx0: number }
