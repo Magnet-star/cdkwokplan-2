@@ -260,11 +260,69 @@ function AdminPage() {
         <TabsList className="flex-wrap">
           <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
           <TabsTrigger value="fleet">Fleet</TabsTrigger>
+          <TabsTrigger value="events">Diocesan events</TabsTrigger>
           <TabsTrigger value="depts">Departments</TabsTrigger>
           <TabsTrigger value="users">Users & roles</TabsTrigger>
           <TabsTrigger value="allplans">Work plans</TabsTrigger>
           <TabsTrigger value="cleanup">Logs & plans</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="events" className="space-y-4 pt-4">
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif">Add upcoming event</CardTitle>
+                <CardDescription>Posted to every user's dashboard.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={addEvent} className="grid gap-3 md:grid-cols-2">
+                  <div><Label>Title *</Label><Input required maxLength={200} value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} placeholder="Diocesan Synod" /></div>
+                  <div><Label>Date *</Label><Input required type="date" value={newEvent.event_date} onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })} /></div>
+                  <div>
+                    <Label>Department spearheading</Label>
+                    <Select value={newEvent.department_id} onValueChange={(v) => setNewEvent({ ...newEvent, department_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Venue</Label><Input maxLength={200} value={newEvent.venue} onChange={(e) => setNewEvent({ ...newEvent, venue: e.target.value })} placeholder="Cathedral grounds" /></div>
+                  <div className="md:col-span-2"><Label>Notes</Label><Textarea maxLength={2000} value={newEvent.notes} onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })} placeholder="Additional details, dress code, agenda…" /></div>
+                  <Button type="submit" className="md:col-span-2 w-fit"><Plus className="mr-1 h-4 w-4" />Add event</Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {events.length === 0 && (
+            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No events yet. {canEdit && "Add one above."}</CardContent></Card>
+          )}
+          {events.map((ev) => {
+            const dept = depts.find((d) => d.id === ev.department_id);
+            const past = new Date(ev.event_date) < new Date(new Date().toDateString());
+            return (
+              <Card key={ev.id}>
+                <CardContent className="flex flex-wrap items-start justify-between gap-3 py-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">{ev.title}</p>
+                      <Badge variant={past ? "secondary" : "default"}>{past ? "Past" : "Upcoming"}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{format(parseISO(ev.event_date), "EEEE, MMM d, yyyy")}{dept && <> · {dept.name}</>}{ev.venue && <> · {ev.venue}</>}</p>
+                    {ev.notes && <p className="mt-2 text-sm whitespace-pre-wrap break-words">{ev.notes}</p>}
+                  </div>
+                  {canEdit && (
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeEvent(ev.id)}>
+                      <Trash2 className="mr-1 h-4 w-4" />Delete
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </TabsContent>
 
         <TabsContent value="fleet" className="space-y-4 pt-4">
           {canEdit && (
