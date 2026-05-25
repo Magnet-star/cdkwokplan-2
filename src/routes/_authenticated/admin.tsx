@@ -322,6 +322,11 @@ function AdminPage() {
                         {userRoles.map((r) => <Badge key={r} variant="secondary">{r.replace("_", " ")}</Badge>)}
                       </div>
                     </div>
+                    {canEdit && u.id !== user?.id && (
+                      <Button size="sm" variant="destructive" onClick={() => deleteUser(u.id, u.full_name)}>
+                        <Trash2 className="mr-1 h-3.5 w-3.5" />Delete user
+                      </Button>
+                    )}
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
