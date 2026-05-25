@@ -138,9 +138,6 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
     if (l.challenges) { const lines = doc.splitTextToSize(`Challenges: ${l.challenges}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 2; }
   });
 
-  const pages = doc.getNumberOfPages();
-  for (let i = 1; i <= pages; i++) {
-    doc.setPage(i);
   // Signature block (on last page)
   let sigY = y + 20;
   const pageH = doc.internal.pageSize.getHeight();
