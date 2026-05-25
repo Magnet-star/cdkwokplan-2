@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format, startOfWeek } from "date-fns";
-import { ClipboardList, Car, BookText, FileBarChart, ArrowRight } from "lucide-react";
+import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
