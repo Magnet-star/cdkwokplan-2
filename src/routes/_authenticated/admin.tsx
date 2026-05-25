@@ -15,7 +15,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { Plus, ShieldCheck, ShieldOff, Check, X, Trash2, UserPlus, Copy, Pencil, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, ShieldCheck, ShieldOff, Check, X, Trash2, UserPlus, Copy, Pencil, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { downloadVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -588,6 +589,7 @@ function VehicleApproveCard({ v, userName, onDecide, onDelete, onUpdate }: { v: 
               <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>
               <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>
               <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
+              <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, { fullName: userName(v.user_id) })}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
               <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
             </div>
           </>
@@ -621,6 +623,7 @@ function VehicleManageCard({ v, userName, onDelete, onUpdate, onDecide }: { v: a
             <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
             {v.status !== "approved" && <Button size="sm" onClick={() => onDecide(v.id, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark approved</Button>}
             {v.status !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecide(v.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark rejected</Button>}
+            <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, { fullName: userName(v.user_id) })}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
             <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
           </div>
         )}
