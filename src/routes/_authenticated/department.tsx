@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format, parseISO, startOfWeek } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { FileBarChart } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/department")({
