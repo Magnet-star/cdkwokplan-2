@@ -39,20 +39,11 @@ function AuthLayout() {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex" style={{ backgroundColor: '#660000' }}>
-        <div
-          className="relative flex items-center gap-2 border-b border-white/20 px-5 py-5"
-          style={{
-            backgroundImage: `url(${dioceseLogo})`,
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-          }}
-        >
-          <div className="absolute inset-0" style={{ backgroundColor: 'rgba(102, 0, 0, 0.7)' }} />
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white">
-            <Church className="h-5 w-5" />
+        <div className="flex items-center gap-2 border-b border-white/20 px-5 py-5">
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white">
+            <img src={dioceseLogo} alt="Diocese of Kitale" className="h-full w-full object-contain" />
           </div>
-          <div className="relative">
+          <div>
             <p className="text-base font-bold leading-tight" style={{ color: "#ffffff", fontFamily: '"Cormorant Garamond", Georgia, serif' }}>Diocese of Kitale</p>
             <p className="text-[11px] font-bold" style={{ color: "#ffffff" }}>Secretariat</p>
           </div>
@@ -88,7 +79,9 @@ function AuthLayout() {
       <div className="flex w-full flex-col">
         <header className="flex items-center justify-between border-b border-white/20 px-4 py-3 md:hidden" style={{ backgroundColor: '#660000' }}>
           <div className="flex items-center gap-2">
-            <Church className="h-5 w-5 text-white" />
+            <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white">
+              <img src={dioceseLogo} alt="Diocese of Kitale" className="h-full w-full object-contain" />
+            </div>
             <span className="font-bold" style={{ color: "#ffffff", fontFamily: '"Cormorant Garamond", Georgia, serif' }}>Diocese of Kitale</span>
           </div>
           <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={() => { signOut().then(() => navigate({ to: "/" })); }}>
