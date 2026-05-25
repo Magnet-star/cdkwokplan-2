@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import dioceseLogo from "@/assets/diocese-logo.jpg";
+import { OfficeAttendanceButton } from "@/components/OfficeAttendanceButton";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthLayout,
@@ -100,6 +101,9 @@ function AuthLayout() {
         </nav>
 
         <main className="flex-1 overflow-x-hidden p-4 md:p-8">
+          <div className="mb-4 flex justify-end">
+            <OfficeAttendanceButton />
+          </div>
           <Outlet />
         </main>
       </div>
