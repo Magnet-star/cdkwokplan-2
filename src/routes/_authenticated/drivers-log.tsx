@@ -28,6 +28,7 @@ interface DriverLog {
   starting_km: number;
   closing_km: number | null;
   department_id: string | null;
+  vehicle_id: string | null;
   passengers: number | null;
   condition_start: string | null;
   condition_end: string | null;
@@ -38,10 +39,12 @@ interface DriverLog {
 
 interface Dept { id: string; name: string; hod_id: string | null }
 interface Profile { id: string; full_name: string }
+interface Vehicle { id: string; registration: string; make_model: string | null; active: boolean }
 
 function DriversLogPage() {
   const { user, isDriver, isHod, isSuperAdmin, canViewAll, profile, rolesLoaded } = useAuth();
   const [depts, setDepts] = useState<Dept[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Record<string, Profile>>({});
   const [logs, setLogs] = useState<DriverLog[]>([]);
   const [busy, setBusy] = useState(false);
@@ -53,6 +56,7 @@ function DriversLogPage() {
     starting_km: "",
     closing_km: "",
     department_id: "",
+    vehicle_id: "",
     passengers: "1",
     condition_start: "",
     condition_end: "",
@@ -91,11 +95,13 @@ function DriversLogPage() {
   };
 
   const load = async () => {
-    const [{ data: d }, { data: l }] = await Promise.all([
+    const [{ data: d }, { data: vh }, { data: l }] = await Promise.all([
       supabase.from("departments").select("id,name,hod_id"),
+      supabase.from("vehicles").select("id,registration,make_model,active").order("registration"),
       supabase.from("driver_logs").select("*").order("log_date", { ascending: false }).limit(200),
     ]);
     setDepts((d as Dept[]) ?? []);
+    setVehicles((vh as Vehicle[]) ?? []);
     const list = (l as DriverLog[]) ?? [];
     setLogs(list);
     const userIds = Array.from(new Set(list.map((x) => x.user_id)));
@@ -112,6 +118,7 @@ function DriversLogPage() {
     e.preventDefault();
     if (!user) return;
     if (!form.department_id) { toast.error("Select the department using the vehicle"); return; }
+    if (!form.vehicle_id) { toast.error("Select which vehicle you are using"); return; }
     setBusy(true);
     const { error } = await supabase.from("driver_logs").insert({
       user_id: user.id,
@@ -121,6 +128,7 @@ function DriversLogPage() {
       starting_km: Number(form.starting_km),
       closing_km: form.closing_km ? Number(form.closing_km) : null,
       department_id: form.department_id,
+      vehicle_id: form.vehicle_id,
       passengers: form.passengers ? Number(form.passengers) : 0,
       condition_start: form.condition_start || null,
       condition_end: form.condition_end || null,
@@ -132,6 +140,7 @@ function DriversLogPage() {
     setForm(empty);
     load();
   };
+
 
   const decide = async (id: string, status: "approved" | "rejected", notes?: string) => {
     if (!user) return;
@@ -151,6 +160,10 @@ function DriversLogPage() {
     l.status === "pending" && (isSuperAdmin || (isHod && l.department_id === myDeptId));
 
   const deptName = (id: string | null) => depts.find((d) => d.id === id)?.name ?? "—";
+  const vehicleLabel = (id: string | null) => {
+    const v = vehicles.find((x) => x.id === id);
+    return v ? `${v.registration}${v.make_model ? " · " + v.make_model : ""}` : "—";
+  };
 
   // Filters
   const [filterDept, setFilterDept] = useState<string>("all");
@@ -211,10 +224,11 @@ function DriversLogPage() {
 
     autoTable(doc, {
       startY: filterDept !== "all" ? 30 : 24,
-      head: [["Date", "Driver", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Pass.", "Status"]],
+      head: [["Date", "Driver", "Vehicle", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Pass.", "Status"]],
       body: inRange.map((l) => [
         format(parseISO(l.log_date), "yyyy-MM-dd"),
         drivers[l.user_id]?.full_name ?? "—",
+        vehicleLabel(l.vehicle_id),
         deptName(l.department_id),
         l.start_point,
         l.destination,
@@ -283,6 +297,17 @@ function DriversLogPage() {
                   <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                   <SelectContent>
                     {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-2">
+                <Label>Vehicle used</Label>
+                <Select value={form.vehicle_id} onValueChange={(v) => setForm({ ...form, vehicle_id: v })}>
+                  <SelectTrigger><SelectValue placeholder={vehicles.filter(v=>v.active).length ? "Select vehicle" : "No vehicles registered — ask Super Admin"} /></SelectTrigger>
+                  <SelectContent>
+                    {vehicles.filter((v) => v.active).map((v) => (
+                      <SelectItem key={v.id} value={v.id}>{v.registration}{v.make_model ? ` · ${v.make_model}` : ""}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -378,7 +403,7 @@ function DriversLogPage() {
                 <div>
                   <p className="font-medium">{l.start_point} → {l.destination}</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)}
+                    {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)} · Vehicle: {vehicleLabel(l.vehicle_id)}
                   </p>
                 </div>
                 <Badge variant={l.status === "approved" ? "default" : l.status === "rejected" ? "destructive" : "secondary"}>

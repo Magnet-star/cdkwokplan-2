@@ -33,6 +33,8 @@ function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [rolesByUser, setRolesByUser] = useState<Record<string, Role[]>>({});
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [fleet, setFleet] = useState<any[]>([]);
+  const [newVehicle, setNewVehicle] = useState({ registration: "", make_model: "", notes: "" });
   const [newDept, setNewDept] = useState({ name: "", description: "" });
 
   // Create user state
@@ -46,11 +48,12 @@ function AdminPage() {
   const [plans, setPlans] = useState<any[]>([]);
 
   const load = async () => {
-    const [{ data: d }, { data: u }, { data: r }, { data: v }, { data: l }, { data: p }] = await Promise.all([
+    const [{ data: d }, { data: u }, { data: r }, { data: v }, { data: f }, { data: l }, { data: p }] = await Promise.all([
       supabase.from("departments").select("*").order("name"),
       supabase.from("profiles").select("id,full_name,email,position,department_id").order("full_name"),
       supabase.from("user_roles").select("user_id,role"),
       supabase.from("vehicle_requests").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("vehicles").select("*").order("registration"),
       supabase.from("daily_logs").select("*").order("log_date", { ascending: false }).limit(100),
       supabase.from("work_plans").select("*").order("week_start_date", { ascending: false }).limit(100),
     ]);
@@ -60,6 +63,7 @@ function AdminPage() {
     ((r as any[]) ?? []).forEach((row) => { (map[row.user_id] ||= []).push(row.role); });
     setRolesByUser(map);
     setVehicles((v as any) ?? []);
+    setFleet((f as any) ?? []);
     setLogs((l as any) ?? []);
     setPlans((p as any) ?? []);
   };
@@ -73,6 +77,29 @@ function AdminPage() {
     const { error } = await supabase.from("departments").insert(newDept);
     if (error) toast.error(error.message);
     else { toast.success("Department created"); setNewDept({ name: "", description: "" }); load(); }
+  };
+
+  const addVehicle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newVehicle.registration.trim()) return;
+    const { error } = await supabase.from("vehicles").insert({
+      registration: newVehicle.registration.trim(),
+      make_model: newVehicle.make_model.trim() || null,
+      notes: newVehicle.notes.trim() || null,
+    });
+    if (error) toast.error(error.message);
+    else { toast.success("Vehicle added"); setNewVehicle({ registration: "", make_model: "", notes: "" }); load(); }
+  };
+
+  const toggleVehicleActive = async (id: string, active: boolean) => {
+    const { error } = await supabase.from("vehicles").update({ active: !active }).eq("id", id);
+    if (error) toast.error(error.message); else load();
+  };
+
+  const removeVehicle = async (id: string) => {
+    if (!window.confirm("Delete this vehicle from the fleet?")) return;
+    const { error } = await supabase.from("vehicles").delete().eq("id", id);
+    if (error) toast.error(error.message); else { toast.success("Removed"); load(); }
   };
 
   const setHod = async (deptId: string, userId: string | null) => {
@@ -207,11 +234,59 @@ function AdminPage() {
       <Tabs defaultValue="vehicles">
         <TabsList className="flex-wrap">
           <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
+          <TabsTrigger value="fleet">Fleet</TabsTrigger>
           <TabsTrigger value="depts">Departments</TabsTrigger>
           <TabsTrigger value="users">Users & roles</TabsTrigger>
           <TabsTrigger value="allplans">Work plans</TabsTrigger>
           <TabsTrigger value="cleanup">Logs & plans</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="fleet" className="space-y-4 pt-4">
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif">Add vehicle</CardTitle>
+                <CardDescription>Register a vehicle drivers can select when filling the driver log.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={addVehicle} className="grid gap-3 md:grid-cols-3 md:items-end">
+                  <div><Label>Registration *</Label><Input required value={newVehicle.registration} onChange={(e) => setNewVehicle({ ...newVehicle, registration: e.target.value })} placeholder="KAA 123A" /></div>
+                  <div><Label>Make / model</Label><Input value={newVehicle.make_model} onChange={(e) => setNewVehicle({ ...newVehicle, make_model: e.target.value })} placeholder="Toyota Hiace" /></div>
+                  <div><Label>Notes</Label><Input value={newVehicle.notes} onChange={(e) => setNewVehicle({ ...newVehicle, notes: e.target.value })} /></div>
+                  <Button type="submit" className="md:col-span-3 w-fit"><Plus className="mr-1 h-4 w-4" />Add vehicle</Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {fleet.length === 0 && (
+            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No vehicles yet. {canEdit && "Add one above."}</CardContent></Card>
+          )}
+          {fleet.map((vh) => (
+            <Card key={vh.id}>
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <div>
+                  <p className="font-medium">{vh.registration} {vh.make_model && <span className="text-muted-foreground">· {vh.make_model}</span>}</p>
+                  {vh.notes && <p className="text-xs text-muted-foreground">{vh.notes}</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={vh.active ? "default" : "secondary"}>{vh.active ? "Active" : "Inactive"}</Badge>
+                  {canEdit && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => toggleVehicleActive(vh.id, vh.active)}>
+                        {vh.active ? "Deactivate" : "Activate"}
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeVehicle(vh.id)}>
+                        <Trash2 className="mr-1 h-4 w-4" />Delete
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
 
         <TabsContent value="vehicles" className="space-y-3 pt-4">
           {vehicles.filter((v) => v.status === "pending").length === 0 && (
