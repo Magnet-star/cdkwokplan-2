@@ -86,6 +86,38 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            <CardTitle className="font-serif">Upcoming Diocesan Events</CardTitle>
+          </div>
+          <CardDescription>Posted by the Super Admin.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {events.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No upcoming events.</p>
+          ) : (
+            events.map((ev) => (
+              <div key={ev.id} className="rounded-md border border-border bg-card p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium break-words">{ev.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(ev.event_date), "EEEE, MMM d, yyyy")}
+                      {ev.department_id && eventDepts[ev.department_id] && <> · Spearheaded by <span className="font-medium text-foreground">{eventDepts[ev.department_id]}</span></>}
+                      {ev.venue && <> · {ev.venue}</>}
+                    </p>
+                  </div>
+                  <Badge variant="outline">{format(new Date(ev.event_date), "MMM d")}</Badge>
+                </div>
+                {ev.notes && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted-foreground">{ev.notes}</p>}
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
       <div>
         <p className="text-sm text-muted-foreground">Welcome back</p>
         <h1 className="font-serif text-3xl text-foreground md:text-4xl">{profile?.full_name ?? "Friend"}</h1>
