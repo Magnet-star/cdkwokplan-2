@@ -578,7 +578,7 @@ function AdminPage() {
   );
 }
 
-function VehicleApproveCard({ v, userName, onDecide, onDelete, onUpdate }: { v: any; userName: (id: string) => string; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
+function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdate }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
   const [notes, setNotes] = useState("");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
