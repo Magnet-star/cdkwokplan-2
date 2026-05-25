@@ -98,6 +98,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          vehicle_id: string | null
         }
         Insert: {
           approved_at?: string | null
@@ -117,6 +118,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          vehicle_id?: string | null
         }
         Update: {
           approved_at?: string | null
@@ -136,6 +138,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          vehicle_id?: string | null
         }
         Relationships: [
           {
@@ -143,6 +146,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_logs_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -270,6 +280,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vehicles: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          make_model: string | null
+          notes: string | null
+          registration: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          make_model?: string | null
+          notes?: string | null
+          registration: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          make_model?: string | null
+          notes?: string | null
+          registration?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       work_plan_items: {
         Row: {
