@@ -324,10 +324,6 @@ function DriversLogPage() {
                 <Input type="number" step="0.1" required value={form.starting_km} onChange={(e) => setForm({ ...form, starting_km: e.target.value })} />
               </div>
               <div>
-                <Label>Closing kilometers</Label>
-                <Input type="number" step="0.1" value={form.closing_km} onChange={(e) => setForm({ ...form, closing_km: e.target.value })} />
-              </div>
-              <div>
                 <Label>Passengers</Label>
                 <Input type="number" min="0" value={form.passengers} onChange={(e) => setForm({ ...form, passengers: e.target.value })} />
               </div>
@@ -335,9 +331,8 @@ function DriversLogPage() {
                 <Label>Vehicle condition at start</Label>
                 <Textarea rows={2} value={form.condition_start} onChange={(e) => setForm({ ...form, condition_start: e.target.value })} />
               </div>
-              <div className="md:col-span-2">
-                <Label>Vehicle condition at end</Label>
-                <Textarea rows={2} value={form.condition_end} onChange={(e) => setForm({ ...form, condition_end: e.target.value })} />
+              <div className="md:col-span-2 rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                Closing kilometers and end-of-trip condition will be filled in by the HOD after the journey, to ensure accountability.
               </div>
               <div className="md:col-span-2">
                 <Button type="submit" disabled={busy}>{busy ? "Submitting…" : "Submit for approval"}</Button>
