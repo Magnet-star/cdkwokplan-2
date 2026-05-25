@@ -58,6 +58,7 @@ function WorkPlansPage() {
     if (p) {
       const planRow = p as Plan;
       setPlan(planRow);
+      setIsEditing(false);
       setSignature(planRow.signature ?? "");
       const { data: its } = await supabase
         .from("work_plan_items").select("*").eq("work_plan_id", planRow.id).order("activity_date");
@@ -75,6 +76,7 @@ function WorkPlansPage() {
       setPlan(null);
       setItems([]);
       setSignature("");
+      setIsEditing(false);
     }
 
     const { data: hist } = await supabase
