@@ -400,9 +400,9 @@ function DriversLogPage() {
           {filteredLogs.map((l) => (
             <div key={l.id} className="rounded-md border border-border p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{l.start_point} → {l.destination}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="break-words text-xs text-muted-foreground">
                     {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)} · Vehicle: {vehicleLabel(l.vehicle_id)}
                   </p>
                 </div>
@@ -410,7 +410,7 @@ function DriversLogPage() {
                   {l.status}
                 </Badge>
               </div>
-              <div className="mt-2 grid gap-2 text-sm md:grid-cols-4">
+              <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2 md:grid-cols-4">
                 <div><span className="text-muted-foreground">Start KM:</span> {l.starting_km}</div>
                 <div><span className="text-muted-foreground">Close KM:</span> {l.closing_km ?? "—"}</div>
                 <div><span className="text-muted-foreground">Distance:</span> {l.closing_km != null ? (Number(l.closing_km) - Number(l.starting_km)).toFixed(1) : "—"}</div>
