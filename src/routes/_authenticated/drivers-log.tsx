@@ -80,6 +80,13 @@ function DriversLogPage() {
     load();
   };
 
+  const deleteLog = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this driver log? This cannot be undone.")) return;
+    const { error } = await supabase.from("driver_logs").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Log deleted");
+    load();
+  };
 
   const load = async () => {
     const [{ data: d }, { data: l }] = await Promise.all([
