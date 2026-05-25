@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Only super admins can change roles" ON public.user_roles;
