@@ -26,6 +26,8 @@ function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [dept, setDept] = useState<string | null>(null);
   const [feed, setFeed] = useState<Submission[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [eventDepts, setEventDepts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
