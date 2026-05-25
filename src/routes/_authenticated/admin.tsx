@@ -389,11 +389,11 @@ function AdminPage() {
             <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No pending vehicle requests.</CardContent></Card>
           )}
           {vehicles.filter((v) => v.status === "pending").map((v) => (
-            <VehicleApproveCard key={v.id} v={v} userName={userName} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
+            <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
           ))}
           <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
           {vehicles.filter((v) => v.status !== "pending").map((v) => (
-            <VehicleManageCard key={v.id} v={v} userName={userName} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
+            <VehicleManageCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
           ))}
         </TabsContent>
 
