@@ -291,7 +291,7 @@ function WorkPlansPage() {
                 {!submitted && <Button onClick={handleSubmit} disabled={busy}>Submit work plan</Button>}
                 {submitted && isEditing && (
                   <>
-                    <Button variant="outline" onClick={() => setIsEditing(false)} disabled={busy}>Cancel</Button>
+                    <Button variant="outline" onClick={() => { setIsEditing(false); load(); }} disabled={busy}>Cancel</Button>
                     <Button onClick={handleUpdate} disabled={busy}>Update</Button>
                   </>
                 )}
