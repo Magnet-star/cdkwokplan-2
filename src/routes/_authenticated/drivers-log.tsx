@@ -353,7 +353,7 @@ function DriversLogPage() {
           <CardDescription>{canViewAll ? "Showing all logs across the diocese." : isHod ? "You can approve logs assigned to your department." : "Read-only view."}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-[1fr,1fr,auto]">
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr,1fr,auto]">
             <div>
               <Label className="text-xs">Search</Label>
               <div className="relative">
@@ -371,7 +371,7 @@ function DriversLogPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end gap-2">
+            <div className="flex flex-wrap items-end gap-2 sm:col-span-2 md:col-span-1">
               <Button size="sm" variant="outline" onClick={() => downloadPdf("daily")}><Download className="mr-1 h-4 w-4" />Daily</Button>
               <Button size="sm" variant="outline" onClick={() => downloadPdf("weekly")}><Download className="mr-1 h-4 w-4" />Weekly</Button>
               <Button size="sm" variant="outline" onClick={() => downloadPdf("monthly")}><Download className="mr-1 h-4 w-4" />Monthly</Button>
