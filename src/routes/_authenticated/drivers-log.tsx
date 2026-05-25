@@ -293,6 +293,11 @@ function DriversLogPage() {
                         </Button>
                       </>
                     )}
+                    {isSuperAdmin && (
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteLog(l.id)}>
+                        <Trash2 className="mr-1 h-4 w-4" /> Delete log
+                      </Button>
+                    )}
                   </div>
                 </>
               )}
