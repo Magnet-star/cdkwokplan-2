@@ -44,7 +44,7 @@ function AuthLayout() {
           </div>
           <div>
             <p className="font-serif text-base font-bold leading-tight" style={{ color: "#ffffff" }}>Diocese of Kitale</p>
-            <p className="text-[11px] text-sidebar-foreground/70">Secretariat</p>
+            <p className="text-[11px] font-bold" style={{ color: "#ffffff" }}>Secretariat</p>
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-3">
