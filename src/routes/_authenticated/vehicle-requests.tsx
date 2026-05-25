@@ -35,6 +35,8 @@ interface VR {
 function VehicleRequestsPage() {
   const { user, profile } = useAuth();
   const [list, setList] = useState<VR[]>([]);
+  const [deptName, setDeptName] = useState<string | null>(null);
+  const [hodName, setHodName] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     date_needed: format(new Date(), "yyyy-MM-dd"),
