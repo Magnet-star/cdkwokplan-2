@@ -106,6 +106,27 @@ function AdminPage() {
     if (error) toast.error(error.message); else { toast.success("Removed"); load(); }
   };
 
+  const addEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEvent.title.trim() || !newEvent.event_date) return;
+    const { error } = await supabase.from("diocesan_events").insert({
+      title: newEvent.title.trim(),
+      event_date: newEvent.event_date,
+      department_id: newEvent.department_id === "none" ? null : newEvent.department_id,
+      venue: newEvent.venue.trim() || null,
+      notes: newEvent.notes.trim() || null,
+      created_by: user?.id ?? null,
+    });
+    if (error) toast.error(error.message);
+    else { toast.success("Event added"); setNewEvent({ title: "", event_date: "", department_id: "none", venue: "", notes: "" }); load(); }
+  };
+
+  const removeEvent = async (id: string) => {
+    if (!window.confirm("Delete this event?")) return;
+    const { error } = await supabase.from("diocesan_events").delete().eq("id", id);
+    if (error) toast.error(error.message); else { toast.success("Removed"); load(); }
+  };
+
   const setHod = async (deptId: string, userId: string | null) => {
     await supabase.from("departments").update({ hod_id: userId }).eq("id", deptId);
     if (userId) {
