@@ -159,7 +159,7 @@ function Dashboard() {
         <Card className="border-l-4 border-l-primary">
           <CardHeader>
             <CardTitle className="font-serif text-primary">Recent Submissions</CardTitle>
-            <CardDescription>Latest work plans, daily logs, and vehicle requests across the diocese.</CardDescription>
+            <CardDescription>Latest work plans, daily logs, and vehicle requests across the secretariat offices.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {feed.length === 0 && <p className="text-sm text-muted-foreground">No submissions yet.</p>}
