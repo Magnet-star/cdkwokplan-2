@@ -79,13 +79,13 @@
   --input: oklch(0.88 0.02 80);
   --ring: oklch(0.35 0.15 25);
 
-  --sidebar: oklch(0.30 0.12 25);
-  --sidebar-foreground: oklch(0.97 0.02 85);
+  --sidebar: oklch(0.30 0.18 20);              /* rich maroon */
+  --sidebar-foreground: #ffffff;
   --sidebar-primary: oklch(0.52 0.20 145);     /* bold green nav highlight */
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: oklch(0.38 0.14 28);
-  --sidebar-accent-foreground: oklch(0.97 0.02 85);
-  --sidebar-border: oklch(0.40 0.10 28);
+  --sidebar-accent: oklch(0.35 0.16 22);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: oklch(0.35 0.14 22);
 }
 
 .dark {
