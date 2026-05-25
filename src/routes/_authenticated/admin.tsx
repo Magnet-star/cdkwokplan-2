@@ -613,7 +613,7 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
   );
 }
 
-function VehicleManageCard({ v, userName, onDelete, onUpdate, onDecide }: { v: any; userName: (id: string) => string; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void }) {
+function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
   return (
