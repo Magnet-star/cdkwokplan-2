@@ -95,11 +95,13 @@ function DriversLogPage() {
   };
 
   const load = async () => {
-    const [{ data: d }, { data: l }] = await Promise.all([
+    const [{ data: d }, { data: vh }, { data: l }] = await Promise.all([
       supabase.from("departments").select("id,name,hod_id"),
+      supabase.from("vehicles").select("id,registration,make_model,active").order("registration"),
       supabase.from("driver_logs").select("*").order("log_date", { ascending: false }).limit(200),
     ]);
     setDepts((d as Dept[]) ?? []);
+    setVehicles((vh as Vehicle[]) ?? []);
     const list = (l as DriverLog[]) ?? [];
     setLogs(list);
     const userIds = Array.from(new Set(list.map((x) => x.user_id)));
@@ -116,6 +118,7 @@ function DriversLogPage() {
     e.preventDefault();
     if (!user) return;
     if (!form.department_id) { toast.error("Select the department using the vehicle"); return; }
+    if (!form.vehicle_id) { toast.error("Select which vehicle you are using"); return; }
     setBusy(true);
     const { error } = await supabase.from("driver_logs").insert({
       user_id: user.id,
@@ -125,6 +128,7 @@ function DriversLogPage() {
       starting_km: Number(form.starting_km),
       closing_km: form.closing_km ? Number(form.closing_km) : null,
       department_id: form.department_id,
+      vehicle_id: form.vehicle_id,
       passengers: form.passengers ? Number(form.passengers) : 0,
       condition_start: form.condition_start || null,
       condition_end: form.condition_end || null,
@@ -136,6 +140,7 @@ function DriversLogPage() {
     setForm(empty);
     load();
   };
+
 
   const decide = async (id: string, status: "approved" | "rejected", notes?: string) => {
     if (!user) return;
