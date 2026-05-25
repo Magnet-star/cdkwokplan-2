@@ -5,8 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, startOfWeek } from "date-fns";
 import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays } from "lucide-react";
+import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -84,8 +86,8 @@ function Dashboard() {
 
   const weekLabel = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "MMMM d, yyyy");
 
-  return (
-    <div className="mx-auto max-w-6xl space-y-6">
+  const dashboardBody = (
+    <div className="space-y-6">
       {/* Upcoming Events - Maroon themed */}
       <Card className="border-l-4 border-l-primary bg-gradient-to-br from-card to-[oklch(0.97_0.02_25_/_0.3)]">
         <CardHeader>
@@ -136,7 +138,7 @@ function Dashboard() {
         <StatCard icon={ClipboardList} title="This week's plan" value={stats?.thisWeekPlan ? (stats.thisWeekPlan.status === "submitted" ? "Submitted" : "Draft") : "Not started"} tone={stats?.thisWeekPlan?.status === "submitted" ? "success" : stats?.thisWeekPlan ? "warning" : "muted"} to="/work-plans" />
         <StatCard icon={Car} title="My vehicle requests (week)" value={String(stats?.myVehicles ?? 0)} to="/vehicle-requests" />
         <StatCard icon={BookText} title="Days logged this week" value={String(stats?.daysLogged ?? 0)} to="/daily-log" />
-        <StatCard icon={FileBarChart} title={isSuperAdmin ? "Pending vehicle approvals" : "Monthly reports"} value={isSuperAdmin ? String(stats?.pendingVehicles ?? 0) : "Generate"} to={isSuperAdmin ? "/admin" : "/reports"} tone={isSuperAdmin && (stats?.pendingVehicles ?? 0) > 0 ? "warning" : "muted"} />
+        <StatCard icon={FileBarChart} title={isSuperAdmin ? "Pending vehicle approvals" : "Monthly reports"} value={isSuperAdmin ? String(stats?.pendingVehicles ?? 0) : "Generate"} to={isSuperAdmin ? "/admin" : "/reports"} tone={isSuperAdmin && (stats?.pendingVehicles ?? 0) > 1 ? "warning" : "muted"} />
       </div>
 
       {/* Checklist - Green accent */}
@@ -186,6 +188,27 @@ function Dashboard() {
             {isSuperAdmin && <Link to="/admin"><Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Administration</Button></Link>}
           </CardContent>
         </Card>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      {isSuperAdmin ? (
+        <Tabs defaultValue="overview">
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="attendance">Office Attendance</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className="pt-4">
+            {dashboardBody}
+          </TabsContent>
+          <TabsContent value="attendance" className="pt-4">
+            <AttendanceLogPanel />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        dashboardBody
       )}
     </div>
   );
