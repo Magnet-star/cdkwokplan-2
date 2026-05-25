@@ -123,10 +123,13 @@ function DriversLogPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="font-serif text-3xl">Drivers Log</h1>
-        <p className="text-sm text-muted-foreground">Vehicle journey logbook. Only drivers submit entries; everyone can view. The HOD of the selected department approves.</p>
+        <p className="text-sm text-muted-foreground">Vehicle journey logbook. Drivers (and Super Admins) submit entries; everyone can view. The HOD of the selected department approves.</p>
+        {!isDriver && !isSuperAdmin && (
+          <p className="mt-2 text-xs text-muted-foreground">You don't have the Driver role, so you can only view logs. Ask a Super Admin to assign you the Driver role from Administration.</p>
+        )}
       </div>
 
-      {isDriver && (
+      {(isDriver || isSuperAdmin) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Truck className="h-5 w-5" /> New journey entry</CardTitle>
