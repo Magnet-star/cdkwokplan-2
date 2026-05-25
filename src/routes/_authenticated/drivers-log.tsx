@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Truck, CheckCircle2, XCircle } from "lucide-react";
+import { Truck, CheckCircle2, XCircle, Pencil, Save, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/drivers-log")({
   component: DriversLogPage,
@@ -56,6 +56,30 @@ function DriversLogPage() {
     condition_end: "",
   };
   const [form, setForm] = useState(empty);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ closing_km: "", condition_end: "", condition_start: "" });
+
+  const startEdit = (l: DriverLog) => {
+    setEditingId(l.id);
+    setEditForm({
+      closing_km: l.closing_km != null ? String(l.closing_km) : "",
+      condition_end: l.condition_end ?? "",
+      condition_start: l.condition_start ?? "",
+    });
+  };
+
+  const saveEdit = async (id: string) => {
+    const { error } = await supabase.from("driver_logs").update({
+      closing_km: editForm.closing_km ? Number(editForm.closing_km) : null,
+      condition_end: editForm.condition_end || null,
+      condition_start: editForm.condition_start || null,
+    }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Log updated");
+    setEditingId(null);
+    load();
+  };
+
 
   const load = async () => {
     const [{ data: d }, { data: l }] = await Promise.all([
