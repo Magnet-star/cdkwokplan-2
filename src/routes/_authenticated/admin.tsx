@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { adminCreateUser } from "@/lib/admin-users.functions";
+import { adminCreateUser, adminDeleteUser } from "@/lib/admin-users.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,10 +24,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
 type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver";
 
 function AdminPage() {
-  const { isSuperAdmin, isAdministrator } = useAuth();
+  const { isSuperAdmin, isAdministrator, user } = useAuth();
   const canEdit = isSuperAdmin;
   const canAccess = isSuperAdmin || isAdministrator;
   const createUserFn = useServerFn(adminCreateUser);
+  const deleteUserFn = useServerFn(adminDeleteUser);
   const [depts, setDepts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [rolesByUser, setRolesByUser] = useState<Record<string, Role[]>>({});
@@ -175,6 +176,18 @@ function AdminPage() {
     if (error) toast.error(error.message); else { toast.success("Work plan deleted"); load(); }
   };
 
+  const deleteUser = async (id: string, name: string) => {
+    if (id === user?.id) { toast.error("You cannot delete your own account"); return; }
+    if (!confirm(`Permanently delete ${name}? This removes their login and cannot be undone.`)) return;
+    try {
+      await deleteUserFn({ data: { userId: id } });
+      toast.success("User deleted");
+      load();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to delete user");
+    }
+  };
+
   const userName = (id: string) => users.find((u) => u.id === id)?.full_name ?? "—";
 
   return (
@@ -309,6 +322,11 @@ function AdminPage() {
                         {userRoles.map((r) => <Badge key={r} variant="secondary">{r.replace("_", " ")}</Badge>)}
                       </div>
                     </div>
+                    {canEdit && u.id !== user?.id && (
+                      <Button size="sm" variant="destructive" onClick={() => deleteUser(u.id, u.full_name)}>
+                        <Trash2 className="mr-1 h-3.5 w-3.5" />Delete user
+                      </Button>
+                    )}
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>

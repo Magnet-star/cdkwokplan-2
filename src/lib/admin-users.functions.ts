@@ -54,3 +54,23 @@ export const adminCreateUser = createServerFn({ method: "POST" })
 
     return { ok: true, userId: newUserId };
   });
+
+const DeleteUserSchema = z.object({ userId: z.string().uuid() });
+
+export const adminDeleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => DeleteUserSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: roleRows, error: roleErr } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (roleErr) throw new Error(roleErr.message);
+    const isSuper = (roleRows ?? []).some((r: any) => r.role === "super_admin");
+    if (!isSuper) throw new Error("Only super admins can delete users");
+    if (data.userId === context.userId) throw new Error("You cannot delete your own account");
+
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
