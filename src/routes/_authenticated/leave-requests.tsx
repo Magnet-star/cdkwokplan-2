@@ -82,8 +82,7 @@ function LeaveRequestsPage() {
     try {
       const a = parseISO(form.from_date);
       const b = parseISO(form.to_date);
-      const d = differenceInCalendarDays(b, a) + 1;
-      return d > 0 ? d : 0;
+      return countWorkingDays(a, b);
     } catch { return 0; }
   }, [form.from_date, form.to_date]);
 
