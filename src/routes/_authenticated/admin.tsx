@@ -36,6 +36,8 @@ function AdminPage() {
   const [fleet, setFleet] = useState<any[]>([]);
   const [newVehicle, setNewVehicle] = useState({ registration: "", make_model: "", notes: "" });
   const [newDept, setNewDept] = useState({ name: "", description: "" });
+  const [events, setEvents] = useState<any[]>([]);
+  const [newEvent, setNewEvent] = useState({ title: "", event_date: "", department_id: "none", venue: "", notes: "" });
 
   // Create user state
   const [nu, setNu] = useState<{ email: string; password: string; fullName: string; departmentId: string; position: string; roles: Role[] }>(
