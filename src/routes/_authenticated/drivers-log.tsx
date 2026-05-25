@@ -417,20 +417,20 @@ function DriversLogPage() {
                 <div><span className="text-muted-foreground">Passengers:</span> {l.passengers ?? 0}</div>
               </div>
               {editingId === l.id ? (
-                <div className="mt-3 grid gap-3 rounded-md border border-dashed border-border p-3 md:grid-cols-2">
+                <div className="mt-3 grid gap-3 rounded-md border border-dashed border-border p-3 sm:grid-cols-2">
                   <div>
                     <Label>Closing kilometers</Label>
                     <Input type="number" step="0.1" value={editForm.closing_km} onChange={(e) => setEditForm({ ...editForm, closing_km: e.target.value })} />
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2">
                     <Label>Vehicle condition at start</Label>
                     <Textarea rows={2} value={editForm.condition_start} onChange={(e) => setEditForm({ ...editForm, condition_start: e.target.value })} />
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2">
                     <Label>Vehicle condition at end</Label>
                     <Textarea rows={2} value={editForm.condition_end} onChange={(e) => setEditForm({ ...editForm, condition_end: e.target.value })} />
                   </div>
-                  <div className="flex gap-2 md:col-span-2">
+                  <div className="flex flex-wrap gap-2 sm:col-span-2">
                     <Button size="sm" onClick={() => saveEdit(l.id)}><Save className="mr-1 h-4 w-4" /> Save</Button>
                     <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="mr-1 h-4 w-4" /> Cancel</Button>
                   </div>
