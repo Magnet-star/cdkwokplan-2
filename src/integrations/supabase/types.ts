@@ -263,6 +263,39 @@ export type Database = {
           },
         ]
       }
+      office_attendance: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          id: string
+          left_at: string
+          reason: string | null
+          returned_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          left_at?: string
+          reason?: string | null
+          returned_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          left_at?: string
+          reason?: string | null
+          returned_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
