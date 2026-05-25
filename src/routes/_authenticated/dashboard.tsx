@@ -86,11 +86,14 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <Card>
+      {/* Upcoming Events - Maroon themed */}
+      <Card className="border-l-4 border-l-primary bg-gradient-to-br from-card to-[oklch(0.97_0.02_25_/_0.3)]">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            <CardTitle className="font-serif">Upcoming Diocesan Events</CardTitle>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <CalendarDays className="h-4 w-4" />
+            </div>
+            <CardTitle className="font-serif text-primary">Upcoming Diocesan Events</CardTitle>
           </div>
           <CardDescription>Posted by the Super Admin.</CardDescription>
         </CardHeader>
@@ -99,17 +102,17 @@ function Dashboard() {
             <p className="text-sm text-muted-foreground">No upcoming events.</p>
           ) : (
             events.map((ev) => (
-              <div key={ev.id} className="rounded-md border border-border bg-card p-3">
+              <div key={ev.id} className="rounded-lg border border-border/60 bg-gradient-to-r from-card to-[oklch(0.96_0.03_145_/_0.15)] p-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-medium break-words">{ev.title}</p>
+                  <div className="min-w-1.0">
+                    <p className="font-medium text-foreground break-words">{ev.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(ev.event_date), "EEEE, MMM d, yyyy")}
-                      {ev.department_id && eventDepts[ev.department_id] && <> · Spearheaded by <span className="font-medium text-foreground">{eventDepts[ev.department_id]}</span></>}
-                      {ev.venue && <> · {ev.venue}</>}
+                      {ev.department_id && eventDepts[ev.department_id] && <> · Spearheaded by <span className="font-semibold text-accent">{eventDepts[ev.department_id]}</span></>}
+                      {ev.venue && <> · <span className="text-primary/80">{ev.venue}</span></>}
                     </p>
                   </div>
-                  <Badge variant="outline">{format(new Date(ev.event_date), "MMM d")}</Badge>
+                  <Badge className="bg-primary/10 text-primary border-primary/20">{format(new Date(ev.event_date), "MMM d")}</Badge>
                 </div>
                 {ev.notes && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted-foreground">{ev.notes}</p>}
               </div>
@@ -118,15 +121,17 @@ function Dashboard() {
         </CardContent>
       </Card>
 
-      <div>
-        <p className="text-sm text-muted-foreground">Welcome back</p>
-        <h1 className="font-serif text-3xl text-foreground md:text-4xl">{profile?.full_name ?? "Friend"}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {dept ? <>Department: <span className="font-medium text-foreground">{dept}</span> · </> : "No department assigned yet · "}
+      {/* Welcome */}
+      <div className="rounded-xl bg-gradient-to-r from-primary/90 to-[oklch(0.42_0.14_145_/_0.85)] p-5 text-primary-foreground shadow-md">
+        <p className="text-sm opacity-80">Welcome back</p>
+        <h1 className="font-serif text-3xl md:text-4xl">{profile?.full_name ?? "Friend"}</h1>
+        <p className="mt-1 text-sm opacity-90">
+          {dept ? <>Department: <span className="font-semibold">{dept}</span> · </> : "No department assigned yet · "}
           Week of {weekLabel}
         </p>
       </div>
 
+      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={ClipboardList} title="This week's plan" value={stats?.thisWeekPlan ? (stats.thisWeekPlan.status === "submitted" ? "Submitted" : "Draft") : "Not started"} tone={stats?.thisWeekPlan?.status === "submitted" ? "success" : stats?.thisWeekPlan ? "warning" : "muted"} to="/work-plans" />
         <StatCard icon={Car} title="My vehicle requests (week)" value={String(stats?.myVehicles ?? 0)} to="/vehicle-requests" />
@@ -134,9 +139,10 @@ function Dashboard() {
         <StatCard icon={FileBarChart} title={isSuperAdmin ? "Pending vehicle approvals" : "Monthly reports"} value={isSuperAdmin ? String(stats?.pendingVehicles ?? 0) : "Generate"} to={isSuperAdmin ? "/admin" : "/reports"} tone={isSuperAdmin && (stats?.pendingVehicles ?? 0) > 0 ? "warning" : "muted"} />
       </div>
 
-      <Card>
+      {/* Checklist - Green accent */}
+      <Card className="border-t-4 border-t-accent">
         <CardHeader>
-          <CardTitle className="font-serif">Your Monday checklist</CardTitle>
+          <CardTitle className="font-serif text-accent">Your Monday Checklist</CardTitle>
           <CardDescription>Complete these every Monday for the week ahead.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -146,36 +152,38 @@ function Dashboard() {
         </CardContent>
       </Card>
 
+      {/* Recent Submissions - Maroon themed */}
       {isSuperAdmin && (
-        <Card>
+        <Card className="border-l-4 border-l-primary">
           <CardHeader>
-            <CardTitle className="font-serif">Recent submissions</CardTitle>
+            <CardTitle className="font-serif text-primary">Recent Submissions</CardTitle>
             <CardDescription>Latest work plans, daily logs, and vehicle requests across the diocese.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {feed.length === 0 && <p className="text-sm text-muted-foreground">No submissions yet.</p>}
             {feed.map((s) => (
-              <Link key={`${s.kind}-${s.id}`} to="/admin" className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2 text-sm hover:bg-muted">
-                <div className="min-w-0">
-                  <p className="truncate"><span className="font-medium">{s.user}</span> · {s.label}</p>
+              <Link key={`${s.kind}-${s.id}`} to="/admin" className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-muted/80 transition-colors">
+                <div className="min-w-1.0">
+                  <p className="truncate"><span className="font-semibold text-foreground">{s.user}</span> · {s.label}</p>
                   <p className="text-xs text-muted-foreground">{format(new Date(s.when), "PPp")}</p>
                 </div>
-                <Badge variant={s.kind === "plan" ? "default" : s.kind === "vehicle" ? "secondary" : "outline"}>{s.kind}{s.status ? ` · ${s.status}` : ""}</Badge>
+                <Badge className={s.kind === "plan" ? "bg-primary/15 text-primary border-primary/20" : s.kind === "vehicle" ? "bg-accent/15 text-accent border-accent/20" : "bg-secondary text-secondary-foreground"}>{s.kind}{s.status ? ` · ${s.status}` : ""}</Badge>
               </Link>
             ))}
           </CardContent>
         </Card>
       )}
 
+      {/* Leadership */}
       {(isHod || isSuperAdmin) && (
-        <Card>
+        <Card className="bg-gradient-to-br from-primary/[0.08] to-accent/[0.08]">
           <CardHeader>
-            <CardTitle className="font-serif">Leadership</CardTitle>
+            <CardTitle className="font-serif text-primary">Leadership</CardTitle>
             <CardDescription>{isSuperAdmin ? "Oversee all departments, approve vehicle requests, and review reports." : "Review your department's work plans, logs and reports."}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {(isHod || isSuperAdmin) && <Link to="/department"><Button variant="outline">Open department view</Button></Link>}
-            {isSuperAdmin && <Link to="/admin"><Button>Administration</Button></Link>}
+            {(isHod || isSuperAdmin) && <Link to="/department"><Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">Open department view</Button></Link>}
+            {isSuperAdmin && <Link to="/admin"><Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Administration</Button></Link>}
           </CardContent>
         </Card>
       )}
@@ -184,13 +192,16 @@ function Dashboard() {
 }
 
 function StatCard({ icon: Icon, title, value, to, tone = "muted" }: { icon: any; title: string; value: string; to: string; tone?: "success" | "warning" | "muted" }) {
-  const toneClass = tone === "success" ? "text-success" : tone === "warning" ? "text-warning-foreground" : "text-foreground";
+  const toneClass = tone === "success" ? "text-accent" : tone === "warning" ? "text-warning-foreground" : "text-foreground";
+  const cardAccent = tone === "success" ? "border-t-4 border-t-accent" : tone === "warning" ? "border-t-4 border-t-warning" : "border-t-4 border-t-primary/40";
   return (
     <Link to={to}>
-      <Card className="transition-shadow hover:shadow-md">
+      <Card className={`transition-shadow hover:shadow-lg ${cardAccent}`}>
         <CardContent className="p-5">
           <div className="flex items-center justify-between">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary"><Icon className="h-5 w-5" /></div>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${tone === "success" ? "bg-accent/15 text-accent" : tone === "warning" ? "bg-warning/15 text-warning-foreground" : "bg-primary/10 text-primary"}`}>
+              <Icon className="h-5 w-5" />
+            </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="mt-3 text-xs text-muted-foreground">{title}</p>
@@ -203,12 +214,12 @@ function StatCard({ icon: Icon, title, value, to, tone = "muted" }: { icon: any;
 
 function ChecklistRow({ done, title, to }: { done: boolean; title: string; to: string }) {
   return (
-    <Link to={to} className="flex items-center justify-between rounded-md border border-border bg-card px-4 py-3 hover:bg-muted">
+    <Link to={to} className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/60 transition-colors">
       <div className="flex items-center gap-3">
-        <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${done ? "border-success bg-success text-success-foreground" : "border-border"}`}>{done ? "✓" : ""}</span>
+        <span className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${done ? "border-accent bg-accent text-accent-foreground" : "border-muted-foreground/30"}`}>{done ? "✓" : ""}</span>
         <span className="text-sm">{title}</span>
       </div>
-      {done ? <Badge variant="secondary" className="bg-success/15 text-success">Done</Badge> : <Badge variant="outline">Pending</Badge>}
+      {done ? <Badge className="bg-accent/15 text-accent border-accent/20">Done</Badge> : <Badge variant="outline">Pending</Badge>}
     </Link>
   );
 }
