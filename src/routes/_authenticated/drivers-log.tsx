@@ -224,10 +224,11 @@ function DriversLogPage() {
 
     autoTable(doc, {
       startY: filterDept !== "all" ? 30 : 24,
-      head: [["Date", "Driver", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Pass.", "Status"]],
+      head: [["Date", "Driver", "Vehicle", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Pass.", "Status"]],
       body: inRange.map((l) => [
         format(parseISO(l.log_date), "yyyy-MM-dd"),
         drivers[l.user_id]?.full_name ?? "—",
+        vehicleLabel(l.vehicle_id),
         deptName(l.department_id),
         l.start_point,
         l.destination,
