@@ -126,6 +126,80 @@ function DepartmentPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-serif">Vehicle trips</CardTitle>
+          <CardDescription>Driver logs filed by department members.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-md border border-border p-3">
+              <p className="text-xs text-muted-foreground">My trips</p>
+              <p className="text-2xl font-semibold">{myTripCount}</p>
+              <p className="text-xs text-muted-foreground">{myDistance.toLocaleString()} km covered</p>
+            </div>
+            <div className="rounded-md border border-border p-3">
+              <p className="text-xs text-muted-foreground">Department trips</p>
+              <p className="text-2xl font-semibold">{trips.length}</p>
+              <p className="text-xs text-muted-foreground">{totalDeptDistance.toLocaleString()} km covered</p>
+            </div>
+            <div className="rounded-md border border-border p-3">
+              <p className="text-xs text-muted-foreground">Active drivers</p>
+              <p className="text-2xl font-semibold">{tripsByStaff.length}</p>
+              <p className="text-xs text-muted-foreground">staff with trips</p>
+            </div>
+          </div>
+
+          {tripsByStaff.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-semibold">Trips per staff</p>
+              <ul className="divide-y divide-border">
+                {tripsByStaff.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between py-2 text-sm">
+                    <div className="min-w-0">
+                      <p className="font-medium break-words">{s.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{s.position ?? "—"}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">{s.tripCount} trip{s.tripCount === 1 ? "" : "s"}</p>
+                      <p className="text-xs text-muted-foreground">{s.distance.toLocaleString()} km</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div>
+            <p className="mb-2 text-sm font-semibold">Recent trips</p>
+            {trips.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No trips logged yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {trips.slice(0, 15).map((t) => {
+                  const d = distance(t);
+                  return (
+                    <li key={t.id} className="rounded-md border border-border p-3 text-sm">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium break-words">{nameFor(t.user_id)} — {format(parseISO(t.log_date), "MMM d, yyyy")}</p>
+                          <p className="text-xs text-muted-foreground break-words">{t.start_point} → {t.destination}</p>
+                          <p className="text-xs text-muted-foreground break-words">{vehicleLabel(t.vehicle_id)}</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={t.status === "approved" ? "default" : "outline"} className={t.status === "approved" ? "bg-success text-success-foreground" : ""}>{t.status}</Badge>
+                          <p className="mt-1 text-xs text-muted-foreground">{d != null ? `${d.toLocaleString()} km` : "—"} · {t.passengers ?? 0} pax</p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Link to="/reports"><Button variant="outline"><FileBarChart className="mr-2 h-4 w-4" /> Generate monthly report for a staff member</Button></Link>
     </div>
   );
