@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Truck, CheckCircle2, XCircle, Pencil, Save, X } from "lucide-react";
+import { Truck, CheckCircle2, XCircle, Pencil, Save, X, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/drivers-log")({
   component: DriversLogPage,
