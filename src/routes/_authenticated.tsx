@@ -6,6 +6,7 @@ import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Us
 import { cn } from "@/lib/utils";
 import dioceseLogo from "@/assets/diocese-logo.jpg";
 import { OfficeAttendanceButton } from "@/components/OfficeAttendanceButton";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthLayout,
