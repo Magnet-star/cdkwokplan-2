@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Truck, CheckCircle2, XCircle, Pencil, Save, X } from "lucide-react";
+import { Truck, CheckCircle2, XCircle, Pencil, Save, X, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/drivers-log")({
   component: DriversLogPage,
@@ -80,6 +80,13 @@ function DriversLogPage() {
     load();
   };
 
+  const deleteLog = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this driver log? This cannot be undone.")) return;
+    const { error } = await supabase.from("driver_logs").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Log deleted");
+    load();
+  };
 
   const load = async () => {
     const [{ data: d }, { data: l }] = await Promise.all([
@@ -285,6 +292,11 @@ function DriversLogPage() {
                           <XCircle className="mr-1 h-4 w-4" /> Reject
                         </Button>
                       </>
+                    )}
+                    {isSuperAdmin && (
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteLog(l.id)}>
+                        <Trash2 className="mr-1 h-4 w-4" /> Delete log
+                      </Button>
                     )}
                   </div>
                 </>
