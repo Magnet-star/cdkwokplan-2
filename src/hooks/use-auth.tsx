@@ -19,6 +19,7 @@ interface AuthState {
   profile: Profile | null;
   roles: AppRole[];
   loading: boolean;
+  rolesLoaded: boolean;
   isSuperAdmin: boolean;
   isAdministrator: boolean;
   isHod: boolean;
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
 
   const loadProfile = async (uid: string) => {
     const [{ data: p }, { data: r }] = await Promise.all([
@@ -44,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     setProfile(p as Profile | null);
     setRoles(((r as { role: AppRole }[] | null) ?? []).map((x) => x.role));
+    setRolesLoaded(true);
   };
 
   useEffect(() => {
@@ -74,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     roles,
     loading,
+    rolesLoaded,
     isSuperAdmin: roles.includes("super_admin"),
     isAdministrator: roles.includes("administrator"),
     isHod: roles.includes("hod"),

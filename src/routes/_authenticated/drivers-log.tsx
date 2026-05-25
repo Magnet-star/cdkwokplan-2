@@ -38,7 +38,7 @@ interface Dept { id: string; name: string; hod_id: string | null }
 interface Profile { id: string; full_name: string }
 
 function DriversLogPage() {
-  const { user, isDriver, isHod, isSuperAdmin, canViewAll, profile } = useAuth();
+  const { user, isDriver, isHod, isSuperAdmin, canViewAll, profile, rolesLoaded } = useAuth();
   const [depts, setDepts] = useState<Dept[]>([]);
   const [drivers, setDrivers] = useState<Record<string, Profile>>({});
   const [logs, setLogs] = useState<DriverLog[]>([]);
@@ -124,12 +124,15 @@ function DriversLogPage() {
       <div>
         <h1 className="font-serif text-3xl">Drivers Log</h1>
         <p className="text-sm text-muted-foreground">Vehicle journey logbook. Drivers (and Super Admins) submit entries; everyone can view. The HOD of the selected department approves.</p>
-        {!isDriver && !isSuperAdmin && (
+        {!rolesLoaded && (
+          <p className="mt-2 text-xs text-muted-foreground">Loading your permissions…</p>
+        )}
+        {rolesLoaded && !isDriver && !isSuperAdmin && (
           <p className="mt-2 text-xs text-muted-foreground">You don't have the Driver role, so you can only view logs. Ask a Super Admin to assign you the Driver role from Administration.</p>
         )}
       </div>
 
-      {(isDriver || isSuperAdmin) && (
+      {rolesLoaded && (isDriver || isSuperAdmin) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Truck className="h-5 w-5" /> New journey entry</CardTitle>
