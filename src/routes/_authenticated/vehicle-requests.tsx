@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { Car, Plus } from "lucide-react";
+import { Car, Plus, Download } from "lucide-react";
+import { downloadVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
 
 export const Route = createFileRoute("/_authenticated/vehicle-requests")({
   component: VehicleRequestsPage,
