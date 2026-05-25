@@ -38,7 +38,7 @@ interface Dept { id: string; name: string; hod_id: string | null }
 interface Profile { id: string; full_name: string }
 
 function DriversLogPage() {
-  const { user, isDriver, isHod, isSuperAdmin, canViewAll, profile } = useAuth();
+  const { user, isDriver, isHod, isSuperAdmin, canViewAll, profile, rolesLoaded } = useAuth();
   const [depts, setDepts] = useState<Dept[]>([]);
   const [drivers, setDrivers] = useState<Record<string, Profile>>({});
   const [logs, setLogs] = useState<DriverLog[]>([]);
