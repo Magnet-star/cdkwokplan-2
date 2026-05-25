@@ -39,7 +39,7 @@ function AuthLayout() {
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex" style={{ backgroundColor: '#660000' }}>
         <div className="flex items-center gap-2 border-b border-white/20 px-5 py-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white">
             <Church className="h-5 w-5" />
           </div>
           <div>
@@ -55,8 +55,8 @@ function AuthLayout() {
                 key={to}
                 to={to}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                  active ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent",
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-bold text-white transition-colors",
+                  active ? "bg-white/20 text-white" : "hover:bg-white/10",
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -65,10 +65,10 @@ function AuthLayout() {
             );
           })}
         </nav>
-        <div className="border-t border-sidebar-border p-4">
-          <p className="truncate text-sm font-medium">{profile?.full_name ?? user.email}</p>
-          <p className="mt-0.5 text-xs text-sidebar-foreground/70">{roleLabel}</p>
-          <Button onClick={() => { signOut().then(() => navigate({ to: "/" })); }} variant="ghost" size="sm" className="mt-3 w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground">
+        <div className="border-t border-white/20 p-4">
+          <p className="truncate text-sm font-bold text-white">{profile?.full_name ?? user.email}</p>
+          <p className="mt-0.5 text-xs font-bold text-white/70">{roleLabel}</p>
+          <Button onClick={() => { signOut().then(() => navigate({ to: "/" })); }} variant="ghost" size="sm" className="mt-3 w-full justify-start font-bold text-white hover:bg-white/10 hover:text-white">
             <LogOut className="mr-2 h-4 w-4" /> Sign out
           </Button>
         </div>
