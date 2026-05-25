@@ -124,7 +124,7 @@ function Dashboard() {
       {/* Welcome */}
       <div className="rounded-xl bg-primary p-5 text-white shadow-md">
         <p className="text-sm font-bold text-white">Welcome back</p>
-        <h1 className="font-serif text-3xl font-bold text-white md:text-4xl">{profile?.full_name ?? "Friend"}</h1>
+        <h1 className="text-3xl font-bold text-white md:text-4xl" style={{ color: "#ffffff" }}>{profile?.full_name ?? "Friend"}</h1>
         <p className="mt-1 text-sm font-bold text-white">
           {dept ? <>Department: <span className="font-bold text-white">{dept}</span> · </> : "No department assigned yet · "}
           Week of {weekLabel}
