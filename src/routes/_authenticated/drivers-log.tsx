@@ -353,7 +353,7 @@ function DriversLogPage() {
           <CardDescription>{canViewAll ? "Showing all logs across the diocese." : isHod ? "You can approve logs assigned to your department." : "Read-only view."}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-[1fr,1fr,auto]">
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr,1fr,auto]">
             <div>
               <Label className="text-xs">Search</Label>
               <div className="relative">
@@ -371,7 +371,7 @@ function DriversLogPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end gap-2">
+            <div className="flex flex-wrap items-end gap-2 sm:col-span-2 md:col-span-1">
               <Button size="sm" variant="outline" onClick={() => downloadPdf("daily")}><Download className="mr-1 h-4 w-4" />Daily</Button>
               <Button size="sm" variant="outline" onClick={() => downloadPdf("weekly")}><Download className="mr-1 h-4 w-4" />Weekly</Button>
               <Button size="sm" variant="outline" onClick={() => downloadPdf("monthly")}><Download className="mr-1 h-4 w-4" />Monthly</Button>
@@ -400,9 +400,9 @@ function DriversLogPage() {
           {filteredLogs.map((l) => (
             <div key={l.id} className="rounded-md border border-border p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{l.start_point} → {l.destination}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="break-words text-xs text-muted-foreground">
                     {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)} · Vehicle: {vehicleLabel(l.vehicle_id)}
                   </p>
                 </div>
@@ -410,27 +410,27 @@ function DriversLogPage() {
                   {l.status}
                 </Badge>
               </div>
-              <div className="mt-2 grid gap-2 text-sm md:grid-cols-4">
+              <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2 md:grid-cols-4">
                 <div><span className="text-muted-foreground">Start KM:</span> {l.starting_km}</div>
                 <div><span className="text-muted-foreground">Close KM:</span> {l.closing_km ?? "—"}</div>
                 <div><span className="text-muted-foreground">Distance:</span> {l.closing_km != null ? (Number(l.closing_km) - Number(l.starting_km)).toFixed(1) : "—"}</div>
                 <div><span className="text-muted-foreground">Passengers:</span> {l.passengers ?? 0}</div>
               </div>
               {editingId === l.id ? (
-                <div className="mt-3 grid gap-3 rounded-md border border-dashed border-border p-3 md:grid-cols-2">
+                <div className="mt-3 grid gap-3 rounded-md border border-dashed border-border p-3 sm:grid-cols-2">
                   <div>
                     <Label>Closing kilometers</Label>
                     <Input type="number" step="0.1" value={editForm.closing_km} onChange={(e) => setEditForm({ ...editForm, closing_km: e.target.value })} />
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2">
                     <Label>Vehicle condition at start</Label>
                     <Textarea rows={2} value={editForm.condition_start} onChange={(e) => setEditForm({ ...editForm, condition_start: e.target.value })} />
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2">
                     <Label>Vehicle condition at end</Label>
                     <Textarea rows={2} value={editForm.condition_end} onChange={(e) => setEditForm({ ...editForm, condition_end: e.target.value })} />
                   </div>
-                  <div className="flex gap-2 md:col-span-2">
+                  <div className="flex flex-wrap gap-2 sm:col-span-2">
                     <Button size="sm" onClick={() => saveEdit(l.id)}><Save className="mr-1 h-4 w-4" /> Save</Button>
                     <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="mr-1 h-4 w-4" /> Cancel</Button>
                   </div>
@@ -438,9 +438,9 @@ function DriversLogPage() {
               ) : (
                 <>
                   {(l.condition_start || l.condition_end) && (
-                    <div className="mt-2 grid gap-2 text-sm md:grid-cols-2">
-                      {l.condition_start && <div><span className="text-muted-foreground">Condition (start):</span> {l.condition_start}</div>}
-                      {l.condition_end && <div><span className="text-muted-foreground">Condition (end):</span> {l.condition_end}</div>}
+                    <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                      {l.condition_start && <div className="break-words"><span className="text-muted-foreground">Condition (start):</span> {l.condition_start}</div>}
+                      {l.condition_end && <div className="break-words"><span className="text-muted-foreground">Condition (end):</span> {l.condition_end}</div>}
                     </div>
                   )}
                   {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
