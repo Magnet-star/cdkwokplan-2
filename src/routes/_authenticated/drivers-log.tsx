@@ -239,26 +239,57 @@ function DriversLogPage() {
                 <div><span className="text-muted-foreground">Distance:</span> {l.closing_km != null ? (Number(l.closing_km) - Number(l.starting_km)).toFixed(1) : "—"}</div>
                 <div><span className="text-muted-foreground">Passengers:</span> {l.passengers ?? 0}</div>
               </div>
-              {(l.condition_start || l.condition_end) && (
-                <div className="mt-2 grid gap-2 text-sm md:grid-cols-2">
-                  {l.condition_start && <div><span className="text-muted-foreground">Condition (start):</span> {l.condition_start}</div>}
-                  {l.condition_end && <div><span className="text-muted-foreground">Condition (end):</span> {l.condition_end}</div>}
+              {editingId === l.id ? (
+                <div className="mt-3 grid gap-3 rounded-md border border-dashed border-border p-3 md:grid-cols-2">
+                  <div>
+                    <Label>Closing kilometers</Label>
+                    <Input type="number" step="0.1" value={editForm.closing_km} onChange={(e) => setEditForm({ ...editForm, closing_km: e.target.value })} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Vehicle condition at start</Label>
+                    <Textarea rows={2} value={editForm.condition_start} onChange={(e) => setEditForm({ ...editForm, condition_start: e.target.value })} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Vehicle condition at end</Label>
+                    <Textarea rows={2} value={editForm.condition_end} onChange={(e) => setEditForm({ ...editForm, condition_end: e.target.value })} />
+                  </div>
+                  <div className="flex gap-2 md:col-span-2">
+                    <Button size="sm" onClick={() => saveEdit(l.id)}><Save className="mr-1 h-4 w-4" /> Save</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="mr-1 h-4 w-4" /> Cancel</Button>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  {(l.condition_start || l.condition_end) && (
+                    <div className="mt-2 grid gap-2 text-sm md:grid-cols-2">
+                      {l.condition_start && <div><span className="text-muted-foreground">Condition (start):</span> {l.condition_start}</div>}
+                      {l.condition_end && <div><span className="text-muted-foreground">Condition (end):</span> {l.condition_end}</div>}
+                    </div>
+                  )}
+                  {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {l.user_id === user?.id && (
+                      <Button size="sm" variant="outline" onClick={() => startEdit(l)}>
+                        <Pencil className="mr-1 h-4 w-4" /> Update trip details
+                      </Button>
+                    )}
+                    {canApprove(l) && (
+                      <>
+                        <Button size="sm" onClick={() => decide(l.id, "approved")}>
+                          <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => {
+                          const note = window.prompt("Reason for rejection (optional):") ?? "";
+                          decide(l.id, "rejected", note || undefined);
+                        }}>
+                          <XCircle className="mr-1 h-4 w-4" /> Reject
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </>
               )}
-              {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
-              {canApprove(l) && (
-                <div className="mt-3 flex gap-2">
-                  <Button size="sm" onClick={() => decide(l.id, "approved")}>
-                    <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => {
-                    const note = window.prompt("Reason for rejection (optional):") ?? "";
-                    decide(l.id, "rejected", note || undefined);
-                  }}>
-                    <XCircle className="mr-1 h-4 w-4" /> Reject
-                  </Button>
-                </div>
-              )}
+
             </div>
           ))}
         </CardContent>
