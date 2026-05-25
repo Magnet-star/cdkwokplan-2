@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/department")({
 });
 
 function DepartmentPage() {
-  const { profile, isSuperAdmin, isAdministrator, isHod } = useAuth();
+  const { profile } = useAuth();
   const [deptId, setDeptId] = useState<string | null>(null);
   const [deptName, setDeptName] = useState<string>("");
   const [staff, setStaff] = useState<any[]>([]);
