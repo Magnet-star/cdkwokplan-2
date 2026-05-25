@@ -188,7 +188,7 @@ function WorkPlansPage() {
                   <CardTitle className="font-serif text-xl">{format(d, "EEEE")}</CardTitle>
                   <CardDescription>{format(d, "PPP")}</CardDescription>
                 </div>
-                {!submitted && <Button size="sm" variant="outline" onClick={() => addItem(d)}><Plus className="mr-1 h-3.5 w-3.5" />Add activity</Button>}
+                {<Button size="sm" variant="outline" onClick={() => addItem(d)}><Plus className="mr-1 h-3.5 w-3.5" />Add activity</Button>}
               </CardHeader>
               <CardContent className="space-y-3">
                 {dayItems.length === 0 && <p className="text-sm text-muted-foreground italic">No activities planned.</p>}
@@ -197,35 +197,33 @@ function WorkPlansPage() {
                     <div className="grid gap-3 md:grid-cols-2">
                       <div className="md:col-span-2">
                         <Label>Activity</Label>
-                        <Textarea rows={2} disabled={submitted} value={it.activity} onChange={(e) => updateItem(idx, { activity: e.target.value })} placeholder="What will you do?" />
+                        <Textarea rows={2} value={it.activity} onChange={(e) => updateItem(idx, { activity: e.target.value })} placeholder="What will you do?" />
                       </div>
                       <div>
                         <Label>Location</Label>
-                        <Input disabled={submitted} value={it.location} onChange={(e) => updateItem(idx, { location: e.target.value })} placeholder="Where?" />
+                        <Input value={it.location} onChange={(e) => updateItem(idx, { location: e.target.value })} placeholder="Where?" />
                       </div>
                       <div>
                         <Label>Notes</Label>
-                        <Input disabled={submitted} value={it.notes} onChange={(e) => updateItem(idx, { notes: e.target.value })} placeholder="Optional" />
+                        <Input value={it.notes} onChange={(e) => updateItem(idx, { notes: e.target.value })} placeholder="Optional" />
                       </div>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-5">
                       <label className="flex items-center gap-2 text-sm">
-                        <Checkbox disabled={submitted} checked={it.needs_vehicle} onCheckedChange={(v) => updateItem(idx, { needs_vehicle: !!v })} /> Needs vehicle
+                        <Checkbox checked={it.needs_vehicle} onCheckedChange={(v) => updateItem(idx, { needs_vehicle: !!v })} /> Needs vehicle
                       </label>
                       <label className="flex items-center gap-2 text-sm">
-                        <Checkbox disabled={submitted} checked={it.needs_money} onCheckedChange={(v) => updateItem(idx, { needs_money: !!v })} /> Needs money
+                        <Checkbox checked={it.needs_money} onCheckedChange={(v) => updateItem(idx, { needs_money: !!v })} /> Needs money
                       </label>
                       {it.needs_money && (
                         <div className="flex items-center gap-2">
                           <Label className="text-xs">Amount (KES)</Label>
-                          <Input disabled={submitted} type="number" className="w-32" value={it.money_amount} onChange={(e) => updateItem(idx, { money_amount: e.target.value })} />
+                          <Input type="number" className="w-32" value={it.money_amount} onChange={(e) => updateItem(idx, { money_amount: e.target.value })} />
                         </div>
                       )}
-                      {!submitted && (
-                        <Button size="sm" variant="ghost" className="ml-auto text-destructive hover:text-destructive" onClick={() => removeItem(idx)}>
-                          <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
-                        </Button>
-                      )}
+                      {<Button size="sm" variant="ghost" className="ml-auto text-destructive hover:text-destructive" onClick={() => removeItem(idx)}>
+                        <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
+                      </Button>}
                     </div>
                   </div>
                 ))}
