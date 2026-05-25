@@ -43,7 +43,7 @@ function AuthLayout() {
             <Church className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-serif text-base leading-tight">Diocese of Kitale</p>
+            <p className="font-serif text-base font-bold leading-tight" style={{ color: "#ffffff" }}>Diocese of Kitale</p>
             <p className="text-[11px] text-sidebar-foreground/70">Secretariat</p>
           </div>
         </div>
@@ -79,7 +79,7 @@ function AuthLayout() {
         <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 md:hidden">
           <div className="flex items-center gap-2">
             <Church className="h-5 w-5 text-primary" />
-            <span className="font-serif">Diocese of Kitale</span>
+            <span className="font-serif font-bold" style={{ color: "#ffffff" }}>Diocese of Kitale</span>
           </div>
           <Button variant="ghost" size="sm" onClick={() => { signOut().then(() => navigate({ to: "/" })); }}>
             <LogOut className="h-4 w-4" />
