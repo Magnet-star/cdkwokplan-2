@@ -201,6 +201,68 @@ export type Database = {
           },
         ]
       }
+      leave_requests: {
+        Row: {
+          applicant_name: string
+          approved_at: string | null
+          approved_by: string | null
+          approver_notes: string | null
+          contact_while_away: string
+          created_at: string
+          days_requested: number
+          department_id: string | null
+          from_date: string
+          id: string
+          reason: string | null
+          status: string
+          to_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applicant_name: string
+          approved_at?: string | null
+          approved_by?: string | null
+          approver_notes?: string | null
+          contact_while_away: string
+          created_at?: string
+          days_requested: number
+          department_id?: string | null
+          from_date: string
+          id?: string
+          reason?: string | null
+          status?: string
+          to_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applicant_name?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          approver_notes?: string | null
+          contact_while_away?: string
+          created_at?: string
+          days_requested?: number
+          department_id?: string | null
+          from_date?: string
+          id?: string
+          reason?: string | null
+          status?: string
+          to_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
