@@ -45,6 +45,7 @@ function WorkPlansPage() {
   const [signature, setSignature] = useState("");
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState<Plan[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
 
   const weekStartStr = useMemo(() => format(weekStart, "yyyy-MM-dd"), [weekStart]);
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -57,6 +58,7 @@ function WorkPlansPage() {
     if (p) {
       const planRow = p as Plan;
       setPlan(planRow);
+      setIsEditing(false);
       setSignature(planRow.signature ?? "");
       const { data: its } = await supabase
         .from("work_plan_items").select("*").eq("work_plan_id", planRow.id).order("activity_date");
@@ -74,6 +76,7 @@ function WorkPlansPage() {
       setPlan(null);
       setItems([]);
       setSignature("");
+      setIsEditing(false);
     }
 
     const { data: hist } = await supabase
@@ -149,6 +152,7 @@ function WorkPlansPage() {
     await saveItems(plan.id);
     await supabase.from("work_plans").update({ updated_at: new Date().toISOString() }).eq("id", plan.id);
     toast.success("Work plan updated");
+    setIsEditing(false);
     await load();
     setBusy(false);
   };
@@ -171,82 +175,131 @@ function WorkPlansPage() {
         </div>
       </div>
 
-      {submitted && (
+      {submitted && !isEditing && (
         <div className="rounded-md border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
           Submitted on {plan?.submitted_at ? format(parseISO(plan.submitted_at), "PPp") : ""} — signed by {plan?.signature}.
         </div>
       )}
 
-      <div className="space-y-4">
-        {weekDays.map((d) => {
-          const dStr = format(d, "yyyy-MM-dd");
-          const dayItems = items.map((it, idx) => ({ it, idx })).filter(({ it }) => it.activity_date === dStr);
-          return (
-            <Card key={dStr}>
-              <CardHeader className="flex flex-row items-center justify-between gap-3 pb-3">
-                <div>
+      {/* Read-only view for submitted plans when not editing */}
+      {submitted && !isEditing ? (
+        <div className="space-y-4">
+          {weekDays.map((d) => {
+            const dStr = format(d, "yyyy-MM-dd");
+            const dayItems = items.filter((it) => it.activity_date === dStr);
+            if (dayItems.length === 0) return null;
+            return (
+              <Card key={dStr}>
+                <CardHeader className="pb-3">
                   <CardTitle className="font-serif text-xl">{format(d, "EEEE")}</CardTitle>
                   <CardDescription>{format(d, "PPP")}</CardDescription>
-                </div>
-                {<Button size="sm" variant="outline" onClick={() => addItem(d)}><Plus className="mr-1 h-3.5 w-3.5" />Add activity</Button>}
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {dayItems.length === 0 && <p className="text-sm text-muted-foreground italic">No activities planned.</p>}
-                {dayItems.map(({ it, idx }) => (
-                  <div key={idx} className="rounded-lg border border-border bg-muted/30 p-4">
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="md:col-span-2">
-                        <Label>Activity</Label>
-                        <Textarea rows={2} value={it.activity} onChange={(e) => updateItem(idx, { activity: e.target.value })} placeholder="What will you do?" />
-                      </div>
-                      <div>
-                        <Label>Location</Label>
-                        <Input value={it.location} onChange={(e) => updateItem(idx, { location: e.target.value })} placeholder="Where?" />
-                      </div>
-                      <div>
-                        <Label>Notes</Label>
-                        <Input value={it.notes} onChange={(e) => updateItem(idx, { notes: e.target.value })} placeholder="Optional" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {dayItems.map((it, idx) => (
+                    <div key={idx} className="rounded-lg border border-border bg-muted/30 p-4">
+                      <div className="font-medium">{it.activity}</div>
+                      <div className="mt-1 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        {it.location && <span>Location: {it.location}</span>}
+                        {it.notes && <span>Notes: {it.notes}</span>}
+                        {it.needs_vehicle && <Badge variant="outline">Needs vehicle</Badge>}
+                        {it.needs_money && <Badge variant="outline">Money: KES {it.money_amount}</Badge>}
                       </div>
                     </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-5">
-                      <label className="flex items-center gap-2 text-sm">
-                        <Checkbox checked={it.needs_vehicle} onCheckedChange={(v) => updateItem(idx, { needs_vehicle: !!v })} /> Needs vehicle
-                      </label>
-                      <label className="flex items-center gap-2 text-sm">
-                        <Checkbox checked={it.needs_money} onCheckedChange={(v) => updateItem(idx, { needs_money: !!v })} /> Needs money
-                      </label>
-                      {it.needs_money && (
-                        <div className="flex items-center gap-2">
-                          <Label className="text-xs">Amount (KES)</Label>
-                          <Input type="number" className="w-32" value={it.money_amount} onChange={(e) => updateItem(idx, { money_amount: e.target.value })} />
+                  ))}
+                </CardContent>
+              </Card>
+            );
+          })}
+          <Card>
+            <CardHeader><CardTitle className="font-serif">Signature</CardTitle></CardHeader>
+            <CardContent>
+              <p className="text-sm">Signed by: <span className="font-medium">{signature}</span></p>
+              <div className="mt-4">
+                <Button onClick={() => setIsEditing(true)}>Edit</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        /* Editable form */
+        <>
+          <div className="space-y-4">
+            {weekDays.map((d) => {
+              const dStr = format(d, "yyyy-MM-dd");
+              const dayItems = items.map((it, idx) => ({ it, idx })).filter(({ it }) => it.activity_date === dStr);
+              return (
+                <Card key={dStr}>
+                  <CardHeader className="flex flex-row items-center justify-between gap-3 pb-3">
+                    <div>
+                      <CardTitle className="font-serif text-xl">{format(d, "EEEE")}</CardTitle>
+                      <CardDescription>{format(d, "PPP")}</CardDescription>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => addItem(d)}><Plus className="mr-1 h-3.5 w-3.5" />Add activity</Button>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {dayItems.length === 0 && <p className="text-sm text-muted-foreground italic">No activities planned.</p>}
+                    {dayItems.map(({ it, idx }) => (
+                      <div key={idx} className="rounded-lg border border-border bg-muted/30 p-4">
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="md:col-span-2">
+                            <Label>Activity</Label>
+                            <Textarea rows={2} value={it.activity} onChange={(e) => updateItem(idx, { activity: e.target.value })} placeholder="What will you do?" />
+                          </div>
+                          <div>
+                            <Label>Location</Label>
+                            <Input value={it.location} onChange={(e) => updateItem(idx, { location: e.target.value })} placeholder="Where?" />
+                          </div>
+                          <div>
+                            <Label>Notes</Label>
+                            <Input value={it.notes} onChange={(e) => updateItem(idx, { notes: e.target.value })} placeholder="Optional" />
+                          </div>
                         </div>
-                      )}
-                      {<Button size="sm" variant="ghost" className="ml-auto text-destructive hover:text-destructive" onClick={() => removeItem(idx)}>
-                        <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
-                      </Button>}
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-5">
+                          <label className="flex items-center gap-2 text-sm">
+                            <Checkbox checked={it.needs_vehicle} onCheckedChange={(v) => updateItem(idx, { needs_vehicle: !!v })} /> Needs vehicle
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <Checkbox checked={it.needs_money} onCheckedChange={(v) => updateItem(idx, { needs_money: !!v })} /> Needs money
+                          </label>
+                          {it.needs_money && (
+                            <div className="flex items-center gap-2">
+                              <Label className="text-xs">Amount (KES)</Label>
+                              <Input type="number" className="w-32" value={it.money_amount} onChange={(e) => updateItem(idx, { money_amount: e.target.value })} />
+                            </div>
+                          )}
+                          <Button size="sm" variant="ghost" className="ml-auto text-destructive hover:text-destructive" onClick={() => removeItem(idx)}>
+                            <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-      <Card>
-        <CardHeader><CardTitle className="font-serif">Signature & Submit</CardTitle><CardDescription>By submitting, you confirm this is your work plan for the week.</CardDescription></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="max-w-md">
-            <Label>Signature (type your full name)</Label>
-            <Input disabled={submitted} value={signature} onChange={(e) => setSignature(e.target.value)} placeholder={profile?.full_name ?? ""} />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {!submitted && <Button variant="outline" onClick={handleSaveDraft} disabled={busy}>Save draft</Button>}
-            {!submitted && <Button onClick={handleSubmit} disabled={busy}>Submit work plan</Button>}
-            {submitted && <Button onClick={handleUpdate} disabled={busy}>Update</Button>}
-          </div>
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader><CardTitle className="font-serif">Signature & Submit</CardTitle><CardDescription>By submitting, you confirm this is your work plan for the week.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="max-w-md">
+                <Label>Signature (type your full name)</Label>
+                <Input disabled={submitted} value={signature} onChange={(e) => setSignature(e.target.value)} placeholder={profile?.full_name ?? ""} />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {!submitted && <Button variant="outline" onClick={handleSaveDraft} disabled={busy}>Save draft</Button>}
+                {!submitted && <Button onClick={handleSubmit} disabled={busy}>Submit work plan</Button>}
+                {submitted && isEditing && (
+                  <>
+                    <Button variant="outline" onClick={() => { setIsEditing(false); load(); }} disabled={busy}>Cancel</Button>
+                    <Button onClick={handleUpdate} disabled={busy}>Update</Button>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       <Separator />
       <div>
