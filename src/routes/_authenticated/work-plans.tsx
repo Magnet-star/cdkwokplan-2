@@ -152,6 +152,7 @@ function WorkPlansPage() {
     await saveItems(plan.id);
     await supabase.from("work_plans").update({ updated_at: new Date().toISOString() }).eq("id", plan.id);
     toast.success("Work plan updated");
+    setIsEditing(false);
     await load();
     setBusy(false);
   };
