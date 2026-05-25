@@ -131,6 +131,19 @@ function VehicleRequestsPage() {
               {r.approver_notes && (
                 <p className="mt-2 rounded-md bg-muted px-3 py-2 text-xs"><strong>Secretary's note:</strong> {r.approver_notes}</p>
               )}
+              <div className="mt-3 flex justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => downloadVehicleRequestPDF(r, {
+                    fullName: profile?.full_name ?? "—",
+                    email: profile?.email,
+                    position: profile?.position,
+                  })}
+                >
+                  <Download className="mr-1 h-4 w-4" />Download PDF
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
