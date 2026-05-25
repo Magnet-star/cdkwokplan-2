@@ -281,7 +281,7 @@ function AdminPage() {
         </TabsList>
 
         <TabsContent value="attendance" className="space-y-3 pt-4">
-          <AttendanceLogPanel users={users} depts={depts} />
+          <AttendanceLogPanel />
         </TabsContent>
 
         <TabsContent value="events" className="space-y-4 pt-4">
