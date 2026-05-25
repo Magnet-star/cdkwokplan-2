@@ -149,6 +149,8 @@ function VehicleRequestsPage() {
                     fullName: profile?.full_name ?? "—",
                     email: profile?.email,
                     position: profile?.position,
+                    departmentName: deptName,
+                    hodName: hodName,
                   })}
                 >
                   <Download className="mr-1 h-4 w-4" />Download PDF
