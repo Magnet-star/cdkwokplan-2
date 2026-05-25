@@ -82,13 +82,19 @@ export function downloadVehicleRequestPDF(req: VehicleRequestPDF, requester: Veh
   if (req.approved_at) row("Decision date:", format(parseISO(req.approved_at), "PPp"));
   if (req.approver_notes) row("Secretary's note:", req.approver_notes);
 
-  y = Math.max(y + 20, 230);
+  y = Math.max(y + 24, 230);
   doc.setDrawColor(120);
   doc.line(14, y, 90, y);
   doc.line(pageW - 90, y, pageW - 14, y);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-  doc.text("Requester signature", 14, y + 5);
-  doc.text("Diocesan Secretary", pageW - 90, y + 5);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+  doc.text(requester.hodName ?? "—", 14, y + 5);
+  doc.text(DIOCESAN_SECRETARY, pageW - 90, y + 5);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(80);
+  doc.text(`HOD — ${requester.departmentName ?? "Department"}`, 14, y + 10);
+  doc.text("Diocesan Secretary", pageW - 90, y + 10);
+
+  doc.setFontSize(8); doc.setTextColor(120);
+  doc.text(`Generated ${format(new Date(), "PPp")}`, 14, doc.internal.pageSize.getHeight() - 8);
 
   doc.setFontSize(8); doc.setTextColor(120);
   doc.text(`Generated ${format(new Date(), "PPp")}`, 14, doc.internal.pageSize.getHeight() - 8);
