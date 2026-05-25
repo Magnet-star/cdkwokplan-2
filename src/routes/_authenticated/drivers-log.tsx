@@ -300,6 +300,17 @@ function DriversLogPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="md:col-span-2">
+                <Label>Vehicle used</Label>
+                <Select value={form.vehicle_id} onValueChange={(v) => setForm({ ...form, vehicle_id: v })}>
+                  <SelectTrigger><SelectValue placeholder={vehicles.filter(v=>v.active).length ? "Select vehicle" : "No vehicles registered — ask Super Admin"} /></SelectTrigger>
+                  <SelectContent>
+                    {vehicles.filter((v) => v.active).map((v) => (
+                      <SelectItem key={v.id} value={v.id}>{v.registration}{v.make_model ? ` · ${v.make_model}` : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <Label>Start point</Label>
                 <Input required value={form.start_point} onChange={(e) => setForm({ ...form, start_point: e.target.value })} />
