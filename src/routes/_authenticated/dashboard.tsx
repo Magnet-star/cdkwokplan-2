@@ -164,12 +164,12 @@ function Dashboard() {
           <CardContent className="space-y-2">
             {feed.length === 0 && <p className="text-sm text-muted-foreground">No submissions yet.</p>}
             {feed.map((s) => (
-              <Link key={`${s.kind}-${s.id}`} to="/admin" className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-muted/80 transition-colors overflow-hidden">
-                <div className="min-w-1 flex-1 overflow-hidden">
-                  <p className="truncate"><span className="font-semibold text-foreground">{s.user}</span> · {s.label}</p>
+              <Link key={`${s.kind}-${s.id}`} to="/admin" className="flex w-full flex-col gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-muted/80 transition-colors sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="break-words"><span className="font-semibold text-foreground">{s.user}</span> · {s.label}</p>
                   <p className="text-xs text-muted-foreground">{format(new Date(s.when), "PPp")}</p>
                 </div>
-                <Badge className={`shrink-0 whitespace-nowrap ${s.kind === "plan" ? "bg-primary/15 text-primary border-primary/20" : s.kind === "vehicle" ? "bg-accent/15 text-accent border-accent/20" : "bg-secondary text-secondary-foreground"}`}>{s.kind}{s.status ? ` · ${s.status}` : ""}</Badge>
+                <Badge className={`shrink-0 self-start whitespace-nowrap ${s.kind === "plan" ? "bg-primary/15 text-primary border-primary/20" : s.kind === "vehicle" ? "bg-accent/15 text-accent border-accent/20" : "bg-secondary text-secondary-foreground"}`}>{s.kind}{s.status ? ` · ${s.status}` : ""}</Badge>
               </Link>
             ))}
           </CardContent>
