@@ -86,22 +86,6 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <p className="text-sm text-muted-foreground">Welcome back</p>
-        <h1 className="font-serif text-3xl text-foreground md:text-4xl">{profile?.full_name ?? "Friend"}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {dept ? <>Department: <span className="font-medium text-foreground">{dept}</span> · </> : "No department assigned yet · "}
-          Week of {weekLabel}
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={ClipboardList} title="This week's plan" value={stats?.thisWeekPlan ? (stats.thisWeekPlan.status === "submitted" ? "Submitted" : "Draft") : "Not started"} tone={stats?.thisWeekPlan?.status === "submitted" ? "success" : stats?.thisWeekPlan ? "warning" : "muted"} to="/work-plans" />
-        <StatCard icon={Car} title="My vehicle requests (week)" value={String(stats?.myVehicles ?? 0)} to="/vehicle-requests" />
-        <StatCard icon={BookText} title="Days logged this week" value={String(stats?.daysLogged ?? 0)} to="/daily-log" />
-        <StatCard icon={FileBarChart} title={isSuperAdmin ? "Pending vehicle approvals" : "Monthly reports"} value={isSuperAdmin ? String(stats?.pendingVehicles ?? 0) : "Generate"} to={isSuperAdmin ? "/admin" : "/reports"} tone={isSuperAdmin && (stats?.pendingVehicles ?? 0) > 0 ? "warning" : "muted"} />
-      </div>
-
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -134,6 +118,21 @@ function Dashboard() {
         </CardContent>
       </Card>
 
+      <div>
+        <p className="text-sm text-muted-foreground">Welcome back</p>
+        <h1 className="font-serif text-3xl text-foreground md:text-4xl">{profile?.full_name ?? "Friend"}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {dept ? <>Department: <span className="font-medium text-foreground">{dept}</span> · </> : "No department assigned yet · "}
+          Week of {weekLabel}
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={ClipboardList} title="This week's plan" value={stats?.thisWeekPlan ? (stats.thisWeekPlan.status === "submitted" ? "Submitted" : "Draft") : "Not started"} tone={stats?.thisWeekPlan?.status === "submitted" ? "success" : stats?.thisWeekPlan ? "warning" : "muted"} to="/work-plans" />
+        <StatCard icon={Car} title="My vehicle requests (week)" value={String(stats?.myVehicles ?? 0)} to="/vehicle-requests" />
+        <StatCard icon={BookText} title="Days logged this week" value={String(stats?.daysLogged ?? 0)} to="/daily-log" />
+        <StatCard icon={FileBarChart} title={isSuperAdmin ? "Pending vehicle approvals" : "Monthly reports"} value={isSuperAdmin ? String(stats?.pendingVehicles ?? 0) : "Generate"} to={isSuperAdmin ? "/admin" : "/reports"} tone={isSuperAdmin && (stats?.pendingVehicles ?? 0) > 0 ? "warning" : "muted"} />
+      </div>
 
       <Card>
         <CardHeader>
