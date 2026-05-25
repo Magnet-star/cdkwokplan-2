@@ -45,6 +45,7 @@ function WorkPlansPage() {
   const [signature, setSignature] = useState("");
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState<Plan[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
 
   const weekStartStr = useMemo(() => format(weekStart, "yyyy-MM-dd"), [weekStart]);
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
