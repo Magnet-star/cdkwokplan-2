@@ -243,6 +243,7 @@ function WorkPlansPage() {
           <div className="flex flex-wrap gap-2">
             {!submitted && <Button variant="outline" onClick={handleSaveDraft} disabled={busy}>Save draft</Button>}
             {!submitted && <Button onClick={handleSubmit} disabled={busy}>Submit work plan</Button>}
+            {submitted && <Button onClick={handleUpdate} disabled={busy}>Update</Button>}
           </div>
         </CardContent>
       </Card>
