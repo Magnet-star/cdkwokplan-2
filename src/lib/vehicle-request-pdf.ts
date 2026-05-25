@@ -17,7 +17,6 @@ export interface VehicleRequestPDF {
 
 export interface VehicleRequester {
   fullName: string;
-  email?: string | null;
   departmentName?: string | null;
   position?: string | null;
   hodName?: string | null;
@@ -57,7 +56,6 @@ export function downloadVehicleRequestPDF(req: VehicleRequestPDF, requester: Veh
   };
 
   row("Requester:", requester.fullName);
-  if (requester.email) row("Email:", requester.email);
   if (requester.departmentName) row("Department:", requester.departmentName);
   if (requester.position) row("Position:", requester.position);
   row("Date submitted:", format(parseISO(req.created_at), "PPp"));
