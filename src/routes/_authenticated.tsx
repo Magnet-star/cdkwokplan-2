@@ -31,6 +31,7 @@ function AuthLayout() {
     { to: "/daily-log", label: "Daily Log", icon: BookText, show: true },
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart, show: true },
     { to: "/department", label: "My Department", icon: Building2, show: true },
+    { to: "/leave-requests", label: "Leave Requests", icon: CalendarDays, show: true },
     { to: "/admin", label: "Administration", icon: Users, show: canViewAll },
   ];
 
