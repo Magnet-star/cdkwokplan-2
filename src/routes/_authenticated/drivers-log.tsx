@@ -160,6 +160,10 @@ function DriversLogPage() {
     l.status === "pending" && (isSuperAdmin || (isHod && l.department_id === myDeptId));
 
   const deptName = (id: string | null) => depts.find((d) => d.id === id)?.name ?? "—";
+  const vehicleLabel = (id: string | null) => {
+    const v = vehicles.find((x) => x.id === id);
+    return v ? `${v.registration}${v.make_model ? " · " + v.make_model : ""}` : "—";
+  };
 
   // Filters
   const [filterDept, setFilterDept] = useState<string>("all");
