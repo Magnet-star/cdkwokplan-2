@@ -28,13 +28,26 @@ function ReportsPage() {
   const [weekStart, setWeekStart] = useState(() => format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"));
   const [targetUserId, setTargetUserId] = useState<string>("self");
   const [people, setPeople] = useState<{ id: string; full_name: string; department_id: string | null; position: string | null }[]>([]);
-  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [departments, setDepartments] = useState<{ id: string; name: string; hod_id: string | null }[]>([]);
+  const [hodByDept, setHodByDept] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data: depts } = await supabase.from("departments").select("id,name").order("name");
+      const { data: depts } = await supabase.from("departments").select("id,name,hod_id").order("name");
       setDepartments((depts as any) ?? []);
+      const hodIds = ((depts as any) ?? []).map((d: any) => d.hod_id).filter(Boolean);
+      if (hodIds.length) {
+        const { data: hods } = await supabase.from("profiles").select("id,full_name").in("id", hodIds);
+        const map: Record<string, string> = {};
+        ((depts as any) ?? []).forEach((d: any) => {
+          if (d.hod_id) {
+            const h = (hods as any)?.find((x: any) => x.id === d.hod_id);
+            if (h) map[d.id] = h.full_name;
+          }
+        });
+        setHodByDept(map);
+      }
       if (isSuperAdmin || isHod) {
         const { data } = await supabase.from("profiles").select("id,full_name,department_id,position").order("full_name");
         setPeople((data as any) ?? []);
@@ -47,10 +60,10 @@ function ReportsPage() {
     setBusy(true);
     try {
       const target = targetUserId === "self"
-        ? { userId: user.id, fullName: profile.full_name, departmentName: departments.find((d) => d.id === profile.department_id)?.name ?? null, position: profile.position }
+        ? { userId: user.id, fullName: profile.full_name, departmentName: departments.find((d) => d.id === profile.department_id)?.name ?? null, position: profile.position, hodName: profile.department_id ? (hodByDept[profile.department_id] ?? null) : null }
         : (() => {
             const p = people.find((x) => x.id === targetUserId)!;
-            return { userId: p.id, fullName: p.full_name, departmentName: departments.find((d) => d.id === p.department_id)?.name ?? null, position: p.position };
+            return { userId: p.id, fullName: p.full_name, departmentName: departments.find((d) => d.id === p.department_id)?.name ?? null, position: p.position, hodName: p.department_id ? (hodByDept[p.department_id] ?? null) : null };
           })();
       if (period === "monthly") {
         await generateReportPDF(target, { kind: "monthly", year, monthIdx0: month });
