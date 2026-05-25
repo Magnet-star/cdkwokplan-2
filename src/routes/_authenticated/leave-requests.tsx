@@ -146,22 +146,18 @@ function LeaveRequestsPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold"><CalendarDays className="h-6 w-6" /> Leave Requests</h1>
-          <p className="text-sm text-muted-foreground">{isSuperAdmin ? "Review and approve staff leave applications." : "Apply for leave and track your balance."}</p>
+          <p className="text-sm text-muted-foreground">{isSuperAdmin ? "Apply for leave, review and approve staff applications." : "Apply for leave and track your balance."}</p>
         </div>
-        {!isSuperAdmin && (
-          <Button onClick={() => setShowForm((v) => !v)}><Plus className="mr-2 h-4 w-4" /> New Request</Button>
-        )}
+        <Button onClick={() => setShowForm((v) => !v)}><Plus className="mr-2 h-4 w-4" /> New Request</Button>
       </div>
 
-      {!isSuperAdmin && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card><CardHeader className="pb-2"><CardDescription>Annual entitlement</CardDescription><CardTitle className="text-3xl">{ANNUAL_LEAVE_DAYS}</CardTitle></CardHeader></Card>
-          <Card><CardHeader className="pb-2"><CardDescription>Used ({currentYear})</CardDescription><CardTitle className="text-3xl">{myUsed}</CardTitle></CardHeader></Card>
-          <Card><CardHeader className="pb-2"><CardDescription>Remaining balance</CardDescription><CardTitle className="text-3xl text-primary">{myBalance}</CardTitle></CardHeader></Card>
-        </div>
-      )}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card><CardHeader className="pb-2"><CardDescription>Annual entitlement</CardDescription><CardTitle className="text-3xl">{ANNUAL_LEAVE_DAYS}</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>Used ({currentYear})</CardDescription><CardTitle className="text-3xl">{myUsed}</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>Remaining balance</CardDescription><CardTitle className="text-3xl text-primary">{myBalance}</CardTitle></CardHeader></Card>
+      </div>
 
-      {showForm && !isSuperAdmin && (
+      {showForm && (
         <Card>
           <CardHeader><CardTitle>New Leave Application</CardTitle></CardHeader>
           <CardContent>
