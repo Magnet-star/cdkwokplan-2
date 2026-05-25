@@ -102,7 +102,8 @@ function AuthLayout() {
         </nav>
 
         <main className="flex-1 overflow-x-hidden p-4 md:p-8">
-          <div className="mb-4 flex justify-end">
+          <div className="mb-4 flex justify-end gap-2">
+            <NotificationBell />
             <OfficeAttendanceButton />
           </div>
           <Outlet />
