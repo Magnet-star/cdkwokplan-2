@@ -147,7 +147,6 @@ function VehicleRequestsPage() {
                   variant="outline"
                   onClick={() => downloadVehicleRequestPDF(r, {
                     fullName: profile?.full_name ?? "—",
-                    email: profile?.email,
                     position: profile?.position,
                     departmentName: deptName,
                     hodName: hodName,
