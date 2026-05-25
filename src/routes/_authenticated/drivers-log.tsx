@@ -28,6 +28,7 @@ interface DriverLog {
   starting_km: number;
   closing_km: number | null;
   department_id: string | null;
+  vehicle_id: string | null;
   passengers: number | null;
   condition_start: string | null;
   condition_end: string | null;
@@ -38,10 +39,12 @@ interface DriverLog {
 
 interface Dept { id: string; name: string; hod_id: string | null }
 interface Profile { id: string; full_name: string }
+interface Vehicle { id: string; registration: string; make_model: string | null; active: boolean }
 
 function DriversLogPage() {
   const { user, isDriver, isHod, isSuperAdmin, canViewAll, profile, rolesLoaded } = useAuth();
   const [depts, setDepts] = useState<Dept[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Record<string, Profile>>({});
   const [logs, setLogs] = useState<DriverLog[]>([]);
   const [busy, setBusy] = useState(false);
@@ -53,6 +56,7 @@ function DriversLogPage() {
     starting_km: "",
     closing_km: "",
     department_id: "",
+    vehicle_id: "",
     passengers: "1",
     condition_start: "",
     condition_end: "",
