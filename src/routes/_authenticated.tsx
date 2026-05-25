@@ -76,20 +76,20 @@ function AuthLayout() {
 
       {/* Mobile top bar */}
       <div className="flex w-full flex-col">
-        <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 md:hidden">
+        <header className="flex items-center justify-between border-b border-white/20 px-4 py-3 md:hidden" style={{ backgroundColor: '#660000' }}>
           <div className="flex items-center gap-2">
-            <Church className="h-5 w-5 text-primary" />
+            <Church className="h-5 w-5 text-white" />
             <span className="font-bold" style={{ color: "#ffffff", fontFamily: '"Cormorant Garamond", Georgia, serif' }}>Diocese of Kitale</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => { signOut().then(() => navigate({ to: "/" })); }}>
+          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={() => { signOut().then(() => navigate({ to: "/" })); }}>
             <LogOut className="h-4 w-4" />
           </Button>
         </header>
 
         {/* Mobile nav scroller */}
-        <nav className="flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 md:hidden">
+        <nav className="flex gap-1 overflow-x-auto border-b border-white/20 px-3 py-2 md:hidden" style={{ backgroundColor: '#660000' }}>
           {nav.filter((n) => n.show).map(({ to, label, icon: Icon }) => (
-            <Link key={to} to={to} className="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs hover:bg-muted [&.active]:bg-primary [&.active]:text-primary-foreground" activeOptions={{ exact: false }}>
+            <Link key={to} to={to} className="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold text-white hover:bg-white/10 [&.active]:bg-white/20 [&.active]:text-white" activeOptions={{ exact: false }}>
               <Icon className="h-3.5 w-3.5" /> {label}
             </Link>
           ))}
