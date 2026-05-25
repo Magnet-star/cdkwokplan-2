@@ -328,8 +328,51 @@ function DriversLogPage() {
           <CardDescription>{canViewAll ? "Showing all logs across the diocese." : isHod ? "You can approve logs assigned to your department." : "Read-only view."}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {logs.length === 0 && <p className="text-sm text-muted-foreground">No logs yet.</p>}
-          {logs.map((l) => (
+          <div className="grid gap-3 md:grid-cols-[1fr,1fr,auto]">
+            <div>
+              <Label className="text-xs">Search</Label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-8" placeholder="Driver, route, department…" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Filter by department</Label>
+              <Select value={filterDept} onValueChange={setFilterDept}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All departments</SelectItem>
+                  {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => downloadPdf("daily")}><Download className="mr-1 h-4 w-4" />Daily</Button>
+              <Button size="sm" variant="outline" onClick={() => downloadPdf("weekly")}><Download className="mr-1 h-4 w-4" />Weekly</Button>
+              <Button size="sm" variant="outline" onClick={() => downloadPdf("monthly")}><Download className="mr-1 h-4 w-4" />Monthly</Button>
+            </div>
+          </div>
+
+          {deptSummary.length > 0 && (
+            <div className="rounded-md border border-border bg-muted/30 p-3">
+              <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">Vehicle usage by department ({filteredLogs.length} trip{filteredLogs.length === 1 ? "" : "s"})</p>
+              <div className="grid gap-1 text-sm md:grid-cols-2">
+                {deptSummary.map((s) => (
+                  <div key={s.name} className="flex justify-between gap-3">
+                    <span>{s.name}</span>
+                    <span className="text-muted-foreground">{s.trips} trip{s.trips === 1 ? "" : "s"} · {s.km.toFixed(1)} km</span>
+                  </div>
+                ))}
+                <div className="flex justify-between gap-3 border-t pt-1 font-medium md:col-span-2">
+                  <span>Total kilometers covered</span>
+                  <span>{deptSummary.reduce((s, x) => s + x.km, 0).toFixed(1)} km</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {filteredLogs.length === 0 && <p className="text-sm text-muted-foreground">No logs match the current filter.</p>}
+          {filteredLogs.map((l) => (
             <div key={l.id} className="rounded-md border border-border p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
