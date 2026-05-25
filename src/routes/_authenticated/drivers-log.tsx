@@ -152,6 +152,106 @@ function DriversLogPage() {
 
   const deptName = (id: string | null) => depts.find((d) => d.id === id)?.name ?? "—";
 
+  // Filters
+  const [filterDept, setFilterDept] = useState<string>("all");
+  const [searchText, setSearchText] = useState("");
+
+  const filteredLogs = logs.filter((l) => {
+    if (filterDept !== "all" && l.department_id !== filterDept) return false;
+    if (searchText) {
+      const q = searchText.toLowerCase();
+      const hay = `${l.start_point} ${l.destination} ${deptName(l.department_id)} ${drivers[l.user_id]?.full_name ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const distanceOf = (l: DriverLog) =>
+    l.closing_km != null ? Number(l.closing_km) - Number(l.starting_km) : 0;
+
+  // Per-department summary across filtered logs
+  const deptSummary = (() => {
+    const map = new Map<string, { name: string; trips: number; km: number }>();
+    filteredLogs.forEach((l) => {
+      const key = l.department_id ?? "none";
+      const name = deptName(l.department_id);
+      const cur = map.get(key) ?? { name, trips: 0, km: 0 };
+      cur.trips += 1;
+      cur.km += distanceOf(l);
+      map.set(key, cur);
+    });
+    return Array.from(map.values()).sort((a, b) => b.km - a.km);
+  })();
+
+  const downloadPdf = (period: "daily" | "weekly" | "monthly") => {
+    const now = new Date();
+    let start: Date; let end: Date; let label: string;
+    if (period === "daily") {
+      start = new Date(now); start.setHours(0,0,0,0);
+      end = new Date(now); end.setHours(23,59,59,999);
+      label = `Daily — ${format(now, "PPP")}`;
+    } else if (period === "weekly") {
+      start = startOfWeek(now, { weekStartsOn: 1 });
+      end = endOfWeek(now, { weekStartsOn: 1 });
+      label = `Weekly — ${format(start, "PP")} to ${format(end, "PP")}`;
+    } else {
+      start = startOfMonth(now);
+      end = endOfMonth(now);
+      label = `Monthly — ${format(now, "MMMM yyyy")}`;
+    }
+    const inRange = filteredLogs.filter((l) => isWithinInterval(parseISO(l.log_date), { start, end }));
+    if (inRange.length === 0) { toast.error("No logs in the selected period"); return; }
+
+    const doc = new jsPDF({ orientation: "landscape" });
+    doc.setFontSize(14);
+    doc.text("Drivers Log Report", 14, 14);
+    doc.setFontSize(10);
+    doc.text(label, 14, 20);
+    if (filterDept !== "all") doc.text(`Department filter: ${deptName(filterDept)}`, 14, 26);
+
+    autoTable(doc, {
+      startY: filterDept !== "all" ? 30 : 24,
+      head: [["Date", "Driver", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Pass.", "Status"]],
+      body: inRange.map((l) => [
+        format(parseISO(l.log_date), "yyyy-MM-dd"),
+        drivers[l.user_id]?.full_name ?? "—",
+        deptName(l.department_id),
+        l.start_point,
+        l.destination,
+        l.starting_km,
+        l.closing_km ?? "—",
+        l.closing_km != null ? distanceOf(l).toFixed(1) : "—",
+        l.passengers ?? 0,
+        l.status,
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [40, 40, 40] },
+    });
+
+    // Department summary
+    const summary = new Map<string, { name: string; trips: number; km: number }>();
+    inRange.forEach((l) => {
+      const key = l.department_id ?? "none";
+      const cur = summary.get(key) ?? { name: deptName(l.department_id), trips: 0, km: 0 };
+      cur.trips += 1; cur.km += distanceOf(l);
+      summary.set(key, cur);
+    });
+    const totalKm = inRange.reduce((s, l) => s + distanceOf(l), 0);
+
+    autoTable(doc, {
+      head: [["Department", "Trips", "Kilometers covered"]],
+      body: [
+        ...Array.from(summary.values()).sort((a,b) => b.km - a.km).map((s) => [s.name, s.trips, s.km.toFixed(1)]),
+        ["TOTAL", inRange.length, totalKm.toFixed(1)],
+      ],
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [40, 40, 40] },
+    });
+
+    doc.save(`drivers-log-${period}-${format(now, "yyyy-MM-dd")}.pdf`);
+  };
+
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
