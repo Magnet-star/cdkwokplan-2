@@ -47,33 +47,33 @@
 
   /* Bold green + maroon blend */
   --background: oklch(0.97 0.015 100);
-  --foreground: oklch(0.2 0.03 30);
+  --foreground: #000000;
 
   --card: oklch(1  0  0);
-  --card-foreground: oklch(1.20.03 30);
+  --card-foreground: #000000;
   --popover: oklch(1  0  1.0);
-  --popover-foreground: oklch(1.20.03 30);
+  --popover-foreground: #000000;
 
   --primary: oklch(0.35 0.15 25);              /* deep maroon */
-  --primary-foreground: oklch(0.97 0.01 90);
+  --primary-foreground: #ffffff;
 
   --secondary: oklch(0.92 0.04 145);           /* soft green */
-  --secondary-foreground: oklch(0.22 0.05 30);
+  --secondary-foreground: #000000;
 
   --muted: oklch(0.94 0.02 90);
-  --muted-foreground: oklch(0.45 0.03 40);
+  --muted-foreground: #000000;
 
   --accent: oklch(0.52 0.20 145);              /* bold green */
-  --accent-foreground: oklch(0.985 0 0);
+  --accent-foreground: #ffffff;
 
   --destructive: oklch(0.55 0.22 27);
-  --destructive-foreground: oklch(0.985 0 0);
+  --destructive-foreground: #ffffff;
 
   --success: oklch(0.52 0.20 145);
-  --success-foreground: oklch(0.985 0 0);
+  --success-foreground: #ffffff;
 
   --warning: oklch(0.72 0.16 70);
-  --warning-foreground: oklch(0.2 0.04 30);
+  --warning-foreground: #000000;
 
   --border: oklch(0.85 0.03 80);
   --input: oklch(0.88 0.02 80);
@@ -82,7 +82,7 @@
   --sidebar: oklch(0.30 0.12 25);
   --sidebar-foreground: oklch(0.97 0.02 85);
   --sidebar-primary: oklch(0.52 0.20 145);     /* bold green nav highlight */
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.38 0.14 28);
   --sidebar-accent-foreground: oklch(0.97 0.02 85);
   --sidebar-border: oklch(0.40 0.10 28);
@@ -120,6 +120,28 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-weight: 700;
   }
   h1, h2, h3, .font-serif { font-family: var(--font-serif); letter-spacing: -0.01em; }
+}
+
+@layer utilities {
+  /* Force all content text to bold black for visibility */
+  .text-primary:not(.text-primary-foreground),
+  .text-accent:not(.text-accent-foreground),
+  .text-success:not(.text-success-foreground),
+  .text-destructive:not(.text-destructive-foreground),
+  .text-warning:not(.text-warning-foreground),
+  .text-secondary:not(.text-secondary-foreground) {
+    color: #000000 !important;
+  }
+
+  /* Catch opacity variants like text-primary/80 */
+  [class*="text-primary/"],
+  [class*="text-accent/"],
+  [class*="text-success/"],
+  [class*="text-destructive/"],
+  [class*="text-warning/"] {
+    color: #000000 !important;
+  }
 }
