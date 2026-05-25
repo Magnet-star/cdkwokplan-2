@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { format, differenceInCalendarDays, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
+import { countWorkingDays } from "@/lib/working-days";
 import { toast } from "sonner";
 import { CalendarDays, Plus, Check, X } from "lucide-react";
 
@@ -81,8 +82,7 @@ function LeaveRequestsPage() {
     try {
       const a = parseISO(form.from_date);
       const b = parseISO(form.to_date);
-      const d = differenceInCalendarDays(b, a) + 1;
-      return d > 0 ? d : 0;
+      return countWorkingDays(a, b);
     } catch { return 0; }
   }, [form.from_date, form.to_date]);
 
@@ -171,8 +171,8 @@ function LeaveRequestsPage() {
                 <Input value={profile?.position ? profile.position : "—"} disabled />
               </div>
               <div>
-                <Label>Days requested</Label>
-                <Input value={`${daysRequested} day${daysRequested === 1 ? "" : "s"}`} disabled />
+                <Label>Working days requested</Label>
+                <Input value={`${daysRequested} day${daysRequested === 1 ? "" : "s"} (excl. weekends & public holidays)`} disabled />
               </div>
               <div>
                 <Label htmlFor="from">From</Label>
