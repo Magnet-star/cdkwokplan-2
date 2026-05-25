@@ -79,6 +79,50 @@ export type Database = {
         }
         Relationships: []
       }
+      diocesan_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department_id: string | null
+          event_date: string
+          id: string
+          notes: string | null
+          title: string
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          event_date: string
+          id?: string
+          notes?: string | null
+          title: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          event_date?: string
+          id?: string
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diocesan_events_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_logs: {
         Row: {
           approved_at: string | null

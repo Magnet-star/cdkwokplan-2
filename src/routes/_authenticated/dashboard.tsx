@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format, startOfWeek } from "date-fns";
-import { ClipboardList, Car, BookText, FileBarChart, ArrowRight } from "lucide-react";
+import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -26,6 +26,8 @@ function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [dept, setDept] = useState<string | null>(null);
   const [feed, setFeed] = useState<Submission[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [eventDepts, setEventDepts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -67,6 +69,16 @@ function Dashboard() {
         daysLogged: logs.data?.length ?? 0,
       });
       setDept((deptRow.data as { name: string } | null)?.name ?? null);
+
+      const today = format(new Date(), "yyyy-MM-dd");
+      const [{ data: evs }, { data: allDepts }] = await Promise.all([
+        supabase.from("diocesan_events").select("*").gte("event_date", today).order("event_date", { ascending: true }).limit(10),
+        supabase.from("departments").select("id,name"),
+      ]);
+      setEvents((evs as any) ?? []);
+      const map: Record<string, string> = {};
+      ((allDepts as any[]) ?? []).forEach((d) => { map[d.id] = d.name; });
+      setEventDepts(map);
     })();
   }, [user, profile?.department_id, isSuperAdmin]);
 
@@ -89,6 +101,39 @@ function Dashboard() {
         <StatCard icon={BookText} title="Days logged this week" value={String(stats?.daysLogged ?? 0)} to="/daily-log" />
         <StatCard icon={FileBarChart} title={isSuperAdmin ? "Pending vehicle approvals" : "Monthly reports"} value={isSuperAdmin ? String(stats?.pendingVehicles ?? 0) : "Generate"} to={isSuperAdmin ? "/admin" : "/reports"} tone={isSuperAdmin && (stats?.pendingVehicles ?? 0) > 0 ? "warning" : "muted"} />
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            <CardTitle className="font-serif">Upcoming Diocesan Events</CardTitle>
+          </div>
+          <CardDescription>Posted by the Super Admin.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {events.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No upcoming events.</p>
+          ) : (
+            events.map((ev) => (
+              <div key={ev.id} className="rounded-md border border-border bg-card p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium break-words">{ev.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(ev.event_date), "EEEE, MMM d, yyyy")}
+                      {ev.department_id && eventDepts[ev.department_id] && <> · Spearheaded by <span className="font-medium text-foreground">{eventDepts[ev.department_id]}</span></>}
+                      {ev.venue && <> · {ev.venue}</>}
+                    </p>
+                  </div>
+                  <Badge variant="outline">{format(new Date(ev.event_date), "MMM d")}</Badge>
+                </div>
+                {ev.notes && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted-foreground">{ev.notes}</p>}
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader>

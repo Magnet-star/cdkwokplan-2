@@ -36,6 +36,8 @@ function AdminPage() {
   const [fleet, setFleet] = useState<any[]>([]);
   const [newVehicle, setNewVehicle] = useState({ registration: "", make_model: "", notes: "" });
   const [newDept, setNewDept] = useState({ name: "", description: "" });
+  const [events, setEvents] = useState<any[]>([]);
+  const [newEvent, setNewEvent] = useState({ title: "", event_date: "", department_id: "none", venue: "", notes: "" });
 
   // Create user state
   const [nu, setNu] = useState<{ email: string; password: string; fullName: string; departmentId: string; position: string; roles: Role[] }>(
@@ -48,7 +50,7 @@ function AdminPage() {
   const [plans, setPlans] = useState<any[]>([]);
 
   const load = async () => {
-    const [{ data: d }, { data: u }, { data: r }, { data: v }, { data: f }, { data: l }, { data: p }] = await Promise.all([
+    const [{ data: d }, { data: u }, { data: r }, { data: v }, { data: f }, { data: l }, { data: p }, { data: ev }] = await Promise.all([
       supabase.from("departments").select("*").order("name"),
       supabase.from("profiles").select("id,full_name,email,position,department_id").order("full_name"),
       supabase.from("user_roles").select("user_id,role"),
@@ -56,6 +58,7 @@ function AdminPage() {
       supabase.from("vehicles").select("*").order("registration"),
       supabase.from("daily_logs").select("*").order("log_date", { ascending: false }).limit(100),
       supabase.from("work_plans").select("*").order("week_start_date", { ascending: false }).limit(100),
+      supabase.from("diocesan_events").select("*").order("event_date", { ascending: true }),
     ]);
     setDepts((d as any) ?? []);
     setUsers((u as any) ?? []);
@@ -66,6 +69,7 @@ function AdminPage() {
     setFleet((f as any) ?? []);
     setLogs((l as any) ?? []);
     setPlans((p as any) ?? []);
+    setEvents((ev as any) ?? []);
   };
   useEffect(() => { if (canAccess) load(); }, [canAccess]);
 
@@ -99,6 +103,27 @@ function AdminPage() {
   const removeVehicle = async (id: string) => {
     if (!window.confirm("Delete this vehicle from the fleet?")) return;
     const { error } = await supabase.from("vehicles").delete().eq("id", id);
+    if (error) toast.error(error.message); else { toast.success("Removed"); load(); }
+  };
+
+  const addEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEvent.title.trim() || !newEvent.event_date) return;
+    const { error } = await supabase.from("diocesan_events").insert({
+      title: newEvent.title.trim(),
+      event_date: newEvent.event_date,
+      department_id: newEvent.department_id === "none" ? null : newEvent.department_id,
+      venue: newEvent.venue.trim() || null,
+      notes: newEvent.notes.trim() || null,
+      created_by: user?.id ?? null,
+    });
+    if (error) toast.error(error.message);
+    else { toast.success("Event added"); setNewEvent({ title: "", event_date: "", department_id: "none", venue: "", notes: "" }); load(); }
+  };
+
+  const removeEvent = async (id: string) => {
+    if (!window.confirm("Delete this event?")) return;
+    const { error } = await supabase.from("diocesan_events").delete().eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Removed"); load(); }
   };
 
@@ -235,11 +260,69 @@ function AdminPage() {
         <TabsList className="flex-wrap">
           <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
           <TabsTrigger value="fleet">Fleet</TabsTrigger>
+          <TabsTrigger value="events">Diocesan events</TabsTrigger>
           <TabsTrigger value="depts">Departments</TabsTrigger>
           <TabsTrigger value="users">Users & roles</TabsTrigger>
           <TabsTrigger value="allplans">Work plans</TabsTrigger>
           <TabsTrigger value="cleanup">Logs & plans</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="events" className="space-y-4 pt-4">
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif">Add upcoming event</CardTitle>
+                <CardDescription>Posted to every user's dashboard.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={addEvent} className="grid gap-3 md:grid-cols-2">
+                  <div><Label>Title *</Label><Input required maxLength={200} value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} placeholder="Diocesan Synod" /></div>
+                  <div><Label>Date *</Label><Input required type="date" value={newEvent.event_date} onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })} /></div>
+                  <div>
+                    <Label>Department spearheading</Label>
+                    <Select value={newEvent.department_id} onValueChange={(v) => setNewEvent({ ...newEvent, department_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Venue</Label><Input maxLength={200} value={newEvent.venue} onChange={(e) => setNewEvent({ ...newEvent, venue: e.target.value })} placeholder="Cathedral grounds" /></div>
+                  <div className="md:col-span-2"><Label>Notes</Label><Textarea maxLength={2000} value={newEvent.notes} onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })} placeholder="Additional details, dress code, agenda…" /></div>
+                  <Button type="submit" className="md:col-span-2 w-fit"><Plus className="mr-1 h-4 w-4" />Add event</Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {events.length === 0 && (
+            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No events yet. {canEdit && "Add one above."}</CardContent></Card>
+          )}
+          {events.map((ev) => {
+            const dept = depts.find((d) => d.id === ev.department_id);
+            const past = new Date(ev.event_date) < new Date(new Date().toDateString());
+            return (
+              <Card key={ev.id}>
+                <CardContent className="flex flex-wrap items-start justify-between gap-3 py-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">{ev.title}</p>
+                      <Badge variant={past ? "secondary" : "default"}>{past ? "Past" : "Upcoming"}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{format(parseISO(ev.event_date), "EEEE, MMM d, yyyy")}{dept && <> · {dept.name}</>}{ev.venue && <> · {ev.venue}</>}</p>
+                    {ev.notes && <p className="mt-2 text-sm whitespace-pre-wrap break-words">{ev.notes}</p>}
+                  </div>
+                  {canEdit && (
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeEvent(ev.id)}>
+                      <Trash2 className="mr-1 h-4 w-4" />Delete
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </TabsContent>
 
         <TabsContent value="fleet" className="space-y-4 pt-4">
           {canEdit && (
