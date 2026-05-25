@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { format, differenceInCalendarDays, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
+import { countWorkingDays } from "@/lib/working-days";
 import { toast } from "sonner";
 import { CalendarDays, Plus, Check, X } from "lucide-react";
 
