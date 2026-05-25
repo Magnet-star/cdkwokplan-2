@@ -60,7 +60,7 @@ function Dashboard() {
           ...((rp as any[]) ?? []).map((p) => ({ kind: "plan" as const, id: p.id, user: nameOf(p.user_id), when: p.submitted_at ?? p.week_start_date, label: `Work plan for week of ${format(new Date(p.week_start_date), "MMM d")}`, status: p.status })),
           ...((rl as any[]) ?? []).map((l) => ({ kind: "log" as const, id: l.id, user: nameOf(l.user_id), when: l.created_at, label: `Daily log · ${format(new Date(l.log_date), "MMM d")}` })),
           ...((rv as any[]) ?? []).map((v) => ({ kind: "vehicle" as const, id: v.id, user: nameOf(v.user_id), when: v.created_at, label: `Vehicle: ${v.destination} (${format(new Date(v.date_needed), "MMM d")})`, status: v.status })),
-        ].sort((a, b) => +new Date(b.when) - +new Date(a.when)).slice(0, 12);
+        ].sort((a, b) => +new Date(b.when) - +new Date(a.when)).slice(0, 5);
         setFeed(subs);
       }
 
