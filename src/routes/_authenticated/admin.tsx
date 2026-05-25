@@ -33,6 +33,8 @@ function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [rolesByUser, setRolesByUser] = useState<Record<string, Role[]>>({});
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [fleet, setFleet] = useState<any[]>([]);
+  const [newVehicle, setNewVehicle] = useState({ registration: "", make_model: "", notes: "" });
   const [newDept, setNewDept] = useState({ name: "", description: "" });
 
   // Create user state
