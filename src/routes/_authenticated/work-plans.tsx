@@ -143,6 +143,16 @@ function WorkPlansPage() {
     setBusy(false);
   };
 
+  const handleUpdate = async () => {
+    if (!plan) return;
+    setBusy(true);
+    await saveItems(plan.id);
+    await supabase.from("work_plans").update({ updated_at: new Date().toISOString() }).eq("id", plan.id);
+    toast.success("Work plan updated");
+    await load();
+    setBusy(false);
+  };
+
   const submitted = plan?.status === "submitted";
 
   return (
