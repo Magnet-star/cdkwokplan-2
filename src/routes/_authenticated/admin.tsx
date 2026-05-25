@@ -48,11 +48,12 @@ function AdminPage() {
   const [plans, setPlans] = useState<any[]>([]);
 
   const load = async () => {
-    const [{ data: d }, { data: u }, { data: r }, { data: v }, { data: l }, { data: p }] = await Promise.all([
+    const [{ data: d }, { data: u }, { data: r }, { data: v }, { data: f }, { data: l }, { data: p }] = await Promise.all([
       supabase.from("departments").select("*").order("name"),
       supabase.from("profiles").select("id,full_name,email,position,department_id").order("full_name"),
       supabase.from("user_roles").select("user_id,role"),
       supabase.from("vehicle_requests").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("vehicles").select("*").order("registration"),
       supabase.from("daily_logs").select("*").order("log_date", { ascending: false }).limit(100),
       supabase.from("work_plans").select("*").order("week_start_date", { ascending: false }).limit(100),
     ]);
@@ -62,6 +63,7 @@ function AdminPage() {
     ((r as any[]) ?? []).forEach((row) => { (map[row.user_id] ||= []).push(row.role); });
     setRolesByUser(map);
     setVehicles((v as any) ?? []);
+    setFleet((f as any) ?? []);
     setLogs((l as any) ?? []);
     setPlans((p as any) ?? []);
   };
