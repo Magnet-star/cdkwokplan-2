@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import dioceseLogo from "@/assets/diocese-logo.jpg";
+import { OfficeAttendanceButton } from "@/components/OfficeAttendanceButton";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthLayout,
