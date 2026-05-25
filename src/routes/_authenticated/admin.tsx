@@ -176,6 +176,18 @@ function AdminPage() {
     if (error) toast.error(error.message); else { toast.success("Work plan deleted"); load(); }
   };
 
+  const deleteUser = async (id: string, name: string) => {
+    if (id === user?.id) { toast.error("You cannot delete your own account"); return; }
+    if (!confirm(`Permanently delete ${name}? This removes their login and cannot be undone.`)) return;
+    try {
+      await deleteUserFn({ data: { userId: id } });
+      toast.success("User deleted");
+      load();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to delete user");
+    }
+  };
+
   const userName = (id: string) => users.find((u) => u.id === id)?.full_name ?? "—";
 
   return (
