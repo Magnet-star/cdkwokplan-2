@@ -242,6 +242,18 @@ function AdminPage() {
   };
 
   const userName = (id: string) => users.find((u) => u.id === id)?.full_name ?? "—";
+  const userMeta = (id: string) => {
+    const u = users.find((x) => x.id === id);
+    const dept = u?.department_id ? departments.find((d: any) => d.id === u.department_id) : null;
+    const hod = dept?.hod_id ? users.find((x) => x.id === dept.hod_id) : null;
+    return {
+      fullName: u?.full_name ?? "—",
+      email: u?.email ?? null,
+      position: u?.position ?? null,
+      departmentName: dept?.name ?? null,
+      hodName: hod?.full_name ?? null,
+    };
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
