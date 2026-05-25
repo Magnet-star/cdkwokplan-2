@@ -28,6 +28,7 @@ function AdminPage() {
   const canEdit = isSuperAdmin;
   const canAccess = isSuperAdmin || isAdministrator;
   const createUserFn = useServerFn(adminCreateUser);
+  const deleteUserFn = useServerFn(adminDeleteUser);
   const [depts, setDepts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [rolesByUser, setRolesByUser] = useState<Record<string, Role[]>>({});
