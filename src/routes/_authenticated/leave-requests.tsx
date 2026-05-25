@@ -171,8 +171,8 @@ function LeaveRequestsPage() {
                 <Input value={profile?.position ? profile.position : "—"} disabled />
               </div>
               <div>
-                <Label>Days requested</Label>
-                <Input value={`${daysRequested} day${daysRequested === 1 ? "" : "s"}`} disabled />
+                <Label>Working days requested</Label>
+                <Input value={`${daysRequested} day${daysRequested === 1 ? "" : "s"} (excl. weekends & public holidays)`} disabled />
               </div>
               <div>
                 <Label htmlFor="from">From</Label>
