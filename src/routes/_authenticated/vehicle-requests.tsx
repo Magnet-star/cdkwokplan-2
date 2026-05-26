@@ -148,6 +148,8 @@ function VehicleRequestsPage() {
                       </div>
                       <div><Label>Start point</Label><Input placeholder="e.g. Bishop's Office" value={t.start_point} onChange={(e) => updateTrip(i, { start_point: e.target.value })} /></div>
                       <div><Label>Destination</Label><Input required value={t.destination} onChange={(e) => updateTrip(i, { destination: e.target.value })} /></div>
+                      <div><Label>Passengers</Label><Input type="number" min={1} required value={t.passengers} onChange={(e) => updateTrip(i, { passengers: Number(e.target.value) })} /></div>
+                      <div className="md:col-span-2"><Label>Purpose</Label><Textarea required rows={3} value={t.purpose} onChange={(e) => updateTrip(i, { purpose: e.target.value })} /></div>
                     </div>
                   </div>
                 ))}
@@ -156,11 +158,6 @@ function VehicleRequestsPage() {
               <Button type="button" variant="outline" size="sm" onClick={addTrip}>
                 <Plus className="mr-1 h-4 w-4" />Add another day
               </Button>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div><Label>Passengers</Label><Input type="number" min={1} required value={passengers} onChange={(e) => setPassengers(Number(e.target.value))} /></div>
-              </div>
-              <div><Label>Purpose</Label><Textarea required rows={3} value={purpose} onChange={(e) => setPurpose(e.target.value)} /></div>
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
