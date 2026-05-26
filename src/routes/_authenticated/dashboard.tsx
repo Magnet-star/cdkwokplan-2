@@ -50,7 +50,7 @@ function Dashboard() {
         pendingVehicles = count ?? 0;
 
         const [{ data: rp }, { data: rl }, { data: rv }, { data: ppl }] = await Promise.all([
-          supabase.from("work_plans").select("id,user_id,week_start_date,submitted_at,status").eq("status", "submitted").order("submitted_at", { ascending: false }).limit(10),
+          supabase.from("work_plans").select("id,user_id,week_start_date,submitted_at,status").in("status", ["submitted", "approved"]).not("submitted_at", "is", null).order("submitted_at", { ascending: false }).limit(10),
           supabase.from("daily_logs").select("id,user_id,log_date,created_at").order("created_at", { ascending: false }).limit(10),
           supabase.from("vehicle_requests").select("id,user_id,destination,date_needed,created_at,status").order("created_at", { ascending: false }).limit(10),
           supabase.from("profiles").select("id,full_name"),
