@@ -97,8 +97,8 @@ function VehicleRequestsPage() {
       time_from: t.time_from || null,
       time_to: t.time_to || null,
       destination: t.start_point.trim() ? `${t.start_point.trim()} → ${t.destination.trim()}` : t.destination.trim(),
-      purpose,
-      passengers,
+      purpose: t.purpose,
+      passengers: t.passengers,
       status: "pending" as const,
     }));
     const { error } = await supabase.from("vehicle_requests").insert(rows);
@@ -108,8 +108,6 @@ function VehicleRequestsPage() {
       toast.success(`${rows.length} vehicle request${rows.length > 1 ? "s" : ""} submitted for approval`);
       setShowForm(false);
       setTrips([emptyTrip()]);
-      setPurpose("");
-      setPassengers(1);
       load();
     }
   };
