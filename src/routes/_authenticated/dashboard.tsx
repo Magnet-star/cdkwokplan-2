@@ -193,10 +193,10 @@ function Dashboard() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 overflow-hidden">
       {isSuperAdmin ? (
         <Tabs defaultValue="overview">
-          <TabsList className="flex-wrap">
+          <TabsList className="h-auto flex-wrap justify-start">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="attendance">Office Attendance</TabsTrigger>
           </TabsList>
@@ -237,12 +237,12 @@ function StatCard({ icon: Icon, title, value, to, tone = "muted" }: { icon: any;
 
 function ChecklistRow({ done, title, to }: { done: boolean; title: string; to: string }) {
   return (
-    <Link to={to} className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/60 transition-colors">
-      <div className="flex items-center gap-3">
+    <Link to={to} className="flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-center gap-3">
         <span className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${done ? "border-accent bg-accent text-accent-foreground" : "border-muted-foreground/30"}`}>{done ? "✓" : ""}</span>
-        <span className="text-sm">{title}</span>
+        <span className="break-words text-sm">{title}</span>
       </div>
-      {done ? <Badge className="bg-accent/15 text-accent border-accent/20">Done</Badge> : <Badge variant="outline">Pending</Badge>}
+      {done ? <Badge className="w-fit bg-accent/15 text-accent border-accent/20">Done</Badge> : <Badge variant="outline" className="w-fit">Pending</Badge>}
     </Link>
   );
 }
