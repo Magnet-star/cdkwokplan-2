@@ -59,8 +59,6 @@ function VehicleRequestsPage() {
   const [hodName, setHodName] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [trips, setTrips] = useState<TripRow[]>([emptyTrip()]);
-  const [purpose, setPurpose] = useState("");
-  const [passengers, setPassengers] = useState(1);
   const [busy, setBusy] = useState(false);
 
   const updateTrip = (i: number, patch: Partial<TripRow>) =>
