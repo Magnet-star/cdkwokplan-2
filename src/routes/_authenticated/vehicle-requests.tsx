@@ -126,16 +126,45 @@ function VehicleRequestsPage() {
         <Card>
           <CardHeader><CardTitle className="font-serif">Request a vehicle</CardTitle></CardHeader>
           <CardContent>
-            <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
-              <div><Label>Date needed</Label><Input type="date" required value={form.date_needed} onChange={(e) => setForm({ ...form, date_needed: e.target.value })} /></div>
-              <div><Label>Passengers</Label><Input type="number" min={1} required value={form.passengers} onChange={(e) => setForm({ ...form, passengers: Number(e.target.value) })} /></div>
-              <div><Label>From (time)</Label><Input type="time" value={form.time_from} onChange={(e) => setForm({ ...form, time_from: e.target.value })} /></div>
-              <div><Label>To (time)</Label><Input type="time" value={form.time_to} onChange={(e) => setForm({ ...form, time_to: e.target.value })} /></div>
-              <div className="md:col-span-2"><Label>Destination</Label><Input required value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} /></div>
-              <div className="md:col-span-2"><Label>Purpose</Label><Textarea required rows={3} value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} /></div>
-              <div className="md:col-span-2 flex justify-end gap-2">
+            <form onSubmit={submit} className="space-y-5">
+              <p className="text-sm text-muted-foreground">Add one or more trip days. All trips will be submitted together.</p>
+
+              <div className="space-y-4">
+                {trips.map((t, i) => (
+                  <div key={i} className="rounded-md border border-border bg-muted/30 p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-sm font-semibold">Day {i + 1}</p>
+                      {trips.length > 1 && (
+                        <Button type="button" size="sm" variant="ghost" onClick={() => removeTrip(i)}>
+                          <Trash2 className="mr-1 h-3.5 w-3.5" />Remove
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div><Label>Date</Label><Input type="date" required value={t.date_needed} onChange={(e) => updateTrip(i, { date_needed: e.target.value })} /></div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div><Label>From (time)</Label><Input type="time" value={t.time_from} onChange={(e) => updateTrip(i, { time_from: e.target.value })} /></div>
+                        <div><Label>To (time)</Label><Input type="time" value={t.time_to} onChange={(e) => updateTrip(i, { time_to: e.target.value })} /></div>
+                      </div>
+                      <div><Label>Start point</Label><Input placeholder="e.g. Bishop's Office" value={t.start_point} onChange={(e) => updateTrip(i, { start_point: e.target.value })} /></div>
+                      <div><Label>Destination</Label><Input required value={t.destination} onChange={(e) => updateTrip(i, { destination: e.target.value })} /></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Button type="button" variant="outline" size="sm" onClick={addTrip}>
+                <Plus className="mr-1 h-4 w-4" />Add another day
+              </Button>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div><Label>Passengers</Label><Input type="number" min={1} required value={passengers} onChange={(e) => setPassengers(Number(e.target.value))} /></div>
+              </div>
+              <div><Label>Purpose</Label><Textarea required rows={3} value={purpose} onChange={(e) => setPurpose(e.target.value)} /></div>
+
+              <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-                <Button type="submit" disabled={busy}>Submit request</Button>
+                <Button type="submit" disabled={busy}>Submit {trips.length > 1 ? `${trips.length} requests` : "request"}</Button>
               </div>
             </form>
           </CardContent>
