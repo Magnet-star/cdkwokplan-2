@@ -19,6 +19,8 @@ interface TripRow {
   time_to: string;
   start_point: string;
   destination: string;
+  passengers: number;
+  purpose: string;
 }
 
 const emptyTrip = (): TripRow => ({
@@ -27,6 +29,8 @@ const emptyTrip = (): TripRow => ({
   time_to: "17:00",
   start_point: "",
   destination: "",
+  passengers: 1,
+  purpose: "",
 });
 
 export const Route = createFileRoute("/_authenticated/vehicle-requests")({
@@ -55,8 +59,6 @@ function VehicleRequestsPage() {
   const [hodName, setHodName] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [trips, setTrips] = useState<TripRow[]>([emptyTrip()]);
-  const [purpose, setPurpose] = useState("");
-  const [passengers, setPassengers] = useState(1);
   const [busy, setBusy] = useState(false);
 
   const updateTrip = (i: number, patch: Partial<TripRow>) =>
@@ -95,8 +97,8 @@ function VehicleRequestsPage() {
       time_from: t.time_from || null,
       time_to: t.time_to || null,
       destination: t.start_point.trim() ? `${t.start_point.trim()} → ${t.destination.trim()}` : t.destination.trim(),
-      purpose,
-      passengers,
+      purpose: t.purpose,
+      passengers: t.passengers,
       status: "pending" as const,
     }));
     const { error } = await supabase.from("vehicle_requests").insert(rows);
@@ -106,8 +108,6 @@ function VehicleRequestsPage() {
       toast.success(`${rows.length} vehicle request${rows.length > 1 ? "s" : ""} submitted for approval`);
       setShowForm(false);
       setTrips([emptyTrip()]);
-      setPurpose("");
-      setPassengers(1);
       load();
     }
   };
@@ -148,6 +148,8 @@ function VehicleRequestsPage() {
                       </div>
                       <div><Label>Start point</Label><Input placeholder="e.g. Bishop's Office" value={t.start_point} onChange={(e) => updateTrip(i, { start_point: e.target.value })} /></div>
                       <div><Label>Destination</Label><Input required value={t.destination} onChange={(e) => updateTrip(i, { destination: e.target.value })} /></div>
+                      <div><Label>Passengers</Label><Input type="number" min={1} required value={t.passengers} onChange={(e) => updateTrip(i, { passengers: Number(e.target.value) })} /></div>
+                      <div className="md:col-span-2"><Label>Purpose</Label><Textarea required rows={3} value={t.purpose} onChange={(e) => updateTrip(i, { purpose: e.target.value })} /></div>
                     </div>
                   </div>
                 ))}
@@ -156,11 +158,6 @@ function VehicleRequestsPage() {
               <Button type="button" variant="outline" size="sm" onClick={addTrip}>
                 <Plus className="mr-1 h-4 w-4" />Add another day
               </Button>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div><Label>Passengers</Label><Input type="number" min={1} required value={passengers} onChange={(e) => setPassengers(Number(e.target.value))} /></div>
-              </div>
-              <div><Label>Purpose</Label><Textarea required rows={3} value={purpose} onChange={(e) => setPurpose(e.target.value)} /></div>
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
