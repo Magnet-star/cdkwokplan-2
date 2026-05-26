@@ -54,15 +54,15 @@ function VehicleRequestsPage() {
   const [deptName, setDeptName] = useState<string | null>(null);
   const [hodName, setHodName] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    date_needed: format(new Date(), "yyyy-MM-dd"),
-    time_from: "09:00",
-    time_to: "17:00",
-    destination: "",
-    purpose: "",
-    passengers: 1,
-  });
+  const [trips, setTrips] = useState<TripRow[]>([emptyTrip()]);
+  const [purpose, setPurpose] = useState("");
+  const [passengers, setPassengers] = useState(1);
   const [busy, setBusy] = useState(false);
+
+  const updateTrip = (i: number, patch: Partial<TripRow>) =>
+    setTrips((arr) => arr.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
+  const addTrip = () => setTrips((arr) => [...arr, emptyTrip()]);
+  const removeTrip = (i: number) => setTrips((arr) => (arr.length > 1 ? arr.filter((_, idx) => idx !== i) : arr));
 
   const load = async () => {
     if (!user) return;
@@ -82,26 +82,32 @@ function VehicleRequestsPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (trips.some((t) => !t.date_needed || !t.destination.trim())) {
+      toast.error("Each trip needs a date and destination");
+      return;
+    }
     setBusy(true);
-    const weekStart = format(startOfWeek(parseISO(form.date_needed), { weekStartsOn: 1 }), "yyyy-MM-dd");
-    const { error } = await supabase.from("vehicle_requests").insert({
+    const rows = trips.map((t) => ({
       user_id: user.id,
       department_id: profile?.department_id ?? null,
-      week_start_date: weekStart,
-      date_needed: form.date_needed,
-      time_from: form.time_from || null,
-      time_to: form.time_to || null,
-      destination: form.destination,
-      purpose: form.purpose,
-      passengers: form.passengers,
-      status: "pending",
-    });
+      week_start_date: format(startOfWeek(parseISO(t.date_needed), { weekStartsOn: 1 }), "yyyy-MM-dd"),
+      date_needed: t.date_needed,
+      time_from: t.time_from || null,
+      time_to: t.time_to || null,
+      destination: t.start_point.trim() ? `${t.start_point.trim()} → ${t.destination.trim()}` : t.destination.trim(),
+      purpose,
+      passengers,
+      status: "pending" as const,
+    }));
+    const { error } = await supabase.from("vehicle_requests").insert(rows);
     setBusy(false);
     if (error) toast.error(error.message);
     else {
-      toast.success("Vehicle request submitted for approval");
+      toast.success(`${rows.length} vehicle request${rows.length > 1 ? "s" : ""} submitted for approval`);
       setShowForm(false);
-      setForm({ date_needed: format(new Date(), "yyyy-MM-dd"), time_from: "09:00", time_to: "17:00", destination: "", purpose: "", passengers: 1 });
+      setTrips([emptyTrip()]);
+      setPurpose("");
+      setPassengers(1);
       load();
     }
   };
