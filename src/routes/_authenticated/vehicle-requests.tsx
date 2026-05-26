@@ -19,6 +19,8 @@ interface TripRow {
   time_to: string;
   start_point: string;
   destination: string;
+  passengers: number;
+  purpose: string;
 }
 
 const emptyTrip = (): TripRow => ({
@@ -27,6 +29,8 @@ const emptyTrip = (): TripRow => ({
   time_to: "17:00",
   start_point: "",
   destination: "",
+  passengers: 1,
+  purpose: "",
 });
 
 export const Route = createFileRoute("/_authenticated/vehicle-requests")({
