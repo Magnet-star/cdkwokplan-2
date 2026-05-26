@@ -60,7 +60,7 @@ function Dashboard() {
           ...((rp as any[]) ?? []).map((p) => ({ kind: "plan" as const, id: p.id, user: nameOf(p.user_id), when: p.submitted_at ?? p.week_start_date, label: `Work plan for week of ${format(new Date(p.week_start_date), "MMM d")}`, status: p.status })),
           ...((rl as any[]) ?? []).map((l) => ({ kind: "log" as const, id: l.id, user: nameOf(l.user_id), when: l.created_at, label: `Daily log · ${format(new Date(l.log_date), "MMM d")}` })),
           ...((rv as any[]) ?? []).map((v) => ({ kind: "vehicle" as const, id: v.id, user: nameOf(v.user_id), when: v.created_at, label: `Vehicle: ${v.destination} (${format(new Date(v.date_needed), "MMM d")})`, status: v.status })),
-        ].sort((a, b) => +new Date(b.when) - +new Date(a.when)).slice(0, 5);
+        ].sort((a, b) => +new Date(b.when) - +new Date(a.when)).slice(0, 3);
         setFeed(subs);
       }
 
@@ -104,17 +104,17 @@ function Dashboard() {
             <p className="text-sm text-muted-foreground">No upcoming events.</p>
           ) : (
             events.map((ev) => (
-              <div key={ev.id} className="rounded-lg border border-border/60 bg-gradient-to-r from-card to-[oklch(0.96_0.03_145_/_0.15)] p-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-1.0">
-                    <p className="font-medium text-foreground break-words">{ev.title}</p>
-                    <p className="text-xs text-muted-foreground">
+              <div key={ev.id} className="overflow-hidden rounded-lg border border-border/60 bg-gradient-to-r from-card to-[oklch(0.96_0.03_145_/_0.15)] p-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-medium text-foreground">{ev.title}</p>
+                    <p className="break-words text-xs text-muted-foreground">
                       {format(new Date(ev.event_date), "EEEE, MMM d, yyyy")}
                       {ev.department_id && eventDepts[ev.department_id] && <> · Spearheaded by <span className="font-semibold text-accent">{eventDepts[ev.department_id]}</span></>}
                       {ev.venue && <> · <span className="text-primary/80">{ev.venue}</span></>}
                     </p>
                   </div>
-                  <Badge className="bg-primary/10 text-primary border-primary/20">{format(new Date(ev.event_date), "MMM d")}</Badge>
+                  <Badge className="shrink-0 self-start bg-primary/10 text-primary border-primary/20">{format(new Date(ev.event_date), "MMM d")}</Badge>
                 </div>
                 {ev.notes && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted-foreground">{ev.notes}</p>}
               </div>
@@ -124,10 +124,10 @@ function Dashboard() {
       </Card>
 
       {/* Welcome */}
-      <div className="rounded-xl bg-primary p-5 text-white shadow-md">
+      <div className="overflow-hidden rounded-xl bg-primary p-5 text-white shadow-md">
         <p className="text-sm font-bold text-white">Welcome back</p>
-        <h1 className="text-3xl font-bold text-white md:text-4xl" style={{ color: "#ffffff" }}>{profile?.full_name ?? "Friend"}</h1>
-        <p className="mt-1 text-sm font-bold text-white">
+        <h1 className="break-words text-3xl font-bold text-white md:text-4xl" style={{ color: "#ffffff" }}>{profile?.full_name ?? "Friend"}</h1>
+        <p className="mt-1 break-words text-sm font-bold text-white">
           {dept ? <>Department: <span className="font-bold text-white">{dept}</span> · </> : "No department assigned yet · "}
           Week of {weekLabel}
         </p>
@@ -161,12 +161,12 @@ function Dashboard() {
             <CardTitle className="font-serif text-primary">Recent Submissions</CardTitle>
             <CardDescription>Latest work plans, daily logs, and vehicle requests across the secretariat offices.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 overflow-hidden">
             {feed.length === 0 && <p className="text-sm text-muted-foreground">No submissions yet.</p>}
             {feed.map((s) => (
-              <Link key={`${s.kind}-${s.id}`} to="/admin" className="flex w-full flex-col gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-muted/80 transition-colors sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+              <Link key={`${s.kind}-${s.id}`} to="/admin" className="flex w-full max-w-full flex-col gap-1.5 overflow-hidden rounded-lg border border-border bg-card px-3 py-2 text-sm transition-colors hover:bg-muted/80 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="break-words"><span className="font-semibold text-foreground">{s.user}</span> · {s.label}</p>
+                  <p className="break-words [overflow-wrap:anywhere]"><span className="font-semibold text-foreground">{s.user}</span> · {s.label}</p>
                   <p className="text-xs text-muted-foreground">{format(new Date(s.when), "PPp")}</p>
                 </div>
                 <Badge className={`shrink-0 self-start whitespace-nowrap ${s.kind === "plan" ? "bg-primary/15 text-primary border-primary/20" : s.kind === "vehicle" ? "bg-accent/15 text-accent border-accent/20" : "bg-secondary text-secondary-foreground"}`}>{s.kind}{s.status ? ` · ${s.status}` : ""}</Badge>
@@ -193,10 +193,10 @@ function Dashboard() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 overflow-hidden">
       {isSuperAdmin ? (
         <Tabs defaultValue="overview">
-          <TabsList className="flex-wrap">
+          <TabsList className="h-auto flex-wrap justify-start">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="attendance">Office Attendance</TabsTrigger>
           </TabsList>
@@ -237,12 +237,12 @@ function StatCard({ icon: Icon, title, value, to, tone = "muted" }: { icon: any;
 
 function ChecklistRow({ done, title, to }: { done: boolean; title: string; to: string }) {
   return (
-    <Link to={to} className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/60 transition-colors">
-      <div className="flex items-center gap-3">
+    <Link to={to} className="flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-center gap-3">
         <span className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${done ? "border-accent bg-accent text-accent-foreground" : "border-muted-foreground/30"}`}>{done ? "✓" : ""}</span>
-        <span className="text-sm">{title}</span>
+        <span className="break-words text-sm">{title}</span>
       </div>
-      {done ? <Badge className="bg-accent/15 text-accent border-accent/20">Done</Badge> : <Badge variant="outline">Pending</Badge>}
+      {done ? <Badge className="w-fit bg-accent/15 text-accent border-accent/20">Done</Badge> : <Badge variant="outline" className="w-fit">Pending</Badge>}
     </Link>
   );
 }
