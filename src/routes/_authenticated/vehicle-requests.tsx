@@ -10,8 +10,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { Car, Plus, Download } from "lucide-react";
+import { Car, Plus, Download, Trash2 } from "lucide-react";
 import { downloadVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
+
+interface TripRow {
+  date_needed: string;
+  time_from: string;
+  time_to: string;
+  start_point: string;
+  destination: string;
+}
+
+const emptyTrip = (): TripRow => ({
+  date_needed: format(new Date(), "yyyy-MM-dd"),
+  time_from: "09:00",
+  time_to: "17:00",
+  start_point: "",
+  destination: "",
+});
 
 export const Route = createFileRoute("/_authenticated/vehicle-requests")({
   component: VehicleRequestsPage,
