@@ -37,8 +37,7 @@ function Landing() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/auth"><Button variant="ghost" size="sm">Sign in</Button></Link>
-            <Link to="/auth"><Button size="sm">Get started</Button></Link>
+            <Link to="/auth"><Button size="sm">Sign in</Button></Link>
           </div>
         </div>
       </header>
@@ -59,7 +58,6 @@ function Landing() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/auth"><Button size="lg">Sign in to your workspace</Button></Link>
-              <Link to="/auth"><Button size="lg" variant="outline">Create an account</Button></Link>
             </div>
           </div>
         </div>
