@@ -21,31 +21,11 @@ interface Notification {
   to: string;
 }
 
-const READ_IDS_KEY = "notif:readIds";
-const MAX_STORED_IDS = 500;
-
-function getReadIds(): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const stored = localStorage.getItem(READ_IDS_KEY);
-    return new Set(stored ? JSON.parse(stored) : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function saveReadIds(ids: Set<string>) {
-  if (typeof window === "undefined") return;
-  const arr = Array.from(ids);
-  // cap to avoid unbounded localStorage growth
-  const capped = arr.length > MAX_STORED_IDS ? arr.slice(-MAX_STORED_IDS) : arr;
-  localStorage.setItem(READ_IDS_KEY, JSON.stringify(capped));
-}
-
 export function NotificationBell() {
   const { user, isSuperAdmin } = useAuth();
   const [items, setItems] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+
 
   const load = async () => {
     const [{ data: plans }, { data: logs }, { data: vehs }, { data: leaves }, { data: dlogs }, { data: ppl }] =
