@@ -28,7 +28,8 @@ export function NotificationBell() {
 
 
   const load = async () => {
-    const [{ data: plans }, { data: logs }, { data: vehs }, { data: leaves }, { data: dlogs }, { data: ppl }] =
+    if (!user) return;
+    const [{ data: plans }, { data: logs }, { data: vehs }, { data: leaves }, { data: dlogs }, { data: ppl }, { data: reads }] =
       await Promise.all([
         supabase.from("work_plans").select("id,user_id,week_start_date,submitted_at,status").eq("status", "submitted").order("submitted_at", { ascending: false }).limit(15),
         supabase.from("daily_logs").select("id,user_id,log_date,created_at").order("created_at", { ascending: false }).limit(15),
@@ -36,8 +37,10 @@ export function NotificationBell() {
         supabase.from("leave_requests").select("id,user_id,applicant_name,from_date,created_at").order("created_at", { ascending: false }).limit(15),
         supabase.from("driver_logs").select("id,user_id,destination,log_date,created_at").order("created_at", { ascending: false }).limit(15),
         supabase.from("profiles").select("id,full_name"),
+        supabase.from("notification_reads").select("notification_key").eq("user_id", user.id),
       ]);
 
+    const readSet = new Set(((reads as { notification_key: string }[] | null) ?? []).map((r) => r.notification_key));
     const nameOf = (id: string) => (ppl as any[] | null)?.find((p) => p.id === id)?.full_name ?? "Someone";
     const merged: Notification[] = [
       ...((plans as any[]) ?? []).map((p) => ({
@@ -65,12 +68,10 @@ export function NotificationBell() {
         label: `submitted a driver's log to ${d.destination} (${format(new Date(d.log_date), "MMM d")})`,
         when: d.created_at, to: "/drivers-log",
       })),
-    ]
-      .sort((a, b) => +new Date(b.when) - +new Date(a.when));
+    ].sort((a, b) => +new Date(b.when) - +new Date(a.when));
 
-    const readIds = getReadIds();
     const visible = merged
-      .filter((i) => !readIds.has(`${i.kind}-${i.id}`))
+      .filter((i) => !readSet.has(`${i.kind}-${i.id}`))
       .slice(0, 25);
 
     setItems(visible);
@@ -94,20 +95,23 @@ export function NotificationBell() {
 
   const unreadCount = items.length;
 
-  const markSeen = () => {
-    if (items.length === 0) return;
-    const readIds = getReadIds();
-    items.forEach((i) => readIds.add(`${i.kind}-${i.id}`));
-    saveReadIds(readIds);
+  const markSeen = async () => {
+    if (!user || items.length === 0) return;
+    const rows = items.map((i) => ({
+      user_id: user.id,
+      notification_key: `${i.kind}-${i.id}`,
+    }));
+    await supabase.from("notification_reads").upsert(rows, { onConflict: "user_id,notification_key", ignoreDuplicates: true });
   };
 
   const handleOpenChange = async (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
-      markSeen();
+      await markSeen();
       await load();
     }
   };
+
 
   return (
     <DropdownMenu open={open} onOpenChange={handleOpenChange}>
