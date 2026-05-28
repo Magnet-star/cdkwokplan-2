@@ -40,24 +40,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [rolesLoaded, setRolesLoaded] = useState(false);
 
   const loadProfile = async (uid: string) => {
-    const [{ data: p }, { data: r }] = await Promise.all([
+    const [{ data: p, error: pErr }, { data: r, error: rErr }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
-    setProfile(p as Profile | null);
-    setRoles(((r as { role: AppRole }[] | null) ?? []).map((x) => x.role));
-    setRolesLoaded(true);
+    // Only overwrite cached state on successful fetches to avoid losing
+    // privileges during transient network blips or token refreshes.
+    if (!pErr && p) setProfile(p as Profile);
+    if (!rErr && Array.isArray(r)) {
+      const next = (r as { role: AppRole }[]).map((x) => x.role);
+      setRoles(next);
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(`roles:${uid}`, JSON.stringify(next));
+        }
+      } catch {}
+      setRolesLoaded(true);
+    }
+  };
+
+  const hydrateFromCache = (uid: string) => {
+    try {
+      if (typeof window === "undefined") return;
+      const cached = localStorage.getItem(`roles:${uid}`);
+      if (cached) {
+        setRoles(JSON.parse(cached) as AppRole[]);
+        setRolesLoaded(true);
+      }
+    } catch {}
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, sess) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((evt, sess) => {
       setSession(sess);
       setUser(sess?.user ?? null);
       if (sess?.user) {
+        // Token refreshes shouldn't trigger a refetch — keep current roles
+        // in place so super admins don't briefly drop to staff defaults.
+        if (evt === "TOKEN_REFRESHED" || evt === "USER_UPDATED") return;
+        hydrateFromCache(sess.user.id);
         setTimeout(() => { loadProfile(sess.user.id); }, 0);
-      } else {
+      } else if (evt === "SIGNED_OUT") {
         setProfile(null);
         setRoles([]);
+        setRolesLoaded(false);
       }
     });
 
@@ -65,7 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(sess);
       setUser(sess?.user ?? null);
       setLoading(false);
-      if (sess?.user) loadProfile(sess.user.id);
+      if (sess?.user) {
+        hydrateFromCache(sess.user.id);
+        loadProfile(sess.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
