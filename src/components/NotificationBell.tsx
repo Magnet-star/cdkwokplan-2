@@ -21,15 +21,31 @@ interface Notification {
   to: string;
 }
 
-const STORAGE_KEY = "notif:lastSeen";
+const READ_IDS_KEY = "notif:readIds";
+const MAX_STORED_IDS = 500;
+
+function getReadIds(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const stored = localStorage.getItem(READ_IDS_KEY);
+    return new Set(stored ? JSON.parse(stored) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveReadIds(ids: Set<string>) {
+  if (typeof window === "undefined") return;
+  const arr = Array.from(ids);
+  // cap to avoid unbounded localStorage growth
+  const capped = arr.length > MAX_STORED_IDS ? arr.slice(-MAX_STORED_IDS) : arr;
+  localStorage.setItem(READ_IDS_KEY, JSON.stringify(capped));
+}
 
 export function NotificationBell() {
   const { user, isSuperAdmin } = useAuth();
   const [items, setItems] = useState<Notification[]>([]);
-  const [lastSeen, setLastSeen] = useState<number>(() => {
-    if (typeof window === "undefined") return 0;
-    return Number(localStorage.getItem(STORAGE_KEY) ?? 0);
-  });
+  const [open, setOpen] = useState(false);
 
   const load = async () => {
     const [{ data: plans }, { data: logs }, { data: vehs }, { data: leaves }, { data: dlogs }, { data: ppl }] =
@@ -70,10 +86,14 @@ export function NotificationBell() {
         when: d.created_at, to: "/drivers-log",
       })),
     ]
-      .sort((a, b) => +new Date(b.when) - +new Date(a.when))
+      .sort((a, b) => +new Date(b.when) - +new Date(a.when));
+
+    const readIds = getReadIds();
+    const visible = merged
+      .filter((i) => !readIds.has(`${i.kind}-${i.id}`))
       .slice(0, 25);
 
-    setItems(merged);
+    setItems(visible);
   };
 
   useEffect(() => {
@@ -92,22 +112,31 @@ export function NotificationBell() {
 
   if (!isSuperAdmin) return null;
 
-  const unread = items.filter((i) => +new Date(i.when) > lastSeen).length;
+  const unreadCount = items.length;
 
   const markSeen = () => {
-    const now = Date.now();
-    localStorage.setItem(STORAGE_KEY, String(now));
-    setLastSeen(now);
+    if (items.length === 0) return;
+    const readIds = getReadIds();
+    items.forEach((i) => readIds.add(`${i.kind}-${i.id}`));
+    saveReadIds(readIds);
+  };
+
+  const handleOpenChange = async (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      markSeen();
+      await load();
+    }
   };
 
   return (
-    <DropdownMenu onOpenChange={(o) => { if (o) markSeen(); }}>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
           <Bell className="h-4 w-4" />
-          {unread > 0 && (
+          {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-              {unread > 9 ? "9+" : unread}
+              {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
         </Button>
@@ -118,26 +147,23 @@ export function NotificationBell() {
           <p className="text-xs text-muted-foreground">Recent submissions across the diocese</p>
         </div>
         {items.length === 0 ? (
-          <p className="px-3 py-6 text-center text-sm text-muted-foreground">No submissions yet.</p>
+          <p className="px-3 py-6 text-center text-sm text-muted-foreground">No new notifications.</p>
         ) : (
-          items.map((n) => {
-            const isUnread = +new Date(n.when) > lastSeen;
-            return (
-              <Link
-                key={`${n.kind}-${n.id}`}
-                to={n.to}
-                className={`block px-3 py-2 text-sm border-b last:border-b-0 hover:bg-muted/60 transition-colors ${isUnread ? "bg-primary/5" : ""}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-foreground">
-                    <span className="font-semibold">{n.user}</span> {n.label}
-                  </p>
-                  {isUnread && <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5">new</Badge>}
-                </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">{format(new Date(n.when), "PPp")}</p>
-              </Link>
-            );
-          })
+          items.map((n) => (
+            <Link
+              key={`${n.kind}-${n.id}`}
+              to={n.to}
+              className="block px-3 py-2 text-sm border-b last:border-b-0 hover:bg-muted/60 transition-colors bg-primary/5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-foreground">
+                  <span className="font-semibold">{n.user}</span> {n.label}
+                </p>
+                <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 shrink-0">new</Badge>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">{format(new Date(n.when), "PPp")}</p>
+            </Link>
+          ))
         )}
       </DropdownMenuContent>
     </DropdownMenu>
