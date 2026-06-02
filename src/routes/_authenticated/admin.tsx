@@ -747,7 +747,18 @@ function WorkPlanReadCard({ plan, userName, onChanged }: { plan: any; userName: 
             <p className="text-xs text-muted-foreground">{plan.signature ? `Signed by ${plan.signature}` : "Unsigned"}{plan.submitted_at ? ` · Submitted ${format(parseISO(plan.submitted_at), "PPp")}` : ""}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={status === "approved" ? "default" : status === "submitted" ? "secondary" : "outline"} className={status === "approved" ? "bg-success text-success-foreground" : ""}>{status}</Badge>
+            {status === "submitted" && (
+              <>
+                <Badge variant="secondary">SUBMITTED</Badge>
+                <Badge variant="outline" className="text-destructive border-destructive">NOT APPROVED</Badge>
+              </>
+            )}
+            {status === "approved" && (
+              <Badge variant="default" className="bg-success text-success-foreground">SUBMITTED & APPROVED</Badge>
+            )}
+            {status !== "submitted" && status !== "approved" && (
+              <Badge variant="outline">{status}</Badge>
+            )}
             {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </div>
         </button>
