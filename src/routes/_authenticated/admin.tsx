@@ -59,7 +59,7 @@ function AdminPage() {
       supabase.from("vehicle_requests").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("vehicles").select("*").order("registration"),
       supabase.from("daily_logs").select("*").order("log_date", { ascending: false }).limit(100),
-      supabase.from("work_plans").select("*").order("week_start_date", { ascending: false }).limit(100),
+      supabase.from("work_plans").select("*").order("submitted_at", { ascending: false, nullsFirst: false }).limit(100),
       supabase.from("diocesan_events").select("*").order("event_date", { ascending: true }),
     ]);
     setDepts((d as any) ?? []);
@@ -569,7 +569,20 @@ function AdminPage() {
                 <div key={p.id} className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm">
                   <div>
                     <p className="font-medium">{userName(p.user_id)} · Week of {format(parseISO(p.week_start_date), "MMM d, yyyy")}</p>
-                    <Badge variant={p.status === "submitted" ? "default" : "outline"} className={p.status === "submitted" ? "bg-success text-success-foreground" : ""}>{p.status}</Badge>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {p.status === "submitted" && (
+                        <>
+                          <Badge variant="secondary">SUBMITTED</Badge>
+                          <Badge variant="outline" className="text-destructive border-destructive">NOT APPROVED</Badge>
+                        </>
+                      )}
+                      {p.status === "approved" && (
+                        <Badge variant="default" className="bg-success text-success-foreground">SUBMITTED & APPROVED</Badge>
+                      )}
+                      {p.status !== "submitted" && p.status !== "approved" && (
+                        <Badge variant="outline">{p.status}</Badge>
+                      )}
+                    </div>
                   </div>
                   <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
                 </div>
@@ -580,6 +593,11 @@ function AdminPage() {
 
         <TabsContent value="allplans" className="space-y-3 pt-4">
           <p className="text-sm text-muted-foreground">All weekly work plans across the diocese. Click to expand and read the activities.</p>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary" className="text-sm">Submitted: {plans.filter((p) => p.status === "submitted").length}</Badge>
+            <Badge variant="default" className="bg-success text-success-foreground text-sm">Submitted & Approved: {plans.filter((p) => p.status === "approved").length}</Badge>
+            <Badge variant="outline" className="text-sm text-destructive border-destructive">Not Approved: {plans.filter((p) => p.status === "submitted").length}</Badge>
+          </div>
           {plans.length === 0 && <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
           {plans.map((p) => (
             <WorkPlanReadCard key={p.id} plan={p} userName={userName} onChanged={load} />
@@ -742,7 +760,18 @@ function WorkPlanReadCard({ plan, userName, onChanged }: { plan: any; userName: 
             <p className="text-xs text-muted-foreground">{plan.signature ? `Signed by ${plan.signature}` : "Unsigned"}{plan.submitted_at ? ` · Submitted ${format(parseISO(plan.submitted_at), "PPp")}` : ""}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={status === "approved" ? "default" : status === "submitted" ? "secondary" : "outline"} className={status === "approved" ? "bg-success text-success-foreground" : ""}>{status}</Badge>
+            {status === "submitted" && (
+              <>
+                <Badge variant="secondary">SUBMITTED</Badge>
+                <Badge variant="outline" className="text-destructive border-destructive">NOT APPROVED</Badge>
+              </>
+            )}
+            {status === "approved" && (
+              <Badge variant="default" className="bg-success text-success-foreground">SUBMITTED & APPROVED</Badge>
+            )}
+            {status !== "submitted" && status !== "approved" && (
+              <Badge variant="outline">{status}</Badge>
+            )}
             {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </div>
         </button>
