@@ -487,18 +487,25 @@ function AdminPage() {
 
           {users.map((u) => {
             const userRoles = rolesByUser[u.id] ?? [];
+            const isProtected = u.id === "788b3a81-1631-4b53-a08d-35ce5d605f4e";
+            const isSelf = u.id === user?.id;
+            const locked = isProtected && !isSelf;
             return (
               <Card key={u.id}>
                 <CardContent className="space-y-3 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <p className="font-medium">{u.full_name}</p>
+                      <p className="font-medium">
+                        {u.full_name}
+                        {isProtected && <Badge className="ml-2" variant="outline">Protected</Badge>}
+                      </p>
                       <p className="text-xs text-muted-foreground">{u.email}</p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {userRoles.map((r) => <Badge key={r} variant="secondary">{r.replace("_", " ")}</Badge>)}
                       </div>
+                      {locked && <p className="mt-2 text-xs text-muted-foreground">This account is protected and can only be edited by the owner.</p>}
                     </div>
-                    {canEdit && u.id !== user?.id && (
+                    {canEdit && !isSelf && !locked && (
                       <Button size="sm" variant="destructive" onClick={() => deleteUser(u.id, u.full_name)}>
                         <Trash2 className="mr-1 h-3.5 w-3.5" />Delete user
                       </Button>
@@ -507,7 +514,7 @@ function AdminPage() {
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
                       <Label>Department</Label>
-                      <Select value={u.department_id ?? "none"} onValueChange={(v) => assignDepartment(u.id, v === "none" ? null : v)}>
+                      <Select value={u.department_id ?? "none"} onValueChange={(v) => assignDepartment(u.id, v === "none" ? null : v)} disabled={locked}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">— None —</SelectItem>
@@ -517,7 +524,7 @@ function AdminPage() {
                     </div>
                     <div className="flex flex-wrap items-end gap-2">
                       {(["super_admin","administrator","hod","staff","driver"] as Role[]).map((r) => (
-                        <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)}>
+                        <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
                           {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
                           {r.replace("_", " ")}
                         </Button>
