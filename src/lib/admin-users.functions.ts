@@ -69,6 +69,9 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     const isSuper = (roleRows ?? []).some((r: any) => r.role === "super_admin");
     if (!isSuper) throw new Error("Only super admins can delete users");
     if (data.userId === context.userId) throw new Error("You cannot delete your own account");
+    if (data.userId === "788b3a81-1631-4b53-a08d-35ce5d605f4e") {
+      throw new Error("This account is protected and cannot be deleted");
+    }
 
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error(error.message);
