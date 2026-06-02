@@ -59,7 +59,7 @@ function AdminPage() {
       supabase.from("vehicle_requests").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("vehicles").select("*").order("registration"),
       supabase.from("daily_logs").select("*").order("log_date", { ascending: false }).limit(100),
-      supabase.from("work_plans").select("*").order("week_start_date", { ascending: false }).limit(100),
+      supabase.from("work_plans").select("*").order("submitted_at", { ascending: false, nullsFirst: false }).limit(100),
       supabase.from("diocesan_events").select("*").order("event_date", { ascending: true }),
     ]);
     setDepts((d as any) ?? []);
