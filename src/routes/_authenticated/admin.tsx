@@ -569,7 +569,20 @@ function AdminPage() {
                 <div key={p.id} className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm">
                   <div>
                     <p className="font-medium">{userName(p.user_id)} · Week of {format(parseISO(p.week_start_date), "MMM d, yyyy")}</p>
-                    <Badge variant={p.status === "submitted" ? "default" : "outline"} className={p.status === "submitted" ? "bg-success text-success-foreground" : ""}>{p.status}</Badge>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {p.status === "submitted" && (
+                        <>
+                          <Badge variant="secondary">SUBMITTED</Badge>
+                          <Badge variant="outline" className="text-destructive border-destructive">NOT APPROVED</Badge>
+                        </>
+                      )}
+                      {p.status === "approved" && (
+                        <Badge variant="default" className="bg-success text-success-foreground">SUBMITTED & APPROVED</Badge>
+                      )}
+                      {p.status !== "submitted" && p.status !== "approved" && (
+                        <Badge variant="outline">{p.status}</Badge>
+                      )}
+                    </div>
                   </div>
                   <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
                 </div>
