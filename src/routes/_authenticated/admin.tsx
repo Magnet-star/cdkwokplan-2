@@ -622,10 +622,16 @@ function AdminPage() {
             <Badge variant="default" className="bg-success text-success-foreground text-sm">Submitted & Approved: {plans.filter((p) => p.status === "approved").length}</Badge>
             <Badge variant="outline" className="text-sm text-destructive border-destructive">Not Approved: {plans.filter((p) => p.status === "submitted").length}</Badge>
           </div>
-          {plans.length === 0 && <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
-          {plans.map((p) => (
-            <WorkPlanReadCard key={p.id} plan={p} userName={userName} onChanged={load} />
-          ))}
+          <TimeGroupedList
+            items={plans}
+            getDate={(p: any) => parseISO(p.week_start_date)}
+            keyOf={(p: any) => p.id}
+            groupLabel="Work plans"
+            emptyMessage={<Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
+            renderItem={(p: any) => (
+              <WorkPlanReadCard plan={p} userName={userName} onChanged={load} />
+            )}
+          />
         </TabsContent>
       </Tabs>
     </div>
