@@ -556,17 +556,23 @@ function AdminPage() {
               <CardDescription>Delete a log entry submitted by mistake.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {logs.length === 0 && <p className="text-sm text-muted-foreground">No logs yet.</p>}
-              {logs.map((l) => (
-                <div key={l.id} className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm">
-                  <div>
-                    <p className="font-medium">{userName(l.user_id)} · {format(parseISO(l.log_date), "PPP")}</p>
-                    {l.achievements && <p className="text-xs text-muted-foreground"><span className="font-medium">Achievements:</span> {l.achievements}</p>}
-                    {l.challenges && <p className="text-xs text-muted-foreground"><span className="font-medium">Challenges:</span> {l.challenges}</p>}
+              <TimeGroupedList
+                items={logs}
+                getDate={(l: any) => parseISO(l.log_date)}
+                keyOf={(l: any) => l.id}
+                groupLabel="Logs"
+                emptyMessage={<p className="text-sm text-muted-foreground">No logs yet.</p>}
+                renderItem={(l: any) => (
+                  <div className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm">
+                    <div>
+                      <p className="font-medium">{userName(l.user_id)} · {format(parseISO(l.log_date), "PPP")}</p>
+                      {l.achievements && <p className="text-xs text-muted-foreground"><span className="font-medium">Achievements:</span> {l.achievements}</p>}
+                      {l.challenges && <p className="text-xs text-muted-foreground"><span className="font-medium">Challenges:</span> {l.challenges}</p>}
+                    </div>
+                    <Button size="sm" variant="destructive" onClick={() => deleteLog(l.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
                   </div>
-                  <Button size="sm" variant="destructive" onClick={() => deleteLog(l.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
-                </div>
-              ))}
+                )}
+              />
             </CardContent>
           </Card>
 
@@ -576,29 +582,35 @@ function AdminPage() {
               <CardDescription>Delete a weekly work plan (removes all its activities).</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {plans.length === 0 && <p className="text-sm text-muted-foreground">No work plans yet.</p>}
-              {plans.map((p) => (
-                <div key={p.id} className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm">
-                  <div>
-                    <p className="font-medium">{userName(p.user_id)} · Week of {format(parseISO(p.week_start_date), "MMM d, yyyy")}</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {p.status === "submitted" && (
-                        <>
-                          <Badge variant="secondary">SUBMITTED</Badge>
-                          <Badge variant="outline" className="text-destructive border-destructive">NOT APPROVED</Badge>
-                        </>
-                      )}
-                      {p.status === "approved" && (
-                        <Badge variant="default" className="bg-success text-success-foreground">SUBMITTED & APPROVED</Badge>
-                      )}
-                      {p.status !== "submitted" && p.status !== "approved" && (
-                        <Badge variant="outline">{p.status}</Badge>
-                      )}
+              <TimeGroupedList
+                items={plans}
+                getDate={(p: any) => parseISO(p.week_start_date)}
+                keyOf={(p: any) => p.id}
+                groupLabel="Work plans"
+                emptyMessage={<p className="text-sm text-muted-foreground">No work plans yet.</p>}
+                renderItem={(p: any) => (
+                  <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm">
+                    <div>
+                      <p className="font-medium">{userName(p.user_id)} · Week of {format(parseISO(p.week_start_date), "MMM d, yyyy")}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {p.status === "submitted" && (
+                          <>
+                            <Badge variant="secondary">SUBMITTED</Badge>
+                            <Badge variant="outline" className="text-destructive border-destructive">NOT APPROVED</Badge>
+                          </>
+                        )}
+                        {p.status === "approved" && (
+                          <Badge variant="default" className="bg-success text-success-foreground">SUBMITTED & APPROVED</Badge>
+                        )}
+                        {p.status !== "submitted" && p.status !== "approved" && (
+                          <Badge variant="outline">{p.status}</Badge>
+                        )}
+                      </div>
                     </div>
+                    <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
                   </div>
-                  <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
-                </div>
-              ))}
+                )}
+              />
             </CardContent>
           </Card>
         </TabsContent>
