@@ -403,9 +403,15 @@ function AdminPage() {
             <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
           ))}
           <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
-          {vehicles.filter((v) => v.status !== "pending").map((v) => (
-            <VehicleManageCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
-          ))}
+          <TimeGroupedList
+            items={vehicles.filter((v) => v.status !== "pending")}
+            getDate={(v: any) => parseISO(v.date_needed)}
+            keyOf={(v: any) => v.id}
+            groupLabel="Vehicle approvals"
+            renderItem={(v: any) => (
+              <VehicleManageCard v={v} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
+            )}
+          />
         </TabsContent>
 
         <TabsContent value="depts" className="space-y-4 pt-4">
