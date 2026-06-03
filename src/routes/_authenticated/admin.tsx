@@ -315,32 +315,37 @@ function AdminPage() {
             </Card>
           )}
 
-          {events.length === 0 && (
-            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No events yet. {canEdit && "Add one above."}</CardContent></Card>
-          )}
-          {events.map((ev) => {
-            const dept = depts.find((d) => d.id === ev.department_id);
-            const past = new Date(ev.event_date) < new Date(new Date().toDateString());
-            return (
-              <Card key={ev.id}>
-                <CardContent className="flex flex-wrap items-start justify-between gap-3 py-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{ev.title}</p>
-                      <Badge variant={past ? "secondary" : "default"}>{past ? "Past" : "Upcoming"}</Badge>
+          <TimeGroupedList
+            items={events}
+            getDate={(ev: any) => parseISO(ev.event_date)}
+            keyOf={(ev: any) => ev.id}
+            groupLabel="Diocesan events"
+            emptyMessage={<Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No events yet. {canEdit && "Add one above."}</CardContent></Card>}
+            renderItem={(ev: any) => {
+              const dept = depts.find((d) => d.id === ev.department_id);
+              const past = new Date(ev.event_date) < new Date(new Date().toDateString());
+              return (
+                <Card>
+                  <CardContent className="flex flex-wrap items-start justify-between gap-3 py-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{ev.title}</p>
+                        <Badge variant={past ? "secondary" : "default"}>{past ? "Past" : "Upcoming"}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{format(parseISO(ev.event_date), "EEEE, MMM d, yyyy")}{dept && <> · {dept.name}</>}{ev.venue && <> · {ev.venue}</>}</p>
+                      {ev.notes && <p className="mt-2 text-sm whitespace-pre-wrap break-words">{ev.notes}</p>}
                     </div>
-                    <p className="text-xs text-muted-foreground">{format(parseISO(ev.event_date), "EEEE, MMM d, yyyy")}{dept && <> · {dept.name}</>}{ev.venue && <> · {ev.venue}</>}</p>
-                    {ev.notes && <p className="mt-2 text-sm whitespace-pre-wrap break-words">{ev.notes}</p>}
-                  </div>
-                  {canEdit && (
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeEvent(ev.id)}>
-                      <Trash2 className="mr-1 h-4 w-4" />Delete
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                    {canEdit && (
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeEvent(ev.id)}>
+                        <Trash2 className="mr-1 h-4 w-4" />Delete
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            }}
+          />
+
         </TabsContent>
 
         <TabsContent value="fleet" className="space-y-4 pt-4">
