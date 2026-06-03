@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { TimeGroupedList } from "@/components/TimeGroupedList";
 
 export function AttendanceLogPanel() {
   const [rows, setRows] = useState<any[]>([]);
@@ -45,43 +46,31 @@ export function AttendanceLogPanel() {
       <CardContent>
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No attendance entries yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                  <th className="py-2 pr-3">Staff</th>
-                  <th className="py-2 pr-3">Department</th>
-                  <th className="py-2 pr-3">Left</th>
-                  <th className="py-2 pr-3">Returned</th>
-                  <th className="py-2 pr-3">Duration</th>
-                  <th className="py-2 pr-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => {
-                  const u = userMap[r.user_id];
-                  const d = deptMap[r.department_id ?? ""];
-                  return (
-                    <tr key={r.id} className="border-b last:border-0">
-                      <td className="py-2 pr-3">{u?.full_name ?? "—"}</td>
-                      <td className="py-2 pr-3">{d?.name ?? "—"}</td>
-                      <td className="py-2 pr-3">{format(new Date(r.left_at), "PP p")}</td>
-                      <td className="py-2 pr-3">{r.returned_at ? format(new Date(r.returned_at), "PP p") : "—"}</td>
-                      <td className="py-2 pr-3">{fmtDur(r.left_at, r.returned_at)}</td>
-                      <td className="py-2 pr-3">
-                        {r.returned_at
-                          ? <Badge variant="secondary">Returned</Badge>
-                          : <Badge className="bg-amber-500">Out</Badge>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <TimeGroupedList
+            items={rows}
+            getDate={(r: any) => new Date(r.left_at)}
+            keyOf={(r: any) => r.id}
+            groupLabel="Office attendance"
+            emptyMessage={<p className="text-sm text-muted-foreground">No attendance entries yet.</p>}
+            renderItem={(r: any) => {
+              const u = userMap[r.user_id];
+              const d = deptMap[r.department_id ?? ""];
+              return (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="font-medium">{u?.full_name ?? "—"} {d?.name && <span className="text-xs text-muted-foreground">· {d.name}</span>}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Left {format(new Date(r.left_at), "PP p")} · {r.returned_at ? `Returned ${format(new Date(r.returned_at), "PP p")}` : "Not returned"} · {fmtDur(r.left_at, r.returned_at)}
+                    </p>
+                  </div>
+                  {r.returned_at
+                    ? <Badge variant="secondary">Returned</Badge>
+                    : <Badge className="bg-amber-500">Out</Badge>}
+                </div>
+              );
+            }}
+          />
         )}
       </CardContent>
     </Card>
