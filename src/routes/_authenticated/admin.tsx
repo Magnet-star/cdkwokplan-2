@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Plus, ShieldCheck, ShieldOff, Check, X, Trash2, UserPlus, Copy, Pencil, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { downloadVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
 import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
+import { TimeGroupedList } from "@/components/TimeGroupedList";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -314,32 +315,37 @@ function AdminPage() {
             </Card>
           )}
 
-          {events.length === 0 && (
-            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No events yet. {canEdit && "Add one above."}</CardContent></Card>
-          )}
-          {events.map((ev) => {
-            const dept = depts.find((d) => d.id === ev.department_id);
-            const past = new Date(ev.event_date) < new Date(new Date().toDateString());
-            return (
-              <Card key={ev.id}>
-                <CardContent className="flex flex-wrap items-start justify-between gap-3 py-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{ev.title}</p>
-                      <Badge variant={past ? "secondary" : "default"}>{past ? "Past" : "Upcoming"}</Badge>
+          <TimeGroupedList
+            items={events}
+            getDate={(ev: any) => parseISO(ev.event_date)}
+            keyOf={(ev: any) => ev.id}
+            groupLabel="Diocesan events"
+            emptyMessage={<Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No events yet. {canEdit && "Add one above."}</CardContent></Card>}
+            renderItem={(ev: any) => {
+              const dept = depts.find((d) => d.id === ev.department_id);
+              const past = new Date(ev.event_date) < new Date(new Date().toDateString());
+              return (
+                <Card>
+                  <CardContent className="flex flex-wrap items-start justify-between gap-3 py-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{ev.title}</p>
+                        <Badge variant={past ? "secondary" : "default"}>{past ? "Past" : "Upcoming"}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{format(parseISO(ev.event_date), "EEEE, MMM d, yyyy")}{dept && <> · {dept.name}</>}{ev.venue && <> · {ev.venue}</>}</p>
+                      {ev.notes && <p className="mt-2 text-sm whitespace-pre-wrap break-words">{ev.notes}</p>}
                     </div>
-                    <p className="text-xs text-muted-foreground">{format(parseISO(ev.event_date), "EEEE, MMM d, yyyy")}{dept && <> · {dept.name}</>}{ev.venue && <> · {ev.venue}</>}</p>
-                    {ev.notes && <p className="mt-2 text-sm whitespace-pre-wrap break-words">{ev.notes}</p>}
-                  </div>
-                  {canEdit && (
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeEvent(ev.id)}>
-                      <Trash2 className="mr-1 h-4 w-4" />Delete
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                    {canEdit && (
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeEvent(ev.id)}>
+                        <Trash2 className="mr-1 h-4 w-4" />Delete
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            }}
+          />
+
         </TabsContent>
 
         <TabsContent value="fleet" className="space-y-4 pt-4">
@@ -397,9 +403,15 @@ function AdminPage() {
             <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
           ))}
           <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
-          {vehicles.filter((v) => v.status !== "pending").map((v) => (
-            <VehicleManageCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
-          ))}
+          <TimeGroupedList
+            items={vehicles.filter((v) => v.status !== "pending")}
+            getDate={(v: any) => parseISO(v.date_needed)}
+            keyOf={(v: any) => v.id}
+            groupLabel="Vehicle approvals"
+            renderItem={(v: any) => (
+              <VehicleManageCard v={v} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
+            )}
+          />
         </TabsContent>
 
         <TabsContent value="depts" className="space-y-4 pt-4">
@@ -544,17 +556,23 @@ function AdminPage() {
               <CardDescription>Delete a log entry submitted by mistake.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {logs.length === 0 && <p className="text-sm text-muted-foreground">No logs yet.</p>}
-              {logs.map((l) => (
-                <div key={l.id} className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm">
-                  <div>
-                    <p className="font-medium">{userName(l.user_id)} · {format(parseISO(l.log_date), "PPP")}</p>
-                    {l.achievements && <p className="text-xs text-muted-foreground"><span className="font-medium">Achievements:</span> {l.achievements}</p>}
-                    {l.challenges && <p className="text-xs text-muted-foreground"><span className="font-medium">Challenges:</span> {l.challenges}</p>}
+              <TimeGroupedList
+                items={logs}
+                getDate={(l: any) => parseISO(l.log_date)}
+                keyOf={(l: any) => l.id}
+                groupLabel="Logs"
+                emptyMessage={<p className="text-sm text-muted-foreground">No logs yet.</p>}
+                renderItem={(l: any) => (
+                  <div className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm">
+                    <div>
+                      <p className="font-medium">{userName(l.user_id)} · {format(parseISO(l.log_date), "PPP")}</p>
+                      {l.achievements && <p className="text-xs text-muted-foreground"><span className="font-medium">Achievements:</span> {l.achievements}</p>}
+                      {l.challenges && <p className="text-xs text-muted-foreground"><span className="font-medium">Challenges:</span> {l.challenges}</p>}
+                    </div>
+                    <Button size="sm" variant="destructive" onClick={() => deleteLog(l.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
                   </div>
-                  <Button size="sm" variant="destructive" onClick={() => deleteLog(l.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
-                </div>
-              ))}
+                )}
+              />
             </CardContent>
           </Card>
 
@@ -564,29 +582,35 @@ function AdminPage() {
               <CardDescription>Delete a weekly work plan (removes all its activities).</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {plans.length === 0 && <p className="text-sm text-muted-foreground">No work plans yet.</p>}
-              {plans.map((p) => (
-                <div key={p.id} className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm">
-                  <div>
-                    <p className="font-medium">{userName(p.user_id)} · Week of {format(parseISO(p.week_start_date), "MMM d, yyyy")}</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {p.status === "submitted" && (
-                        <>
-                          <Badge variant="secondary">SUBMITTED</Badge>
-                          <Badge variant="outline" className="text-destructive border-destructive">NOT APPROVED</Badge>
-                        </>
-                      )}
-                      {p.status === "approved" && (
-                        <Badge variant="default" className="bg-success text-success-foreground">SUBMITTED & APPROVED</Badge>
-                      )}
-                      {p.status !== "submitted" && p.status !== "approved" && (
-                        <Badge variant="outline">{p.status}</Badge>
-                      )}
+              <TimeGroupedList
+                items={plans}
+                getDate={(p: any) => parseISO(p.week_start_date)}
+                keyOf={(p: any) => p.id}
+                groupLabel="Work plans"
+                emptyMessage={<p className="text-sm text-muted-foreground">No work plans yet.</p>}
+                renderItem={(p: any) => (
+                  <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm">
+                    <div>
+                      <p className="font-medium">{userName(p.user_id)} · Week of {format(parseISO(p.week_start_date), "MMM d, yyyy")}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {p.status === "submitted" && (
+                          <>
+                            <Badge variant="secondary">SUBMITTED</Badge>
+                            <Badge variant="outline" className="text-destructive border-destructive">NOT APPROVED</Badge>
+                          </>
+                        )}
+                        {p.status === "approved" && (
+                          <Badge variant="default" className="bg-success text-success-foreground">SUBMITTED & APPROVED</Badge>
+                        )}
+                        {p.status !== "submitted" && p.status !== "approved" && (
+                          <Badge variant="outline">{p.status}</Badge>
+                        )}
+                      </div>
                     </div>
+                    <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
                   </div>
-                  <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
-                </div>
-              ))}
+                )}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -598,10 +622,16 @@ function AdminPage() {
             <Badge variant="default" className="bg-success text-success-foreground text-sm">Submitted & Approved: {plans.filter((p) => p.status === "approved").length}</Badge>
             <Badge variant="outline" className="text-sm text-destructive border-destructive">Not Approved: {plans.filter((p) => p.status === "submitted").length}</Badge>
           </div>
-          {plans.length === 0 && <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
-          {plans.map((p) => (
-            <WorkPlanReadCard key={p.id} plan={p} userName={userName} onChanged={load} />
-          ))}
+          <TimeGroupedList
+            items={plans}
+            getDate={(p: any) => parseISO(p.week_start_date)}
+            keyOf={(p: any) => p.id}
+            groupLabel="Work plans"
+            emptyMessage={<Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
+            renderItem={(p: any) => (
+              <WorkPlanReadCard plan={p} userName={userName} onChanged={load} />
+            )}
+          />
         </TabsContent>
       </Tabs>
     </div>

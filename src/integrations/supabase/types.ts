@@ -358,6 +358,48 @@ export type Database = {
           },
         ]
       }
+      uploaded_reports: {
+        Row: {
+          department_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          notes: string | null
+          period_month: number
+          period_year: number
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          department_id?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          period_month: number
+          period_year: number
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          department_id?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          period_month?: number
+          period_year?: number
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
