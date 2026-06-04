@@ -105,12 +105,11 @@ function DiocesePage() {
     doc.text("Priests & Religious Men and Women", 14, y);
     autoTable(doc, {
       startY: y + 4,
-      head: [["Name", "Category", "Home Parish", "Ordained", "Current Assignment", "Role", "Other Positions"]],
+      head: [["Name", "Category", "Home Parish", "Current Assignment", "Role", "Other Positions"]],
       body: clergy.map((m) => [
         m.full_name,
         CATEGORY_LABEL[m.category] ?? m.category,
         m.home_parish ?? "",
-        m.ordination_date ? format(parseISO(m.ordination_date), "MMM yyyy") : "",
         m.current_assignment ?? "",
         m.assignment_role ? (ROLE_LABEL[m.assignment_role] ?? m.assignment_role) : "",
         m.other_positions ?? "",
@@ -146,7 +145,6 @@ function DiocesePage() {
       full_name: editClergy.full_name.trim(),
       category: editClergy.category,
       home_parish: editClergy.home_parish || null,
-      ordination_date: editClergy.ordination_date || null,
       current_assignment: editClergy.current_assignment || null,
       assignment_role: editClergy.assignment_role || null,
       other_positions: editClergy.other_positions || null,
@@ -178,7 +176,6 @@ function DiocesePage() {
       full_name: "",
       category: "priest",
       home_parish: "",
-      ordination_date: "",
       current_assignment: "",
       assignment_role: "",
       other_positions: "",
@@ -268,7 +265,6 @@ function DiocesePage() {
                   </CardHeader>
                   <CardContent className="space-y-1 pt-0 text-sm">
                     {m.home_parish && <p><span className="font-semibold">Home parish:</span> {m.home_parish}</p>}
-                    {m.ordination_date && <p><span className="font-semibold">Ordained:</span> {format(parseISO(m.ordination_date), "PPP")}</p>}
                     {m.current_assignment && <p><span className="font-semibold">Currently serving:</span> {m.current_assignment}</p>}
                     {m.other_positions && <p><span className="font-semibold">Other positions:</span> {m.other_positions}</p>}
                     {m.notes && <p className="text-muted-foreground whitespace-pre-wrap">{m.notes}</p>}
@@ -313,7 +309,6 @@ function DiocesePage() {
                 <Label>Full name *</Label>
                 <Input value={editClergy.full_name} onChange={(e) => setEditClergy({ ...editClergy, full_name: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label>Category</Label>
                   <Select value={editClergy.category} onValueChange={(v) => setEditClergy({ ...editClergy, category: v })}>
@@ -325,11 +320,6 @@ function DiocesePage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label>Ordination date</Label>
-                  <Input type="date" value={editClergy.ordination_date ?? ""} onChange={(e) => setEditClergy({ ...editClergy, ordination_date: e.target.value })} />
-                </div>
-              </div>
               <div className="space-y-1">
                 <Label>Home parish</Label>
                 <Input value={editClergy.home_parish ?? ""} onChange={(e) => setEditClergy({ ...editClergy, home_parish: e.target.value })} />
