@@ -98,11 +98,10 @@ function Dashboard() {
             </div>
             <CardTitle className="font-serif text-primary">Upcoming Diocesan Events</CardTitle>
           </div>
-          <CardDescription>Posted by the Super Admin.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
+          <CardDescription>Events happening within the next two weeks.</CardDescription>
+          <CardContent className="space-y-3">
           {events.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No upcoming events.</p>
+            <p className="text-sm text-muted-foreground">No events in the next two weeks.</p>
           ) : (
             events.map((ev) => (
               <div key={ev.id} className="overflow-hidden rounded-lg border border-border/60 bg-gradient-to-r from-card to-[oklch(0.96_0.03_145_/_0.15)] p-3">
