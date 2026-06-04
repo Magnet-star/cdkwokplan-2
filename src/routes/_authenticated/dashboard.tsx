@@ -99,7 +99,9 @@ function Dashboard() {
             <CardTitle className="font-serif text-primary">Upcoming Diocesan Events</CardTitle>
           </div>
           <CardDescription>Events happening within the next two weeks.</CardDescription>
-          <CardContent className="space-y-3">
+        </CardHeader>
+        <CardContent className="space-y-3">
+
           {events.length === 0 ? (
             <p className="text-sm text-muted-foreground">No events in the next two weeks.</p>
           ) : (
