@@ -35,7 +35,6 @@ interface ClergyRow {
   full_name: string;
   category: string;
   home_parish: string | null;
-  ordination_date: string | null;
   current_assignment: string | null;
   assignment_role: string | null;
   other_positions: string | null;
