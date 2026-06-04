@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      clergy_members: {
+        Row: {
+          assignment_role: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          current_assignment: string | null
+          full_name: string
+          home_parish: string | null
+          id: string
+          notes: string | null
+          ordination_date: string | null
+          other_positions: string | null
+          updated_at: string
+        }
+        Insert: {
+          assignment_role?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_assignment?: string | null
+          full_name: string
+          home_parish?: string | null
+          id?: string
+          notes?: string | null
+          ordination_date?: string | null
+          other_positions?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assignment_role?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_assignment?: string | null
+          full_name?: string
+          home_parish?: string | null
+          id?: string
+          notes?: string | null
+          ordination_date?: string | null
+          other_positions?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       daily_logs: {
         Row: {
           achievements: string | null
@@ -122,6 +167,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      diocese_leadership: {
+        Row: {
+          created_at: string
+          holder_name: string | null
+          id: string
+          notes: string | null
+          position_key: string
+          position_title: string
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          holder_name?: string | null
+          id?: string
+          notes?: string | null
+          position_key: string
+          position_title: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          holder_name?: string | null
+          id?: string
+          notes?: string | null
+          position_key?: string
+          position_title?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       driver_logs: {
         Row: {
