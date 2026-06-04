@@ -73,8 +73,9 @@ function Dashboard() {
       setDept((deptRow.data as { name: string } | null)?.name ?? null);
 
       const today = format(new Date(), "yyyy-MM-dd");
+      const twoWeeksAhead = format(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), "yyyy-MM-dd");
       const [{ data: evs }, { data: allDepts }] = await Promise.all([
-        supabase.from("diocesan_events").select("*").gte("event_date", today).order("event_date", { ascending: true }).limit(10),
+        supabase.from("diocesan_events").select("*").gte("event_date", today).lte("event_date", twoWeeksAhead).order("event_date", { ascending: true }),
         supabase.from("departments").select("id,name"),
       ]);
       setEvents((evs as any) ?? []);
@@ -97,11 +98,12 @@ function Dashboard() {
             </div>
             <CardTitle className="font-serif text-primary">Upcoming Diocesan Events</CardTitle>
           </div>
-          <CardDescription>Posted by the Super Admin.</CardDescription>
+          <CardDescription>Events happening within the next two weeks.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
+
           {events.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No upcoming events.</p>
+            <p className="text-sm text-muted-foreground">No events in the next two weeks.</p>
           ) : (
             events.map((ev) => (
               <div key={ev.id} className="overflow-hidden rounded-lg border border-border/60 bg-gradient-to-r from-card to-[oklch(0.96_0.03_145_/_0.15)] p-3">
