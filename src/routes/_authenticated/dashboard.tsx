@@ -73,8 +73,9 @@ function Dashboard() {
       setDept((deptRow.data as { name: string } | null)?.name ?? null);
 
       const today = format(new Date(), "yyyy-MM-dd");
+      const twoWeeksAhead = format(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), "yyyy-MM-dd");
       const [{ data: evs }, { data: allDepts }] = await Promise.all([
-        supabase.from("diocesan_events").select("*").gte("event_date", today).order("event_date", { ascending: true }).limit(10),
+        supabase.from("diocesan_events").select("*").gte("event_date", today).lte("event_date", twoWeeksAhead).order("event_date", { ascending: true }),
         supabase.from("departments").select("id,name"),
       ]);
       setEvents((evs as any) ?? []);
