@@ -17,6 +17,7 @@ import { Route as AuthenticatedVehicleRequestsRouteImport } from './routes/_auth
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedLeaveRequestsRouteImport } from './routes/_authenticated/leave-requests'
 import { Route as AuthenticatedDriversLogRouteImport } from './routes/_authenticated/drivers-log'
+import { Route as AuthenticatedDioceseRouteImport } from './routes/_authenticated/diocese'
 import { Route as AuthenticatedDepartmentRouteImport } from './routes/_authenticated/department'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDailyLogRouteImport } from './routes/_authenticated/daily-log'
@@ -63,6 +64,11 @@ const AuthenticatedDriversLogRoute = AuthenticatedDriversLogRouteImport.update({
   path: '/drivers-log',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDioceseRoute = AuthenticatedDioceseRouteImport.update({
+  id: '/diocese',
+  path: '/diocese',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDepartmentRoute = AuthenticatedDepartmentRouteImport.update({
   id: '/department',
   path: '/department',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/department': typeof AuthenticatedDepartmentRoute
+  '/diocese': typeof AuthenticatedDioceseRoute
   '/drivers-log': typeof AuthenticatedDriversLogRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/department': typeof AuthenticatedDepartmentRoute
+  '/diocese': typeof AuthenticatedDioceseRoute
   '/drivers-log': typeof AuthenticatedDriversLogRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/_authenticated/daily-log': typeof AuthenticatedDailyLogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/department': typeof AuthenticatedDepartmentRoute
+  '/_authenticated/diocese': typeof AuthenticatedDioceseRoute
   '/_authenticated/drivers-log': typeof AuthenticatedDriversLogRoute
   '/_authenticated/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/daily-log'
     | '/dashboard'
     | '/department'
+    | '/diocese'
     | '/drivers-log'
     | '/leave-requests'
     | '/reports'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/daily-log'
     | '/dashboard'
     | '/department'
+    | '/diocese'
     | '/drivers-log'
     | '/leave-requests'
     | '/reports'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/_authenticated/daily-log'
     | '/_authenticated/dashboard'
     | '/_authenticated/department'
+    | '/_authenticated/diocese'
     | '/_authenticated/drivers-log'
     | '/_authenticated/leave-requests'
     | '/_authenticated/reports'
@@ -232,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDriversLogRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/diocese': {
+      id: '/_authenticated/diocese'
+      path: '/diocese'
+      fullPath: '/diocese'
+      preLoaderRoute: typeof AuthenticatedDioceseRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/department': {
       id: '/_authenticated/department'
       path: '/department'
@@ -268,6 +287,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDailyLogRoute: typeof AuthenticatedDailyLogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDepartmentRoute: typeof AuthenticatedDepartmentRoute
+  AuthenticatedDioceseRoute: typeof AuthenticatedDioceseRoute
   AuthenticatedDriversLogRoute: typeof AuthenticatedDriversLogRoute
   AuthenticatedLeaveRequestsRoute: typeof AuthenticatedLeaveRequestsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -280,6 +300,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDailyLogRoute: AuthenticatedDailyLogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDepartmentRoute: AuthenticatedDepartmentRoute,
+  AuthenticatedDioceseRoute: AuthenticatedDioceseRoute,
   AuthenticatedDriversLogRoute: AuthenticatedDriversLogRoute,
   AuthenticatedLeaveRequestsRoute: AuthenticatedLeaveRequestsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
