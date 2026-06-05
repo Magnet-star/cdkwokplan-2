@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Car, Plus, Download, Trash2 } from "lucide-react";
-import { downloadVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
+import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
 
 interface TripRow {
   date_needed: string;
