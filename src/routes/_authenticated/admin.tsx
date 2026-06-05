@@ -752,6 +752,7 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={() => onDecideBulk(ids, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve all {items.length} trips</Button>
           <Button size="sm" variant="destructive" onClick={() => onDecideBulk(ids, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject all</Button>
+          <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(items, meta, weekStart)}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
           <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Decide per day"}</Button>
         </div>
 
