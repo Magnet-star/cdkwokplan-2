@@ -164,6 +164,15 @@ function AdminPage() {
     load();
   };
 
+  const decideVehicleBulk = async (ids: string[], status: "approved" | "rejected", notes?: string) => {
+    if (ids.length === 0) return;
+    const { error } = await supabase.from("vehicle_requests").update({
+      status, approver_notes: notes ?? null, approved_at: new Date().toISOString(),
+    }).in("id", ids);
+    if (error) toast.error(error.message);
+    else { toast.success(`${ids.length} request${ids.length > 1 ? "s" : ""} ${status}`); load(); }
+  };
+
   const deleteVehicle = async (id: string) => {
     if (!confirm("Delete this vehicle request? This cannot be undone.")) return;
     const { error } = await supabase.from("vehicle_requests").delete().eq("id", id);
