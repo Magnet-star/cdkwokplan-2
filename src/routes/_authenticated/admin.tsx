@@ -769,6 +769,58 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
   );
 }
 
+function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta, onDelete, onUpdate, onDecide, onDecideBulk }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const meta = userMeta(userId);
+  const statuses = Array.from(new Set(items.map((i) => i.status)));
+  const statusLabel = statuses.length === 1 ? statuses[0] : "mixed";
+  const ids = items.map((i) => i.id);
+  return (
+    <Card>
+      <CardContent className="space-y-2 p-4 text-sm">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p className="font-medium">{userName(userId)} — weekly request</p>
+            <p className="text-xs text-muted-foreground">
+              {meta.departmentName ? `${meta.departmentName} · ` : ""}Week of {format(parseISO(weekStart), "MMM d, yyyy")} · {items.length} trips
+            </p>
+          </div>
+          <Badge className={statusLabel === "approved" ? "bg-success text-success-foreground" : ""} variant={statusLabel === "rejected" ? "destructive" : "default"}>{statusLabel}</Badge>
+        </div>
+
+        <div className="rounded-md border border-border divide-y divide-border">
+          {items.map((v) => (
+            <div key={v.id} className="p-2 text-xs">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium">{format(parseISO(v.date_needed), "EEE, MMM d")}{v.time_from ? ` · ${v.time_from}–${v.time_to ?? ""}` : ""} — {v.destination}</p>
+                  <p className="text-muted-foreground">{v.purpose} · Passengers: {v.passengers ?? 1}</p>
+                </div>
+                <Badge variant="outline" className="text-[10px]">{v.status}</Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(items, meta, weekStart)}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
+          {statusLabel !== "approved" && <Button size="sm" onClick={() => onDecideBulk(ids, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark all approved</Button>}
+          {statusLabel !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecideBulk(ids, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark all rejected</Button>}
+          <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Manage per day"}</Button>
+        </div>
+
+        {expanded && (
+          <div className="space-y-2 pt-2">
+            {items.map((v) => (
+              <VehicleManageCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDelete={onDelete} onUpdate={onUpdate} onDecide={onDecide} />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
