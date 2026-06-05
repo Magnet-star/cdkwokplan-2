@@ -174,38 +174,95 @@ function VehicleRequestsPage() {
             <Car className="h-8 w-8" /><p>No vehicle requests yet.</p>
           </CardContent></Card>
         )}
-        {list.map((r) => (
-          <Card key={r.id}>
-            <CardContent className="p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-serif text-lg">{r.destination}</p>
-                  <p className="text-sm text-muted-foreground">{format(parseISO(r.date_needed), "EEEE, MMM d, yyyy")}{r.time_from ? ` · ${r.time_from}–${r.time_to ?? ""}` : ""}</p>
-                </div>
-                <StatusBadge s={r.status} />
-              </div>
-              <p className="mt-2 text-sm">{r.purpose}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Passengers: {r.passengers ?? 1}</p>
-              {r.approver_notes && (
-                <p className="mt-2 rounded-md bg-muted px-3 py-2 text-xs"><strong>Secretary's note:</strong> {r.approver_notes}</p>
-              )}
-              <div className="mt-3 flex justify-end">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => downloadVehicleRequestPDF(r, {
-                    fullName: profile?.full_name ?? "—",
-                    position: profile?.position,
-                    departmentName: deptName,
-                    hodName: hodName,
-                  })}
-                >
-                  <Download className="mr-1 h-4 w-4" />Download PDF
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {(() => {
+          const meta = {
+            fullName: profile?.full_name ?? "—",
+            position: profile?.position,
+            departmentName: deptName,
+            hodName: hodName,
+          };
+          const groups: Record<string, VR[]> = {};
+          list.forEach((r) => {
+            const wk = r.week_start_date ?? r.date_needed;
+            (groups[`${wk}`] ||= []).push(r);
+          });
+          const groupList = Object.entries(groups).map(([key, items]) => ({
+            key,
+            items: items.sort((a, b) => a.date_needed.localeCompare(b.date_needed)),
+            weekStart: items[0].week_start_date ?? items[0].date_needed,
+          })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+
+          return groupList.map((g) => {
+            if (g.items.length === 1) {
+              const r = g.items[0];
+              return (
+                <Card key={g.key}>
+                  <CardContent className="p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-serif text-lg">{r.destination}</p>
+                        <p className="text-sm text-muted-foreground">{format(parseISO(r.date_needed), "EEEE, MMM d, yyyy")}{r.time_from ? ` · ${r.time_from}–${r.time_to ?? ""}` : ""}</p>
+                      </div>
+                      <StatusBadge s={r.status} />
+                    </div>
+                    <p className="mt-2 text-sm">{r.purpose}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Passengers: {r.passengers ?? 1}</p>
+                    {r.approver_notes && (
+                      <p className="mt-2 rounded-md bg-muted px-3 py-2 text-xs"><strong>Secretary's note:</strong> {r.approver_notes}</p>
+                    )}
+                    <div className="mt-3 flex justify-end">
+                      <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(r, meta)}>
+                        <Download className="mr-1 h-4 w-4" />Download PDF
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            }
+            const statuses = Array.from(new Set(g.items.map((i) => i.status)));
+            const statusLabel = statuses.length === 1 ? statuses[0] : "mixed";
+            const notes = Array.from(new Set(g.items.map((i) => i.approver_notes).filter(Boolean) as string[]));
+            return (
+              <Card key={g.key}>
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-serif text-lg">Weekly request — {g.items.length} trips</p>
+                      <p className="text-sm text-muted-foreground">Week of {format(parseISO(g.weekStart), "EEEE, MMM d, yyyy")}</p>
+                    </div>
+                    {statusLabel === "mixed" ? <Badge>mixed</Badge> : <StatusBadge s={statusLabel as VR["status"]} />}
+                  </div>
+                  <div className="rounded-md border border-border divide-y divide-border">
+                    {g.items.map((r) => (
+                      <div key={r.id} className="p-3 text-sm">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-medium">{format(parseISO(r.date_needed), "EEE, MMM d")}{r.time_from ? ` · ${r.time_from}–${r.time_to ?? ""}` : ""} — {r.destination}</p>
+                            <p className="text-xs text-muted-foreground">{r.purpose} · Passengers: {r.passengers ?? 1}</p>
+                          </div>
+                          <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {notes.length > 0 && (
+                    <div className="rounded-md bg-muted px-3 py-2 text-xs">
+                      <strong>Secretary's note{notes.length > 1 ? "s" : ""}:</strong>
+                      <ul className="mt-1 list-disc pl-4 space-y-1">
+                        {notes.map((n, i) => <li key={i}>{n}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  <div className="flex justify-end">
+                    <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(g.items, meta, g.weekStart)}>
+                      <Download className="mr-1 h-4 w-4" />Download weekly form
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          });
+        })()}
       </div>
     </div>
   );
