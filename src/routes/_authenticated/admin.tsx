@@ -741,7 +741,6 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
                   <p className="mt-1 text-xs text-muted-foreground">{v.purpose} · Passengers: {v.passengers ?? 1}</p>
                 </div>
                 <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" onClick={() => downloadVehicleRequestPDF(v, meta)} title="Download PDF"><Download className="h-3.5 w-3.5" /></Button>
                   <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(v.id)} title="Delete day"><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               </div>
