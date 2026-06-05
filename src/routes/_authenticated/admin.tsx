@@ -16,7 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Plus, ShieldCheck, ShieldOff, Check, X, Trash2, UserPlus, Copy, Pencil, ChevronDown, ChevronUp, Download } from "lucide-react";
-import { downloadVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
+import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
 import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
 import { TimeGroupedList } from "@/components/TimeGroupedList";
 
