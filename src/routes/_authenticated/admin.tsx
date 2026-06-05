@@ -405,12 +405,30 @@ function AdminPage() {
 
 
         <TabsContent value="vehicles" className="space-y-3 pt-4">
-          {vehicles.filter((v) => v.status === "pending").length === 0 && (
-            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No pending vehicle requests.</CardContent></Card>
-          )}
-          {vehicles.filter((v) => v.status === "pending").map((v) => (
-            <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
-          ))}
+          {(() => {
+            const pending = vehicles.filter((v) => v.status === "pending");
+            if (pending.length === 0) {
+              return <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No pending vehicle requests.</CardContent></Card>;
+            }
+            // Group by user_id + week_start_date (fallback: week of date_needed)
+            const groups: Record<string, any[]> = {};
+            pending.forEach((v) => {
+              const wk = v.week_start_date ?? v.date_needed;
+              const key = `${v.user_id}__${wk}`;
+              (groups[key] ||= []).push(v);
+            });
+            const groupList = Object.entries(groups).map(([key, items]) => ({
+              key,
+              items: items.sort((a, b) => a.date_needed.localeCompare(b.date_needed)),
+              weekStart: items[0].week_start_date ?? items[0].date_needed,
+              userId: items[0].user_id,
+            })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+            return groupList.map((g) => (
+              g.items.length === 1
+                ? <VehicleApproveCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
+                : <VehicleWeeklyApproveCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDecideBulk={decideVehicleBulk} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
+            ));
+          })()}
           <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
           <TimeGroupedList
             items={vehicles.filter((v) => v.status !== "pending")}
