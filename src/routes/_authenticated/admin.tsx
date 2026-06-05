@@ -430,15 +430,28 @@ function AdminPage() {
             ));
           })()}
           <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
-          <TimeGroupedList
-            items={vehicles.filter((v) => v.status !== "pending")}
-            getDate={(v: any) => parseISO(v.date_needed)}
-            keyOf={(v: any) => v.id}
-            groupLabel="Vehicle approvals"
-            renderItem={(v: any) => (
-              <VehicleManageCard v={v} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
-            )}
-          />
+          {(() => {
+            const decided = vehicles.filter((v) => v.status !== "pending");
+            if (decided.length === 0) {
+              return <Card><CardContent className="py-6 text-center text-sm text-muted-foreground">No past requests.</CardContent></Card>;
+            }
+            const groups: Record<string, any[]> = {};
+            decided.forEach((v) => {
+              const wk = v.week_start_date ?? v.date_needed;
+              (groups[`${v.user_id}__${wk}`] ||= []).push(v);
+            });
+            const groupList = Object.entries(groups).map(([key, items]) => ({
+              key,
+              items: items.sort((a, b) => a.date_needed.localeCompare(b.date_needed)),
+              weekStart: items[0].week_start_date ?? items[0].date_needed,
+              userId: items[0].user_id,
+            })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+            return groupList.map((g) => (
+              g.items.length === 1
+                ? <VehicleManageCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
+                : <VehicleWeeklyManageCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} onDecideBulk={decideVehicleBulk} />
+            ));
+          })()}
         </TabsContent>
 
         <TabsContent value="depts" className="space-y-4 pt-4">
