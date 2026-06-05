@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { format, parseISO } from "date-fns";
 
 export interface VehicleRequestPDF {
