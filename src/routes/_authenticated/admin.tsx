@@ -164,6 +164,15 @@ function AdminPage() {
     load();
   };
 
+  const decideVehicleBulk = async (ids: string[], status: "approved" | "rejected", notes?: string) => {
+    if (ids.length === 0) return;
+    const { error } = await supabase.from("vehicle_requests").update({
+      status, approver_notes: notes ?? null, approved_at: new Date().toISOString(),
+    }).in("id", ids);
+    if (error) toast.error(error.message);
+    else { toast.success(`${ids.length} request${ids.length > 1 ? "s" : ""} ${status}`); load(); }
+  };
+
   const deleteVehicle = async (id: string) => {
     if (!confirm("Delete this vehicle request? This cannot be undone.")) return;
     const { error } = await supabase.from("vehicle_requests").delete().eq("id", id);
@@ -396,12 +405,30 @@ function AdminPage() {
 
 
         <TabsContent value="vehicles" className="space-y-3 pt-4">
-          {vehicles.filter((v) => v.status === "pending").length === 0 && (
-            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No pending vehicle requests.</CardContent></Card>
-          )}
-          {vehicles.filter((v) => v.status === "pending").map((v) => (
-            <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
-          ))}
+          {(() => {
+            const pending = vehicles.filter((v) => v.status === "pending");
+            if (pending.length === 0) {
+              return <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No pending vehicle requests.</CardContent></Card>;
+            }
+            // Group by user_id + week_start_date (fallback: week of date_needed)
+            const groups: Record<string, any[]> = {};
+            pending.forEach((v) => {
+              const wk = v.week_start_date ?? v.date_needed;
+              const key = `${v.user_id}__${wk}`;
+              (groups[key] ||= []).push(v);
+            });
+            const groupList = Object.entries(groups).map(([key, items]) => ({
+              key,
+              items: items.sort((a, b) => a.date_needed.localeCompare(b.date_needed)),
+              weekStart: items[0].week_start_date ?? items[0].date_needed,
+              userId: items[0].user_id,
+            })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+            return groupList.map((g) => (
+              g.items.length === 1
+                ? <VehicleApproveCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
+                : <VehicleWeeklyApproveCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDecideBulk={decideVehicleBulk} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
+            ));
+          })()}
           <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
           <TimeGroupedList
             items={vehicles.filter((v) => v.status !== "pending")}
@@ -667,6 +694,62 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
           </>
         ) : (
           <VehicleEditFields form={form} setForm={setForm} onSave={() => { onUpdate(v.id, { ...form, time_from: form.time_from || null, time_to: form.time_to || null }); setEditing(false); }} onCancel={() => setEditing(false)} />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta, onDecideBulk, onDecide, onDelete, onUpdate }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
+  const [notes, setNotes] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const meta = userMeta(userId);
+  const ids = items.map((i) => i.id);
+  return (
+    <Card className="border-primary/40">
+      <CardContent className="space-y-3 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p className="font-serif text-lg">{userName(userId)} — weekly vehicle request</p>
+            <p className="text-sm text-muted-foreground">
+              {meta.departmentName ? `${meta.departmentName} · ` : ""}Week of {format(parseISO(weekStart), "MMM d, yyyy")} · {items.length} trip{items.length > 1 ? "s" : ""}
+            </p>
+          </div>
+          <Badge variant="outline">Pending</Badge>
+        </div>
+
+        <div className="rounded-md border border-border divide-y divide-border">
+          {items.map((v) => (
+            <div key={v.id} className="p-3 text-sm">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium">{format(parseISO(v.date_needed), "EEE, MMM d")}{v.time_from ? ` · ${v.time_from}–${v.time_to ?? ""}` : ""}</p>
+                  <p className="text-sm">{v.destination}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{v.purpose} · Passengers: {v.passengers ?? 1}</p>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => downloadVehicleRequestPDF(v, meta)} title="Download PDF"><Download className="h-3.5 w-3.5" /></Button>
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(v.id)} title="Delete day"><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Textarea rows={2} placeholder="Optional note to requester (applies to all trips)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => onDecideBulk(ids, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve all {items.length} trips</Button>
+          <Button size="sm" variant="destructive" onClick={() => onDecideBulk(ids, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject all</Button>
+          <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Decide per day"}</Button>
+        </div>
+
+        {expanded && (
+          <div className="space-y-2 pt-2">
+            <p className="text-xs text-muted-foreground">Decide individual days separately:</p>
+            {items.map((v) => (
+              <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={onDecide} onDelete={onDelete} onUpdate={onUpdate} />
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
