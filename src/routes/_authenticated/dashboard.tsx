@@ -137,7 +137,7 @@ function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={ClipboardList} title="This week's plan" value={stats?.thisWeekPlan ? (stats.thisWeekPlan.status === "submitted" ? "Submitted" : "Draft") : "Not started"} tone={stats?.thisWeekPlan?.status === "submitted" ? "success" : stats?.thisWeekPlan ? "warning" : "muted"} to="/work-plans" />
+        <StatCard icon={ClipboardList} title="This week's plan" value={stats?.thisWeekPlan ? (stats.thisWeekPlan.status === "submitted" || stats.thisWeekPlan.status === "approved" ? "Submitted" : "Draft") : "Not started"} tone={stats?.thisWeekPlan && (stats.thisWeekPlan.status === "submitted" || stats.thisWeekPlan.status === "approved") ? "success" : stats?.thisWeekPlan ? "warning" : "muted"} to="/work-plans" />
         <StatCard icon={Car} title="My vehicle requests (week)" value={String(stats?.myVehicles ?? 0)} to="/vehicle-requests" />
         <StatCard icon={BookText} title="Days logged this week" value={String(stats?.daysLogged ?? 0)} to="/daily-log" />
         <StatCard icon={FileBarChart} title={isSuperAdmin ? "Pending vehicle approvals" : "Monthly reports"} value={isSuperAdmin ? String(stats?.pendingVehicles ?? 0) : "Generate"} to={isSuperAdmin ? "/admin" : "/reports"} tone={isSuperAdmin && (stats?.pendingVehicles ?? 0) > 1 ? "warning" : "muted"} />
@@ -150,7 +150,7 @@ function Dashboard() {
           <CardDescription>Complete these every Monday for the week ahead.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <ChecklistRow done={!!stats?.thisWeekPlan && stats.thisWeekPlan.status === "submitted"} title="Submit your weekly work plan" to="/work-plans" />
+          <ChecklistRow done={!!stats?.thisWeekPlan && (stats.thisWeekPlan.status === "submitted" || stats.thisWeekPlan.status === "approved")} title="Submit your weekly work plan" to="/work-plans" />
           <ChecklistRow done={(stats?.myVehicles ?? 0) > 0} title="Submit vehicle request (if needed)" to="/vehicle-requests" />
           <ChecklistRow done={(stats?.daysLogged ?? 0) > 0} title="Log daily challenges & achievements" to="/daily-log" />
         </CardContent>
