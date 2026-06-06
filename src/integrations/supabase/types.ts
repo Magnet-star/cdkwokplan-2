@@ -218,6 +218,8 @@ export type Database = {
           created_at: string
           department_id: string | null
           destination: string
+          fuel_litres: number | null
+          fuel_order_amount: number | null
           id: string
           log_date: string
           passengers: number | null
@@ -238,6 +240,8 @@ export type Database = {
           created_at?: string
           department_id?: string | null
           destination: string
+          fuel_litres?: number | null
+          fuel_order_amount?: number | null
           id?: string
           log_date: string
           passengers?: number | null
@@ -258,6 +262,8 @@ export type Database = {
           created_at?: string
           department_id?: string | null
           destination?: string
+          fuel_litres?: number | null
+          fuel_order_amount?: number | null
           id?: string
           log_date?: string
           passengers?: number | null
