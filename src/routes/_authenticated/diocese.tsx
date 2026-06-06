@@ -38,7 +38,7 @@ interface ClergyRow {
   current_assignment: string | null;
   assignment_role: string | null;
   other_positions: string | null;
-  notes: string | null;
+  phone_number: string | null;
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
