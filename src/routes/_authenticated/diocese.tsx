@@ -105,7 +105,7 @@ function DiocesePage() {
     doc.text("Priests & Religious Men and Women", 14, y);
     autoTable(doc, {
       startY: y + 4,
-      head: [["Name", "Category", "Home Parish", "Current Assignment", "Role", "Other Positions"]],
+      head: [["Name", "Category", "Home Parish", "Current Assignment", "Role", "Other Positions", "Phone"]],
       body: clergy.map((m) => [
         m.full_name,
         CATEGORY_LABEL[m.category] ?? m.category,
@@ -113,6 +113,7 @@ function DiocesePage() {
         m.current_assignment ?? "",
         m.assignment_role ? (ROLE_LABEL[m.assignment_role] ?? m.assignment_role) : "",
         m.other_positions ?? "",
+        m.phone_number ?? "",
       ]),
       headStyles: { fillColor: [102, 0, 0], textColor: 255 },
       styles: { fontSize: 8, cellPadding: 2 },
