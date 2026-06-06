@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Download, Church } from "lucide-react";
+import { Pencil, Plus, Trash2, Download, Church, Phone } from "lucide-react";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -38,7 +38,7 @@ interface ClergyRow {
   current_assignment: string | null;
   assignment_role: string | null;
   other_positions: string | null;
-  notes: string | null;
+  phone_number: string | null;
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -105,7 +105,7 @@ function DiocesePage() {
     doc.text("Priests & Religious Men and Women", 14, y);
     autoTable(doc, {
       startY: y + 4,
-      head: [["Name", "Category", "Home Parish", "Current Assignment", "Role", "Other Positions"]],
+      head: [["Name", "Category", "Home Parish", "Current Assignment", "Role", "Other Positions", "Phone"]],
       body: clergy.map((m) => [
         m.full_name,
         CATEGORY_LABEL[m.category] ?? m.category,
@@ -113,6 +113,7 @@ function DiocesePage() {
         m.current_assignment ?? "",
         m.assignment_role ? (ROLE_LABEL[m.assignment_role] ?? m.assignment_role) : "",
         m.other_positions ?? "",
+        m.phone_number ?? "",
       ]),
       headStyles: { fillColor: [102, 0, 0], textColor: 255 },
       styles: { fontSize: 8, cellPadding: 2 },
@@ -148,7 +149,7 @@ function DiocesePage() {
       current_assignment: editClergy.current_assignment || null,
       assignment_role: editClergy.assignment_role || null,
       other_positions: editClergy.other_positions || null,
-      notes: editClergy.notes || null,
+      phone_number: editClergy.phone_number || null,
     };
     if (!payload.full_name) { toast.error("Name is required"); return; }
     const { error } = creatingClergy
@@ -179,7 +180,7 @@ function DiocesePage() {
       current_assignment: "",
       assignment_role: "",
       other_positions: "",
-      notes: "",
+      phone_number: "",
     });
   };
 
@@ -267,7 +268,12 @@ function DiocesePage() {
                     {m.home_parish && <p><span className="font-semibold">Home parish:</span> {m.home_parish}</p>}
                     {m.current_assignment && <p><span className="font-semibold">Currently serving:</span> {m.current_assignment}</p>}
                     {m.other_positions && <p><span className="font-semibold">Other positions:</span> {m.other_positions}</p>}
-                    {m.notes && <p className="text-muted-foreground whitespace-pre-wrap">{m.notes}</p>}
+                    {m.phone_number && (
+                      <p>
+                        <Phone className="inline h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                        <a href={`tel:${m.phone_number}`} className="text-primary hover:underline">{m.phone_number}</a>
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -346,8 +352,8 @@ function DiocesePage() {
                 <Input value={editClergy.other_positions ?? ""} onChange={(e) => setEditClergy({ ...editClergy, other_positions: e.target.value })} placeholder="e.g. Chancellor, Dean of Studies" />
               </div>
               <div className="space-y-1">
-                <Label>Notes</Label>
-                <Textarea value={editClergy.notes ?? ""} onChange={(e) => setEditClergy({ ...editClergy, notes: e.target.value })} rows={2} />
+                <Label>Phone number</Label>
+                <Input value={editClergy.phone_number ?? ""} onChange={(e) => setEditClergy({ ...editClergy, phone_number: e.target.value })} placeholder="e.g. +254 712 345 678" />
               </div>
             </div>
           )}

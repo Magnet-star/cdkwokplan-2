@@ -1,0 +1,1 @@
+ALTER TABLE public.clergy_members ADD COLUMN phone_number text;
