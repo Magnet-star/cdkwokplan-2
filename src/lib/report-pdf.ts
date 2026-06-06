@@ -54,6 +54,36 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
     .from("daily_logs").select("*").eq("user_id", target.userId)
     .gte("log_date", startStr).lte("log_date", endStr).order("log_date");
 
+  // Approved driver-log trips for the target's department (if known) — these are trips the
+  // department actually made and the HOD approved. They are summarised separately so reports
+  // include destinations, fuel litres, money, driver, vehicle and conditions per trip.
+  let deptTrips: any[] = [];
+  let driverNames: Record<string, string> = {};
+  let vehicleLabels: Record<string, string> = {};
+  if (target.departmentId) {
+    const { data: trips } = await supabase
+      .from("driver_logs")
+      .select("*")
+      .eq("status", "approved")
+      .eq("department_id", target.departmentId)
+      .gte("log_date", startStr)
+      .lte("log_date", endStr)
+      .order("log_date");
+    deptTrips = trips ?? [];
+    const driverIds = Array.from(new Set(deptTrips.map((t: any) => t.user_id).filter(Boolean)));
+    const vehicleIds = Array.from(new Set(deptTrips.map((t: any) => t.vehicle_id).filter(Boolean)));
+    if (driverIds.length) {
+      const { data: dps } = await supabase.from("profiles").select("id,full_name").in("id", driverIds);
+      ((dps as any[]) ?? []).forEach((p) => { driverNames[p.id] = p.full_name; });
+    }
+    if (vehicleIds.length) {
+      const { data: vs } = await supabase.from("vehicles").select("id,registration,make_model").in("id", vehicleIds);
+      ((vs as any[]) ?? []).forEach((v) => {
+        vehicleLabels[v.id] = `${v.registration}${v.make_model ? " · " + v.make_model : ""}`;
+      });
+    }
+  }
+
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
 
