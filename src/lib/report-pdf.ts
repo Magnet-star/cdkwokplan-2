@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface ReportTarget {
   userId: string;
   fullName: string;
+  departmentId?: string | null;
   departmentName: string | null;
   position: string | null;
   hodName?: string | null;
