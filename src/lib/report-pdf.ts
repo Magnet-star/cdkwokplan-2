@@ -156,18 +156,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
-  if (y > 240) { doc.addPage(); y = 20; }
-  doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-  doc.text("Daily Achievements & Challenges", 14, y); y += 4;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-  (logs ?? []).forEach((l: any) => {
-    if (y > 270) { doc.addPage(); y = 20; }
-    doc.setFont("helvetica", "bold");
-    doc.text(format(parseISO(l.log_date), "EEEE, MMM d"), 14, y); y += 5;
-    doc.setFont("helvetica", "normal");
-    if (l.achievements) { const lines = doc.splitTextToSize(`Achievements: ${l.achievements}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 1; }
-    if (l.challenges) { const lines = doc.splitTextToSize(`Challenges: ${l.challenges}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 2; }
-  });
+
 
   // Departmental approved trips (from drivers log)
   if (deptTrips.length > 0) {
