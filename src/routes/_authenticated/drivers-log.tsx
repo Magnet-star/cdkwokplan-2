@@ -32,6 +32,8 @@ interface DriverLog {
   passengers: number | null;
   condition_start: string | null;
   condition_end: string | null;
+  fuel_order_amount: number | null;
+  fuel_litres: number | null;
   status: string;
   approver_notes: string | null;
   approved_at: string | null;
@@ -60,10 +62,12 @@ function DriversLogPage() {
     passengers: "1",
     condition_start: "",
     condition_end: "",
+    fuel_order_amount: "",
+    fuel_litres: "",
   };
   const [form, setForm] = useState(empty);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ closing_km: "", condition_end: "", condition_start: "" });
+  const [editForm, setEditForm] = useState({ closing_km: "", condition_end: "", condition_start: "", fuel_order_amount: "", fuel_litres: "" });
 
   const startEdit = (l: DriverLog) => {
     setEditingId(l.id);
@@ -71,6 +75,8 @@ function DriversLogPage() {
       closing_km: l.closing_km != null ? String(l.closing_km) : "",
       condition_end: l.condition_end ?? "",
       condition_start: l.condition_start ?? "",
+      fuel_order_amount: l.fuel_order_amount != null ? String(l.fuel_order_amount) : "",
+      fuel_litres: l.fuel_litres != null ? String(l.fuel_litres) : "",
     });
   };
 
@@ -79,6 +85,8 @@ function DriversLogPage() {
       closing_km: editForm.closing_km ? Number(editForm.closing_km) : null,
       condition_end: editForm.condition_end || null,
       condition_start: editForm.condition_start || null,
+      fuel_order_amount: editForm.fuel_order_amount ? Number(editForm.fuel_order_amount) : null,
+      fuel_litres: editForm.fuel_litres ? Number(editForm.fuel_litres) : null,
     }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Log updated");
@@ -132,6 +140,8 @@ function DriversLogPage() {
       passengers: form.passengers ? Number(form.passengers) : 0,
       condition_start: form.condition_start || null,
       condition_end: form.condition_end || null,
+      fuel_order_amount: form.fuel_order_amount ? Number(form.fuel_order_amount) : null,
+      fuel_litres: form.fuel_litres ? Number(form.fuel_litres) : null,
       status: "pending",
     });
     setBusy(false);
@@ -224,7 +234,7 @@ function DriversLogPage() {
 
     autoTable(doc, {
       startY: filterDept !== "all" ? 30 : 24,
-      head: [["Date", "Driver", "Vehicle", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Pass.", "Status"]],
+      head: [["Date", "Driver", "Vehicle", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Fuel (L)", "Fuel (KES)", "Cond. start", "Cond. end", "Status"]],
       body: inRange.map((l) => [
         format(parseISO(l.log_date), "yyyy-MM-dd"),
         drivers[l.user_id]?.full_name ?? "—",
@@ -235,28 +245,36 @@ function DriversLogPage() {
         l.starting_km,
         l.closing_km ?? "—",
         l.closing_km != null ? distanceOf(l).toFixed(1) : "—",
-        l.passengers ?? 0,
+        l.fuel_litres != null ? Number(l.fuel_litres).toFixed(2) : "—",
+        l.fuel_order_amount != null ? Number(l.fuel_order_amount).toLocaleString() : "—",
+        l.condition_start ?? "—",
+        l.condition_end ?? "—",
         l.status,
       ]),
-      styles: { fontSize: 8 },
+      styles: { fontSize: 7 },
       headStyles: { fillColor: [40, 40, 40] },
     });
 
     // Department summary
-    const summary = new Map<string, { name: string; trips: number; km: number }>();
+    const summary = new Map<string, { name: string; trips: number; km: number; litres: number; money: number }>();
     inRange.forEach((l) => {
       const key = l.department_id ?? "none";
-      const cur = summary.get(key) ?? { name: deptName(l.department_id), trips: 0, km: 0 };
-      cur.trips += 1; cur.km += distanceOf(l);
+      const cur = summary.get(key) ?? { name: deptName(l.department_id), trips: 0, km: 0, litres: 0, money: 0 };
+      cur.trips += 1;
+      cur.km += distanceOf(l);
+      cur.litres += Number(l.fuel_litres ?? 0);
+      cur.money += Number(l.fuel_order_amount ?? 0);
       summary.set(key, cur);
     });
     const totalKm = inRange.reduce((s, l) => s + distanceOf(l), 0);
+    const totalLitres = inRange.reduce((s, l) => s + Number(l.fuel_litres ?? 0), 0);
+    const totalMoney = inRange.reduce((s, l) => s + Number(l.fuel_order_amount ?? 0), 0);
 
     autoTable(doc, {
-      head: [["Department", "Trips", "Kilometers covered"]],
+      head: [["Department", "Trips", "Kilometers", "Fuel litres", "Fuel (KES)"]],
       body: [
-        ...Array.from(summary.values()).sort((a,b) => b.km - a.km).map((s) => [s.name, s.trips, s.km.toFixed(1)]),
-        ["TOTAL", inRange.length, totalKm.toFixed(1)],
+        ...Array.from(summary.values()).sort((a,b) => b.km - a.km).map((s) => [s.name, s.trips, s.km.toFixed(1), s.litres.toFixed(2), s.money.toLocaleString()]),
+        ["TOTAL", inRange.length, totalKm.toFixed(1), totalLitres.toFixed(2), totalMoney.toLocaleString()],
       ],
       styles: { fontSize: 9 },
       headStyles: { fillColor: [40, 40, 40] },
@@ -330,6 +348,16 @@ function DriversLogPage() {
               <div className="md:col-span-2">
                 <Label>Vehicle condition at start</Label>
                 <Textarea rows={2} value={form.condition_start} onChange={(e) => setForm({ ...form, condition_start: e.target.value })} />
+              </div>
+              <div>
+                <Label>Fuel order amount (KES)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="e.g. 5000" value={form.fuel_order_amount} onChange={(e) => setForm({ ...form, fuel_order_amount: e.target.value })} />
+                <p className="mt-1 text-xs text-muted-foreground">Fill after fueling the vehicle.</p>
+              </div>
+              <div>
+                <Label>Fuel litres (after fueling)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="e.g. 35.5" value={form.fuel_litres} onChange={(e) => setForm({ ...form, fuel_litres: e.target.value })} />
+                <p className="mt-1 text-xs text-muted-foreground">Total litres of fuel added.</p>
               </div>
               <div className="md:col-span-2 rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
                 Closing kilometers and end-of-trip condition will be filled in by the HOD after the journey, to ensure accountability.
@@ -410,12 +438,22 @@ function DriversLogPage() {
                 <div><span className="text-muted-foreground">Close KM:</span> {l.closing_km ?? "—"}</div>
                 <div><span className="text-muted-foreground">Distance:</span> {l.closing_km != null ? (Number(l.closing_km) - Number(l.starting_km)).toFixed(1) : "—"}</div>
                 <div><span className="text-muted-foreground">Passengers:</span> {l.passengers ?? 0}</div>
+                <div><span className="text-muted-foreground">Fuel (KES):</span> {l.fuel_order_amount != null ? Number(l.fuel_order_amount).toLocaleString() : "—"}</div>
+                <div><span className="text-muted-foreground">Fuel litres:</span> {l.fuel_litres != null ? Number(l.fuel_litres).toFixed(2) : "—"}</div>
               </div>
               {editingId === l.id ? (
                 <div className="mt-3 grid gap-3 rounded-md border border-dashed border-border p-3 sm:grid-cols-2">
                   <div>
                     <Label>Closing kilometers</Label>
                     <Input type="number" step="0.1" value={editForm.closing_km} onChange={(e) => setEditForm({ ...editForm, closing_km: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Fuel order amount (KES)</Label>
+                    <Input type="number" min="0" step="0.01" value={editForm.fuel_order_amount} onChange={(e) => setEditForm({ ...editForm, fuel_order_amount: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Fuel litres (after fueling)</Label>
+                    <Input type="number" min="0" step="0.01" value={editForm.fuel_litres} onChange={(e) => setEditForm({ ...editForm, fuel_litres: e.target.value })} />
                   </div>
                   <div className="sm:col-span-2">
                     <Label>Vehicle condition at start</Label>

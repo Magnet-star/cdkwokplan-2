@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface ReportTarget {
   userId: string;
   fullName: string;
+  departmentId?: string | null;
   departmentName: string | null;
   position: string | null;
   hodName?: string | null;
@@ -52,6 +53,36 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   const { data: logs } = await supabase
     .from("daily_logs").select("*").eq("user_id", target.userId)
     .gte("log_date", startStr).lte("log_date", endStr).order("log_date");
+
+  // Approved driver-log trips for the target's department (if known) — these are trips the
+  // department actually made and the HOD approved. They are summarised separately so reports
+  // include destinations, fuel litres, money, driver, vehicle and conditions per trip.
+  let deptTrips: any[] = [];
+  let driverNames: Record<string, string> = {};
+  let vehicleLabels: Record<string, string> = {};
+  if (target.departmentId) {
+    const { data: trips } = await supabase
+      .from("driver_logs")
+      .select("*")
+      .eq("status", "approved")
+      .eq("department_id", target.departmentId)
+      .gte("log_date", startStr)
+      .lte("log_date", endStr)
+      .order("log_date");
+    deptTrips = trips ?? [];
+    const driverIds = Array.from(new Set(deptTrips.map((t: any) => t.user_id).filter(Boolean)));
+    const vehicleIds = Array.from(new Set(deptTrips.map((t: any) => t.vehicle_id).filter(Boolean)));
+    if (driverIds.length) {
+      const { data: dps } = await supabase.from("profiles").select("id,full_name").in("id", driverIds);
+      ((dps as any[]) ?? []).forEach((p) => { driverNames[p.id] = p.full_name; });
+    }
+    if (vehicleIds.length) {
+      const { data: vs } = await supabase.from("vehicles").select("id,registration,make_model").in("id", vehicleIds);
+      ((vs as any[]) ?? []).forEach((v) => {
+        vehicleLabels[v.id] = `${v.registration}${v.make_model ? " · " + v.make_model : ""}`;
+      });
+    }
+  }
 
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
@@ -125,8 +156,54 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
+
+
+  // Departmental approved trips (from drivers log)
+  if (deptTrips.length > 0) {
+    y = (doc as any).lastAutoTable?.finalY ? Math.max(y, (doc as any).lastAutoTable.finalY) + 10 : y + 6;
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(40, 30, 30);
+    doc.text("Departmental Trips (Drivers Log — Approved)", 14, y);
+
+    const distanceOf = (t: any) => t.closing_km != null ? Number(t.closing_km) - Number(t.starting_km) : 0;
+    autoTable(doc, {
+      startY: y + 4,
+      head: [["Date", "From → To", "Driver", "Vehicle", "KM", "Fuel L", "Fuel KES", "Condition"]],
+      body: deptTrips.map((t: any) => [
+        format(parseISO(t.log_date), "MMM d"),
+        `${t.start_point} → ${t.destination}`,
+        driverNames[t.user_id] ?? "—",
+        vehicleLabels[t.vehicle_id] ?? "—",
+        t.closing_km != null ? distanceOf(t).toFixed(1) : "—",
+        t.fuel_litres != null ? Number(t.fuel_litres).toFixed(2) : "—",
+        t.fuel_order_amount != null ? Number(t.fuel_order_amount).toLocaleString() : "—",
+        [t.condition_start ? `Start: ${t.condition_start}` : "", t.condition_end ? `End: ${t.condition_end}` : ""].filter(Boolean).join(" | ") || "—",
+      ]),
+      headStyles: { fillColor: [89, 25, 32], textColor: 255 },
+      styles: { fontSize: 8, cellPadding: 2 },
+    });
+
+    const tripTotals = deptTrips.reduce(
+      (a: any, t: any) => ({
+        km: a.km + distanceOf(t),
+        litres: a.litres + Number(t.fuel_litres ?? 0),
+        money: a.money + Number(t.fuel_order_amount ?? 0),
+      }),
+      { km: 0, litres: 0, money: 0 }
+    );
+    y = (doc as any).lastAutoTable.finalY + 4;
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+    doc.text(
+      `Trip totals — ${deptTrips.length} trip${deptTrips.length === 1 ? "" : "s"}, ${tripTotals.km.toFixed(1)} km, ${tripTotals.litres.toFixed(2)} L fuel, KES ${tripTotals.money.toLocaleString()}`,
+      14,
+      y
+    );
+    y += 8;
+  }
+
   if (y > 240) { doc.addPage(); y = 20; }
-  doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(40, 30, 30);
   doc.text("Daily Achievements & Challenges", 14, y); y += 4;
   doc.setFont("helvetica", "normal"); doc.setFontSize(9);
   (logs ?? []).forEach((l: any) => {
@@ -137,8 +214,6 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
     if (l.achievements) { const lines = doc.splitTextToSize(`Achievements: ${l.achievements}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 1; }
     if (l.challenges) { const lines = doc.splitTextToSize(`Challenges: ${l.challenges}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 2; }
   });
-
-  // Signature block (on last page)
   let sigY = y + 20;
   const pageH = doc.internal.pageSize.getHeight();
   if (sigY > pageH - 40) { doc.addPage(); sigY = 40; }

@@ -81,10 +81,10 @@ function ReportsPage() {
     setBusy(true);
     try {
       const target = targetUserId === "self"
-        ? { userId: user.id, fullName: profile.full_name, departmentName: departments.find((d) => d.id === profile.department_id)?.name ?? null, position: profile.position, hodName: profile.department_id ? (hodByDept[profile.department_id] ?? null) : null }
+        ? { userId: user.id, fullName: profile.full_name, departmentId: profile.department_id, departmentName: departments.find((d) => d.id === profile.department_id)?.name ?? null, position: profile.position, hodName: profile.department_id ? (hodByDept[profile.department_id] ?? null) : null }
         : (() => {
             const p = people.find((x) => x.id === targetUserId)!;
-            return { userId: p.id, fullName: p.full_name, departmentName: departments.find((d) => d.id === p.department_id)?.name ?? null, position: p.position, hodName: p.department_id ? (hodByDept[p.department_id] ?? null) : null };
+            return { userId: p.id, fullName: p.full_name, departmentId: p.department_id, departmentName: departments.find((d) => d.id === p.department_id)?.name ?? null, position: p.position, hodName: p.department_id ? (hodByDept[p.department_id] ?? null) : null };
           })();
       if (period === "monthly") {
         await generateReportPDF(target, { kind: "monthly", year, monthIdx0: month });
