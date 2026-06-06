@@ -32,6 +32,8 @@ interface DriverLog {
   passengers: number | null;
   condition_start: string | null;
   condition_end: string | null;
+  fuel_order_amount: number | null;
+  fuel_litres: number | null;
   status: string;
   approver_notes: string | null;
   approved_at: string | null;
