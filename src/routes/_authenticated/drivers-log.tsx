@@ -62,10 +62,12 @@ function DriversLogPage() {
     passengers: "1",
     condition_start: "",
     condition_end: "",
+    fuel_order_amount: "",
+    fuel_litres: "",
   };
   const [form, setForm] = useState(empty);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ closing_km: "", condition_end: "", condition_start: "" });
+  const [editForm, setEditForm] = useState({ closing_km: "", condition_end: "", condition_start: "", fuel_order_amount: "", fuel_litres: "" });
 
   const startEdit = (l: DriverLog) => {
     setEditingId(l.id);
@@ -73,6 +75,8 @@ function DriversLogPage() {
       closing_km: l.closing_km != null ? String(l.closing_km) : "",
       condition_end: l.condition_end ?? "",
       condition_start: l.condition_start ?? "",
+      fuel_order_amount: l.fuel_order_amount != null ? String(l.fuel_order_amount) : "",
+      fuel_litres: l.fuel_litres != null ? String(l.fuel_litres) : "",
     });
   };
 
@@ -81,6 +85,8 @@ function DriversLogPage() {
       closing_km: editForm.closing_km ? Number(editForm.closing_km) : null,
       condition_end: editForm.condition_end || null,
       condition_start: editForm.condition_start || null,
+      fuel_order_amount: editForm.fuel_order_amount ? Number(editForm.fuel_order_amount) : null,
+      fuel_litres: editForm.fuel_litres ? Number(editForm.fuel_litres) : null,
     }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Log updated");
