@@ -149,7 +149,7 @@ function DiocesePage() {
       current_assignment: editClergy.current_assignment || null,
       assignment_role: editClergy.assignment_role || null,
       other_positions: editClergy.other_positions || null,
-      notes: editClergy.notes || null,
+      phone_number: editClergy.phone_number || null,
     };
     if (!payload.full_name) { toast.error("Name is required"); return; }
     const { error } = creatingClergy
@@ -180,7 +180,7 @@ function DiocesePage() {
       current_assignment: "",
       assignment_role: "",
       other_positions: "",
-      notes: "",
+      phone_number: "",
     });
   };
 
@@ -268,7 +268,12 @@ function DiocesePage() {
                     {m.home_parish && <p><span className="font-semibold">Home parish:</span> {m.home_parish}</p>}
                     {m.current_assignment && <p><span className="font-semibold">Currently serving:</span> {m.current_assignment}</p>}
                     {m.other_positions && <p><span className="font-semibold">Other positions:</span> {m.other_positions}</p>}
-                    {m.notes && <p className="text-muted-foreground whitespace-pre-wrap">{m.notes}</p>}
+                    {m.phone_number && (
+                      <p>
+                        <Phone className="inline h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                        <a href={`tel:${m.phone_number}`} className="text-primary hover:underline">{m.phone_number}</a>
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -347,8 +352,8 @@ function DiocesePage() {
                 <Input value={editClergy.other_positions ?? ""} onChange={(e) => setEditClergy({ ...editClergy, other_positions: e.target.value })} placeholder="e.g. Chancellor, Dean of Studies" />
               </div>
               <div className="space-y-1">
-                <Label>Notes</Label>
-                <Textarea value={editClergy.notes ?? ""} onChange={(e) => setEditClergy({ ...editClergy, notes: e.target.value })} rows={2} />
+                <Label>Phone number</Label>
+                <Input value={editClergy.phone_number ?? ""} onChange={(e) => setEditClergy({ ...editClergy, phone_number: e.target.value })} placeholder="e.g. +254 712 345 678" />
               </div>
             </div>
           )}
