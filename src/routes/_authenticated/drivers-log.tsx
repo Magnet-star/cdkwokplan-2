@@ -140,6 +140,8 @@ function DriversLogPage() {
       passengers: form.passengers ? Number(form.passengers) : 0,
       condition_start: form.condition_start || null,
       condition_end: form.condition_end || null,
+      fuel_order_amount: form.fuel_order_amount ? Number(form.fuel_order_amount) : null,
+      fuel_litres: form.fuel_litres ? Number(form.fuel_litres) : null,
       status: "pending",
     });
     setBusy(false);
