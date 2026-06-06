@@ -234,7 +234,7 @@ function DriversLogPage() {
 
     autoTable(doc, {
       startY: filterDept !== "all" ? 30 : 24,
-      head: [["Date", "Driver", "Vehicle", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Pass.", "Status"]],
+      head: [["Date", "Driver", "Vehicle", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Fuel (L)", "Fuel (KES)", "Cond. start", "Cond. end", "Status"]],
       body: inRange.map((l) => [
         format(parseISO(l.log_date), "yyyy-MM-dd"),
         drivers[l.user_id]?.full_name ?? "—",
@@ -245,28 +245,36 @@ function DriversLogPage() {
         l.starting_km,
         l.closing_km ?? "—",
         l.closing_km != null ? distanceOf(l).toFixed(1) : "—",
-        l.passengers ?? 0,
+        l.fuel_litres != null ? Number(l.fuel_litres).toFixed(2) : "—",
+        l.fuel_order_amount != null ? Number(l.fuel_order_amount).toLocaleString() : "—",
+        l.condition_start ?? "—",
+        l.condition_end ?? "—",
         l.status,
       ]),
-      styles: { fontSize: 8 },
+      styles: { fontSize: 7 },
       headStyles: { fillColor: [40, 40, 40] },
     });
 
     // Department summary
-    const summary = new Map<string, { name: string; trips: number; km: number }>();
+    const summary = new Map<string, { name: string; trips: number; km: number; litres: number; money: number }>();
     inRange.forEach((l) => {
       const key = l.department_id ?? "none";
-      const cur = summary.get(key) ?? { name: deptName(l.department_id), trips: 0, km: 0 };
-      cur.trips += 1; cur.km += distanceOf(l);
+      const cur = summary.get(key) ?? { name: deptName(l.department_id), trips: 0, km: 0, litres: 0, money: 0 };
+      cur.trips += 1;
+      cur.km += distanceOf(l);
+      cur.litres += Number(l.fuel_litres ?? 0);
+      cur.money += Number(l.fuel_order_amount ?? 0);
       summary.set(key, cur);
     });
     const totalKm = inRange.reduce((s, l) => s + distanceOf(l), 0);
+    const totalLitres = inRange.reduce((s, l) => s + Number(l.fuel_litres ?? 0), 0);
+    const totalMoney = inRange.reduce((s, l) => s + Number(l.fuel_order_amount ?? 0), 0);
 
     autoTable(doc, {
-      head: [["Department", "Trips", "Kilometers covered"]],
+      head: [["Department", "Trips", "Kilometers", "Fuel litres", "Fuel (KES)"]],
       body: [
-        ...Array.from(summary.values()).sort((a,b) => b.km - a.km).map((s) => [s.name, s.trips, s.km.toFixed(1)]),
-        ["TOTAL", inRange.length, totalKm.toFixed(1)],
+        ...Array.from(summary.values()).sort((a,b) => b.km - a.km).map((s) => [s.name, s.trips, s.km.toFixed(1), s.litres.toFixed(2), s.money.toLocaleString()]),
+        ["TOTAL", inRange.length, totalKm.toFixed(1), totalLitres.toFixed(2), totalMoney.toLocaleString()],
       ],
       styles: { fontSize: 9 },
       headStyles: { fillColor: [40, 40, 40] },
