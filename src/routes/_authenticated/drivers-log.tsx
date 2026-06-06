@@ -341,6 +341,16 @@ function DriversLogPage() {
                 <Label>Vehicle condition at start</Label>
                 <Textarea rows={2} value={form.condition_start} onChange={(e) => setForm({ ...form, condition_start: e.target.value })} />
               </div>
+              <div>
+                <Label>Fuel order amount (KES)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="e.g. 5000" value={form.fuel_order_amount} onChange={(e) => setForm({ ...form, fuel_order_amount: e.target.value })} />
+                <p className="mt-1 text-xs text-muted-foreground">Fill after fueling the vehicle.</p>
+              </div>
+              <div>
+                <Label>Fuel litres (after fueling)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="e.g. 35.5" value={form.fuel_litres} onChange={(e) => setForm({ ...form, fuel_litres: e.target.value })} />
+                <p className="mt-1 text-xs text-muted-foreground">Total litres of fuel added.</p>
+              </div>
               <div className="md:col-span-2 rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
                 Closing kilometers and end-of-trip condition will be filled in by the HOD after the journey, to ensure accountability.
               </div>
