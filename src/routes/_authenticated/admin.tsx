@@ -666,7 +666,7 @@ function AdminPage() {
                         )}
                       </div>
                     </div>
-                    <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
+                    {canEdit && <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>}
                   </div>
                 )}
               />
