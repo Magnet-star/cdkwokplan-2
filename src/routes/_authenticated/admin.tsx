@@ -269,11 +269,11 @@ function AdminPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <h1 className="font-serif text-3xl">Administration</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Manage departments, users, roles, vehicle approvals, and data cleanup.</p>
+        <p className="mt-1 text-sm text-muted-foreground">{canEdit ? "Manage departments, users, roles, vehicle approvals, and data cleanup." : "View-only access to submitted entries for planning purposes."}</p>
       </div>
       {!canEdit && (
         <div className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-          You are signed in as <strong>Administrator</strong>. You can view all records but cannot make any changes.
+          You are signed in as <strong>Administrator</strong>. This is a read-only view — only Super Admins can create users, approve requests, or make changes. You can still use all other staff features (work plans, vehicle requests, daily logs, leave requests) normally.
         </div>
       )}
 
