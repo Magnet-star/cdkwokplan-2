@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Download, Church, Phone } from "lucide-react";
+import { Pencil, Plus, Trash2, Download, Church, Phone, Hash } from "lucide-react";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -242,41 +242,61 @@ function DiocesePage() {
           ) : clergy.length === 0 ? (
             <p className="text-sm text-muted-foreground">No clergy or religious members listed yet.</p>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2">
-              {clergy.map((m) => (
-                <Card key={m.id}>
-                  <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 pb-2">
-                    <div>
-                      <CardTitle className="text-base">{m.full_name}</CardTitle>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        <Badge variant="secondary">{CATEGORY_LABEL[m.category] ?? m.category}</Badge>
-                        {m.assignment_role && <Badge variant="outline">{ROLE_LABEL[m.assignment_role] ?? m.assignment_role}</Badge>}
-                      </div>
-                    </div>
-                    {isSuperAdmin && (
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => { setCreatingClergy(false); setEditClergy(m); }}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => removeClergy(m.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </CardHeader>
-                  <CardContent className="space-y-1 pt-0 text-sm">
-                    {m.home_parish && <p><span className="font-semibold">Home parish:</span> {m.home_parish}</p>}
-                    {m.current_assignment && <p><span className="font-semibold">Currently serving:</span> {m.current_assignment}</p>}
-                    {m.other_positions && <p><span className="font-semibold">Other positions:</span> {m.other_positions}</p>}
-                    {m.phone_number && (
-                      <p>
-                        <Phone className="inline h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                        <a href={`tel:${m.phone_number}`} className="text-primary hover:underline">{m.phone_number}</a>
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="overflow-x-auto rounded-md border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium w-10"><Hash className="h-3.5 w-3.5 inline" /></th>
+                    <th className="px-3 py-2 text-left font-medium">Name</th>
+                    <th className="px-3 py-2 text-left font-medium">Home Parish</th>
+                    <th className="px-3 py-2 text-left font-medium">Currently Serving</th>
+                    <th className="px-3 py-2 text-left font-medium">Role</th>
+                    <th className="px-3 py-2 text-left font-medium">Other Positions</th>
+                    <th className="px-3 py-2 text-left font-medium">Phone Number</th>
+                    {isSuperAdmin && <th className="px-3 py-2 text-right font-medium w-24">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {clergy.map((m, idx) => (
+                    <tr key={m.id} className="border-t hover:bg-muted/50">
+                      <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
+                      <td className="px-3 py-2 font-medium">{m.full_name}</td>
+                      <td className="px-3 py-2">{m.home_parish ?? <span className="text-muted-foreground">—</span>}</td>
+                      <td className="px-3 py-2">{m.current_assignment ?? <span className="text-muted-foreground">—</span>}</td>
+                      <td className="px-3 py-2">
+                        {m.assignment_role ? (
+                          <Badge variant="outline" className="text-xs">{ROLE_LABEL[m.assignment_role] ?? m.assignment_role}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2">{m.other_positions ?? <span className="text-muted-foreground">—</span>}</td>
+                      <td className="px-3 py-2">
+                        {m.phone_number ? (
+                          <a href={`tel:${m.phone_number}`} className="text-primary hover:underline flex items-center gap-1">
+                            <Phone className="h-3 w-3" />
+                            {m.phone_number}
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      {isSuperAdmin && (
+                        <td className="px-3 py-2 text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => { setCreatingClergy(false); setEditClergy(m); }}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => removeClergy(m.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </TabsContent>
