@@ -500,59 +500,62 @@ function AdminPage() {
 
 
         <TabsContent value="users" className="space-y-4 pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-serif flex items-center gap-2"><UserPlus className="h-5 w-5 text-primary" /> Create user</CardTitle>
-              <CardDescription>Issue temporary login credentials. The new user can sign in immediately and change their password later.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreateUser} className="grid gap-3 md:grid-cols-2">
-                <div><Label>Full name</Label><Input value={nu.fullName} onChange={(e) => setNu({ ...nu, fullName: e.target.value })} required /></div>
-                <div><Label>Email</Label><Input type="email" value={nu.email} onChange={(e) => setNu({ ...nu, email: e.target.value })} required /></div>
-                <div>
-                  <Label>Temporary password</Label>
-                  <div className="flex gap-2">
-                    <Input value={nu.password} onChange={(e) => setNu({ ...nu, password: e.target.value })} placeholder="Min 8 chars" />
-                    <Button type="button" variant="outline" onClick={genPassword}>Generate</Button>
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif flex items-center gap-2"><UserPlus className="h-5 w-5 text-primary" /> Create user</CardTitle>
+                <CardDescription>Issue temporary login credentials. The new user can sign in immediately and change their password later.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreateUser} className="grid gap-3 md:grid-cols-2">
+                  <div><Label>Full name</Label><Input value={nu.fullName} onChange={(e) => setNu({ ...nu, fullName: e.target.value })} required /></div>
+                  <div><Label>Email</Label><Input type="email" value={nu.email} onChange={(e) => setNu({ ...nu, email: e.target.value })} required /></div>
+                  <div>
+                    <Label>Temporary password</Label>
+                    <div className="flex gap-2">
+                      <Input value={nu.password} onChange={(e) => setNu({ ...nu, password: e.target.value })} placeholder="Min 8 chars" />
+                      <Button type="button" variant="outline" onClick={genPassword}>Generate</Button>
+                    </div>
                   </div>
-                </div>
-                <div><Label>Position (optional)</Label><Input value={nu.position} onChange={(e) => setNu({ ...nu, position: e.target.value })} /></div>
-                <div>
-                  <Label>Department</Label>
-                  <Select value={nu.departmentId} onValueChange={(v) => setNu({ ...nu, departmentId: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">— None —</SelectItem>
-                      {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Roles</Label>
-                  <div className="flex flex-wrap gap-3 pt-2">
-                    {(["staff","driver","hod","administrator","super_admin"] as Role[]).map((r) => (
-                      <label key={r} className="flex items-center gap-2 text-sm">
-                        <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
-                        {r.replace("_", " ")}
-                      </label>
-                    ))}
+                  <div><Label>Position (optional)</Label><Input value={nu.position} onChange={(e) => setNu({ ...nu, position: e.target.value })} /></div>
+                  <div>
+                    <Label>Department</Label>
+                    <Select value={nu.departmentId} onValueChange={(v) => setNu({ ...nu, departmentId: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-                <div className="md:col-span-2 flex gap-2">
-                  <Button type="submit" disabled={creating}><UserPlus className="mr-1 h-4 w-4" />{creating ? "Creating…" : "Create user"}</Button>
-                  {nu.password && nu.email && (
-                    <Button type="button" variant="outline" onClick={copyCreds}><Copy className="mr-1 h-4 w-4" />Copy credentials</Button>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                  <div>
+                    <Label>Roles</Label>
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      {(["staff","driver","hod","administrator","super_admin"] as Role[]).map((r) => (
+                        <label key={r} className="flex items-center gap-2 text-sm">
+                          <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
+                          {r.replace("_", " ")}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2 flex gap-2">
+                    <Button type="submit" disabled={creating}><UserPlus className="mr-1 h-4 w-4" />{creating ? "Creating…" : "Create user"}</Button>
+                    {nu.password && nu.email && (
+                      <Button type="button" variant="outline" onClick={copyCreds}><Copy className="mr-1 h-4 w-4" />Copy credentials</Button>
+                    )}
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
 
           {users.map((u) => {
             const userRoles = rolesByUser[u.id] ?? [];
             const isProtected = u.id === "788b3a81-1631-4b53-a08d-35ce5d605f4e";
             const isSelf = u.id === user?.id;
             const locked = isProtected && !isSelf;
+            const userDept = u.department_id ? depts.find((d) => d.id === u.department_id) : null;
             return (
               <Card key={u.id}>
                 <CardContent className="space-y-3 p-5">
@@ -574,30 +577,35 @@ function AdminPage() {
                       </Button>
                     )}
                   </div>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <Label>Department</Label>
-                      <Select value={u.department_id ?? "none"} onValueChange={(v) => assignDepartment(u.id, v === "none" ? null : v)} disabled={locked}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">— None —</SelectItem>
-                          {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                  {canEdit ? (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div>
+                        <Label>Department</Label>
+                        <Select value={u.department_id ?? "none"} onValueChange={(v) => assignDepartment(u.id, v === "none" ? null : v)} disabled={locked}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">— None —</SelectItem>
+                            {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex flex-wrap items-end gap-2">
+                        {(["super_admin","administrator","hod","staff","driver"] as Role[]).map((r) => (
+                          <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
+                            {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
+                            {r.replace("_", " ")}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap items-end gap-2">
-                      {(["super_admin","administrator","hod","staff","driver"] as Role[]).map((r) => (
-                        <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
-                          {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
-                          {r.replace("_", " ")}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Department: {userDept?.name ?? "—"}{u.position ? ` · ${u.position}` : ""}</p>
+                  )}
                 </CardContent>
               </Card>
             );
           })}
+
         </TabsContent>
 
         <TabsContent value="cleanup" className="space-y-6 pt-4">
