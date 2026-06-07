@@ -979,12 +979,14 @@ function WorkPlanReadCard({ plan, userName, onChanged, canEdit = true }: { plan:
         </button>
         {open && (
           <div className="mt-4 space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {status !== "approved" && <Button size="sm" onClick={() => setPlanStatus("approved")}><Check className="mr-1 h-3.5 w-3.5" /> Approve plan</Button>}
-              {status === "approved" && <Button size="sm" variant="outline" onClick={() => setPlanStatus("submitted")}>Unapprove</Button>}
-              <Button size="sm" variant={editing ? "default" : "outline"} onClick={() => setEditing((e) => !e)}><Pencil className="mr-1 h-3.5 w-3.5" /> {editing ? "Done editing" : "Edit activities"}</Button>
-              {editing && <Button size="sm" variant="outline" onClick={addItem}><Plus className="mr-1 h-3.5 w-3.5" /> Add activity</Button>}
-            </div>
+            {canEdit && (
+              <div className="flex flex-wrap gap-2">
+                {status !== "approved" && <Button size="sm" onClick={() => setPlanStatus("approved")}><Check className="mr-1 h-3.5 w-3.5" /> Approve plan</Button>}
+                {status === "approved" && <Button size="sm" variant="outline" onClick={() => setPlanStatus("submitted")}>Unapprove</Button>}
+                <Button size="sm" variant={editing ? "default" : "outline"} onClick={() => setEditing((e) => !e)}><Pencil className="mr-1 h-3.5 w-3.5" /> {editing ? "Done editing" : "Edit activities"}</Button>
+                {editing && <Button size="sm" variant="outline" onClick={addItem}><Plus className="mr-1 h-3.5 w-3.5" /> Add activity</Button>}
+              </div>
+            )}
             {items === null && <p className="text-xs text-muted-foreground">Loading…</p>}
             {items?.length === 0 && <p className="text-xs text-muted-foreground italic">No activities recorded.</p>}
             {items?.map((it) => editing ? (
