@@ -269,11 +269,11 @@ function AdminPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <h1 className="font-serif text-3xl">Administration</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Manage departments, users, roles, vehicle approvals, and data cleanup.</p>
+        <p className="mt-1 text-sm text-muted-foreground">{canEdit ? "Manage departments, users, roles, vehicle approvals, and data cleanup." : "View-only access to submitted entries for planning purposes."}</p>
       </div>
       {!canEdit && (
         <div className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-          You are signed in as <strong>Administrator</strong>. You can view all records but cannot make any changes.
+          You are signed in as <strong>Administrator</strong>. This is a read-only view — only Super Admins can create users, approve requests, or make changes. You can still use all other staff features (work plans, vehicle requests, daily logs, leave requests) normally.
         </div>
       )}
 
@@ -425,8 +425,8 @@ function AdminPage() {
             })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
             return groupList.map((g) => (
               g.items.length === 1
-                ? <VehicleApproveCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
-                : <VehicleWeeklyApproveCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDecideBulk={decideVehicleBulk} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
+                ? <VehicleApproveCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} canEdit={canEdit} />
+                : <VehicleWeeklyApproveCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDecideBulk={decideVehicleBulk} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} canEdit={canEdit} />
             ));
           })()}
           <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
@@ -448,100 +448,114 @@ function AdminPage() {
             })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
             return groupList.map((g) => (
               g.items.length === 1
-                ? <VehicleManageCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
-                : <VehicleWeeklyManageCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} onDecideBulk={decideVehicleBulk} />
+                ? <VehicleManageCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} canEdit={canEdit} />
+                : <VehicleWeeklyManageCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} onDecideBulk={decideVehicleBulk} canEdit={canEdit} />
             ));
           })()}
         </TabsContent>
 
-        <TabsContent value="depts" className="space-y-4 pt-4">
-          <Card>
-            <CardHeader><CardTitle className="font-serif">New department</CardTitle></CardHeader>
-            <CardContent>
-              <form onSubmit={addDept} className="grid gap-3 md:grid-cols-3 md:items-end">
-                <div><Label>Name</Label><Input value={newDept.name} onChange={(e) => setNewDept({ ...newDept, name: e.target.value })} /></div>
-                <div className="md:col-span-2"><Label>Description</Label><Input value={newDept.description} onChange={(e) => setNewDept({ ...newDept, description: e.target.value })} /></div>
-                <Button type="submit" className="md:col-span-3 w-fit"><Plus className="mr-1 h-4 w-4" />Create</Button>
-              </form>
-            </CardContent>
-          </Card>
 
-          {depts.map((d) => (
-            <Card key={d.id}>
-              <CardHeader>
-                <CardTitle className="font-serif">{d.name}</CardTitle>
-                {d.description && <CardDescription>{d.description}</CardDescription>}
-              </CardHeader>
+        <TabsContent value="depts" className="space-y-4 pt-4">
+          {canEdit && (
+            <Card>
+              <CardHeader><CardTitle className="font-serif">New department</CardTitle></CardHeader>
               <CardContent>
-                <Label>Head of Department</Label>
-                <Select value={d.hod_id ?? "none"} onValueChange={(v) => setHod(d.id, v === "none" ? null : v)}>
-                  <SelectTrigger className="max-w-sm"><SelectValue placeholder="Choose HOD" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">— None —</SelectItem>
-                    {users.filter((u) => u.department_id === d.id).map((u) => (
-                      <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <form onSubmit={addDept} className="grid gap-3 md:grid-cols-3 md:items-end">
+                  <div><Label>Name</Label><Input value={newDept.name} onChange={(e) => setNewDept({ ...newDept, name: e.target.value })} /></div>
+                  <div className="md:col-span-2"><Label>Description</Label><Input value={newDept.description} onChange={(e) => setNewDept({ ...newDept, description: e.target.value })} /></div>
+                  <Button type="submit" className="md:col-span-3 w-fit"><Plus className="mr-1 h-4 w-4" />Create</Button>
+                </form>
               </CardContent>
             </Card>
-          ))}
+          )}
+
+          {depts.map((d) => {
+            const hodUser = d.hod_id ? users.find((u) => u.id === d.hod_id) : null;
+            return (
+              <Card key={d.id}>
+                <CardHeader>
+                  <CardTitle className="font-serif">{d.name}</CardTitle>
+                  {d.description && <CardDescription>{d.description}</CardDescription>}
+                </CardHeader>
+                <CardContent>
+                  <Label>Head of Department</Label>
+                  {canEdit ? (
+                    <Select value={d.hod_id ?? "none"} onValueChange={(v) => setHod(d.id, v === "none" ? null : v)}>
+                      <SelectTrigger className="max-w-sm"><SelectValue placeholder="Choose HOD" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        {users.filter((u) => u.department_id === d.id).map((u) => (
+                          <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm">{hodUser?.full_name ?? <span className="text-muted-foreground">— Not assigned —</span>}</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </TabsContent>
 
+
         <TabsContent value="users" className="space-y-4 pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-serif flex items-center gap-2"><UserPlus className="h-5 w-5 text-primary" /> Create user</CardTitle>
-              <CardDescription>Issue temporary login credentials. The new user can sign in immediately and change their password later.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreateUser} className="grid gap-3 md:grid-cols-2">
-                <div><Label>Full name</Label><Input value={nu.fullName} onChange={(e) => setNu({ ...nu, fullName: e.target.value })} required /></div>
-                <div><Label>Email</Label><Input type="email" value={nu.email} onChange={(e) => setNu({ ...nu, email: e.target.value })} required /></div>
-                <div>
-                  <Label>Temporary password</Label>
-                  <div className="flex gap-2">
-                    <Input value={nu.password} onChange={(e) => setNu({ ...nu, password: e.target.value })} placeholder="Min 8 chars" />
-                    <Button type="button" variant="outline" onClick={genPassword}>Generate</Button>
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif flex items-center gap-2"><UserPlus className="h-5 w-5 text-primary" /> Create user</CardTitle>
+                <CardDescription>Issue temporary login credentials. The new user can sign in immediately and change their password later.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreateUser} className="grid gap-3 md:grid-cols-2">
+                  <div><Label>Full name</Label><Input value={nu.fullName} onChange={(e) => setNu({ ...nu, fullName: e.target.value })} required /></div>
+                  <div><Label>Email</Label><Input type="email" value={nu.email} onChange={(e) => setNu({ ...nu, email: e.target.value })} required /></div>
+                  <div>
+                    <Label>Temporary password</Label>
+                    <div className="flex gap-2">
+                      <Input value={nu.password} onChange={(e) => setNu({ ...nu, password: e.target.value })} placeholder="Min 8 chars" />
+                      <Button type="button" variant="outline" onClick={genPassword}>Generate</Button>
+                    </div>
                   </div>
-                </div>
-                <div><Label>Position (optional)</Label><Input value={nu.position} onChange={(e) => setNu({ ...nu, position: e.target.value })} /></div>
-                <div>
-                  <Label>Department</Label>
-                  <Select value={nu.departmentId} onValueChange={(v) => setNu({ ...nu, departmentId: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">— None —</SelectItem>
-                      {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Roles</Label>
-                  <div className="flex flex-wrap gap-3 pt-2">
-                    {(["staff","driver","hod","administrator","super_admin"] as Role[]).map((r) => (
-                      <label key={r} className="flex items-center gap-2 text-sm">
-                        <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
-                        {r.replace("_", " ")}
-                      </label>
-                    ))}
+                  <div><Label>Position (optional)</Label><Input value={nu.position} onChange={(e) => setNu({ ...nu, position: e.target.value })} /></div>
+                  <div>
+                    <Label>Department</Label>
+                    <Select value={nu.departmentId} onValueChange={(v) => setNu({ ...nu, departmentId: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-                <div className="md:col-span-2 flex gap-2">
-                  <Button type="submit" disabled={creating}><UserPlus className="mr-1 h-4 w-4" />{creating ? "Creating…" : "Create user"}</Button>
-                  {nu.password && nu.email && (
-                    <Button type="button" variant="outline" onClick={copyCreds}><Copy className="mr-1 h-4 w-4" />Copy credentials</Button>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                  <div>
+                    <Label>Roles</Label>
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      {(["staff","driver","hod","administrator","super_admin"] as Role[]).map((r) => (
+                        <label key={r} className="flex items-center gap-2 text-sm">
+                          <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
+                          {r.replace("_", " ")}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2 flex gap-2">
+                    <Button type="submit" disabled={creating}><UserPlus className="mr-1 h-4 w-4" />{creating ? "Creating…" : "Create user"}</Button>
+                    {nu.password && nu.email && (
+                      <Button type="button" variant="outline" onClick={copyCreds}><Copy className="mr-1 h-4 w-4" />Copy credentials</Button>
+                    )}
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
 
           {users.map((u) => {
             const userRoles = rolesByUser[u.id] ?? [];
             const isProtected = u.id === "788b3a81-1631-4b53-a08d-35ce5d605f4e";
             const isSelf = u.id === user?.id;
             const locked = isProtected && !isSelf;
+            const userDept = u.department_id ? depts.find((d) => d.id === u.department_id) : null;
             return (
               <Card key={u.id}>
                 <CardContent className="space-y-3 p-5">
@@ -563,30 +577,35 @@ function AdminPage() {
                       </Button>
                     )}
                   </div>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <Label>Department</Label>
-                      <Select value={u.department_id ?? "none"} onValueChange={(v) => assignDepartment(u.id, v === "none" ? null : v)} disabled={locked}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">— None —</SelectItem>
-                          {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                  {canEdit ? (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div>
+                        <Label>Department</Label>
+                        <Select value={u.department_id ?? "none"} onValueChange={(v) => assignDepartment(u.id, v === "none" ? null : v)} disabled={locked}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">— None —</SelectItem>
+                            {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex flex-wrap items-end gap-2">
+                        {(["super_admin","administrator","hod","staff","driver"] as Role[]).map((r) => (
+                          <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
+                            {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
+                            {r.replace("_", " ")}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap items-end gap-2">
-                      {(["super_admin","administrator","hod","staff","driver"] as Role[]).map((r) => (
-                        <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
-                          {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
-                          {r.replace("_", " ")}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Department: {userDept?.name ?? "—"}{u.position ? ` · ${u.position}` : ""}</p>
+                  )}
                 </CardContent>
               </Card>
             );
           })}
+
         </TabsContent>
 
         <TabsContent value="cleanup" className="space-y-6 pt-4">
@@ -609,7 +628,7 @@ function AdminPage() {
                       {l.achievements && <p className="text-xs text-muted-foreground"><span className="font-medium">Achievements:</span> {l.achievements}</p>}
                       {l.challenges && <p className="text-xs text-muted-foreground"><span className="font-medium">Challenges:</span> {l.challenges}</p>}
                     </div>
-                    <Button size="sm" variant="destructive" onClick={() => deleteLog(l.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
+                    {canEdit && <Button size="sm" variant="destructive" onClick={() => deleteLog(l.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>}
                   </div>
                 )}
               />
@@ -647,7 +666,7 @@ function AdminPage() {
                         )}
                       </div>
                     </div>
-                    <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>
+                    {canEdit && <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>}
                   </div>
                 )}
               />
@@ -669,7 +688,7 @@ function AdminPage() {
             groupLabel="Work plans"
             emptyMessage={<Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
             renderItem={(p: any) => (
-              <WorkPlanReadCard plan={p} userName={userName} onChanged={load} />
+              <WorkPlanReadCard plan={p} userName={userName} onChanged={load} canEdit={canEdit} />
             )}
           />
         </TabsContent>
@@ -678,7 +697,7 @@ function AdminPage() {
   );
 }
 
-function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdate }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
+function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdate, canEdit = true }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; canEdit?: boolean }) {
   const [notes, setNotes] = useState("");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
@@ -696,13 +715,13 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
           <>
             <p className="text-sm">{v.purpose}</p>
             <p className="text-xs text-muted-foreground">Passengers: {v.passengers ?? 1}</p>
-            <Textarea rows={2} placeholder="Optional note to requester" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            {canEdit && <Textarea rows={2} placeholder="Optional note to requester" value={notes} onChange={(e) => setNotes(e.target.value)} />}
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>
-              <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>
-              <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
+              {canEdit && <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>}
+              {canEdit && <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>}
+              {canEdit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
               <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
-              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
+              {canEdit && <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>}
             </div>
           </>
         ) : (
@@ -713,7 +732,8 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
   );
 }
 
-function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta, onDecideBulk, onDecide, onDelete, onUpdate }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
+
+function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta, onDecideBulk, onDecide, onDelete, onUpdate, canEdit = true }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; canEdit?: boolean }) {
   const [notes, setNotes] = useState("");
   const [expanded, setExpanded] = useState(false);
   const meta = userMeta(userId);
@@ -740,27 +760,29 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
                   <p className="text-sm">{v.destination}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{v.purpose} · Passengers: {v.passengers ?? 1}</p>
                 </div>
-                <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(v.id)} title="Delete day"><Trash2 className="h-3.5 w-3.5" /></Button>
-                </div>
+                {canEdit && (
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(v.id)} title="Delete day"><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
 
-        <Textarea rows={2} placeholder="Optional note to requester (applies to all trips)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        {canEdit && <Textarea rows={2} placeholder="Optional note to requester (applies to all trips)" value={notes} onChange={(e) => setNotes(e.target.value)} />}
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => onDecideBulk(ids, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve all {items.length} trips</Button>
-          <Button size="sm" variant="destructive" onClick={() => onDecideBulk(ids, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject all</Button>
+          {canEdit && <Button size="sm" onClick={() => onDecideBulk(ids, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve all {items.length} trips</Button>}
+          {canEdit && <Button size="sm" variant="destructive" onClick={() => onDecideBulk(ids, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject all</Button>}
           <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(items, meta, weekStart)}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
-          <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Decide per day"}</Button>
+          {canEdit && <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Decide per day"}</Button>}
         </div>
 
-        {expanded && (
+        {expanded && canEdit && (
           <div className="space-y-2 pt-2">
             <p className="text-xs text-muted-foreground">Decide individual days separately:</p>
             {items.map((v) => (
-              <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={onDecide} onDelete={onDelete} onUpdate={onUpdate} />
+              <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={onDecide} onDelete={onDelete} onUpdate={onUpdate} canEdit={canEdit} />
             ))}
           </div>
         )}
@@ -769,7 +791,8 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
   );
 }
 
-function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta, onDelete, onUpdate, onDecide, onDecideBulk }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void }) {
+
+function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta, onDelete, onUpdate, onDecide, onDecideBulk, canEdit = true }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; canEdit?: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const meta = userMeta(userId);
   const statuses = Array.from(new Set(items.map((i) => i.status)));
@@ -804,15 +827,15 @@ function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta,
 
         <div className="flex flex-wrap gap-2 pt-1">
           <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(items, meta, weekStart)}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
-          {statusLabel !== "approved" && <Button size="sm" onClick={() => onDecideBulk(ids, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark all approved</Button>}
-          {statusLabel !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecideBulk(ids, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark all rejected</Button>}
-          <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Manage per day"}</Button>
+          {canEdit && statusLabel !== "approved" && <Button size="sm" onClick={() => onDecideBulk(ids, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark all approved</Button>}
+          {canEdit && statusLabel !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecideBulk(ids, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark all rejected</Button>}
+          {canEdit && <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Manage per day"}</Button>}
         </div>
 
-        {expanded && (
+        {expanded && canEdit && (
           <div className="space-y-2 pt-2">
             {items.map((v) => (
-              <VehicleManageCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDelete={onDelete} onUpdate={onUpdate} onDecide={onDecide} />
+              <VehicleManageCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDelete={onDelete} onUpdate={onUpdate} onDecide={onDecide} canEdit={canEdit} />
             ))}
           </div>
         )}
@@ -821,7 +844,7 @@ function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta,
   );
 }
 
-function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void }) {
+function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide, canEdit = true }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; canEdit?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
   return (
@@ -840,17 +863,18 @@ function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide
           <VehicleEditFields form={form} setForm={setForm} onSave={() => { onUpdate(v.id, { ...form, time_from: form.time_from || null, time_to: form.time_to || null }); setEditing(false); }} onCancel={() => setEditing(false)} />
         ) : (
           <div className="flex flex-wrap gap-2 pt-1">
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
-            {v.status !== "approved" && <Button size="sm" onClick={() => onDecide(v.id, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark approved</Button>}
-            {v.status !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecide(v.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark rejected</Button>}
+            {canEdit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
+            {canEdit && v.status !== "approved" && <Button size="sm" onClick={() => onDecide(v.id, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark approved</Button>}
+            {canEdit && v.status !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecide(v.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark rejected</Button>}
             <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
-            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
+            {canEdit && <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>}
           </div>
         )}
       </CardContent>
     </Card>
   );
 }
+
 
 function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; setForm: (f: any) => void; onSave: () => void; onCancel: () => void }) {
   return (
@@ -869,7 +893,7 @@ function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; set
   );
 }
 
-function WorkPlanReadCard({ plan, userName, onChanged }: { plan: any; userName: (id: string) => string; onChanged?: () => void }) {
+function WorkPlanReadCard({ plan, userName, onChanged, canEdit = true }: { plan: any; userName: (id: string) => string; onChanged?: () => void; canEdit?: boolean }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[] | null>(null);
   const [editing, setEditing] = useState(false);
@@ -955,12 +979,14 @@ function WorkPlanReadCard({ plan, userName, onChanged }: { plan: any; userName: 
         </button>
         {open && (
           <div className="mt-4 space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {status !== "approved" && <Button size="sm" onClick={() => setPlanStatus("approved")}><Check className="mr-1 h-3.5 w-3.5" /> Approve plan</Button>}
-              {status === "approved" && <Button size="sm" variant="outline" onClick={() => setPlanStatus("submitted")}>Unapprove</Button>}
-              <Button size="sm" variant={editing ? "default" : "outline"} onClick={() => setEditing((e) => !e)}><Pencil className="mr-1 h-3.5 w-3.5" /> {editing ? "Done editing" : "Edit activities"}</Button>
-              {editing && <Button size="sm" variant="outline" onClick={addItem}><Plus className="mr-1 h-3.5 w-3.5" /> Add activity</Button>}
-            </div>
+            {canEdit && (
+              <div className="flex flex-wrap gap-2">
+                {status !== "approved" && <Button size="sm" onClick={() => setPlanStatus("approved")}><Check className="mr-1 h-3.5 w-3.5" /> Approve plan</Button>}
+                {status === "approved" && <Button size="sm" variant="outline" onClick={() => setPlanStatus("submitted")}>Unapprove</Button>}
+                <Button size="sm" variant={editing ? "default" : "outline"} onClick={() => setEditing((e) => !e)}><Pencil className="mr-1 h-3.5 w-3.5" /> {editing ? "Done editing" : "Edit activities"}</Button>
+                {editing && <Button size="sm" variant="outline" onClick={addItem}><Plus className="mr-1 h-3.5 w-3.5" /> Add activity</Button>}
+              </div>
+            )}
             {items === null && <p className="text-xs text-muted-foreground">Loading…</p>}
             {items?.length === 0 && <p className="text-xs text-muted-foreground italic">No activities recorded.</p>}
             {items?.map((it) => editing ? (
