@@ -893,7 +893,7 @@ function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; set
   );
 }
 
-function WorkPlanReadCard({ plan, userName, onChanged }: { plan: any; userName: (id: string) => string; onChanged?: () => void }) {
+function WorkPlanReadCard({ plan, userName, onChanged, canEdit = true }: { plan: any; userName: (id: string) => string; onChanged?: () => void; canEdit?: boolean }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[] | null>(null);
   const [editing, setEditing] = useState(false);
