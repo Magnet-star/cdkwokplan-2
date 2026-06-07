@@ -679,7 +679,7 @@ function AdminPage() {
   );
 }
 
-function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdate }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
+function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdate, canEdit = true }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; canEdit?: boolean }) {
   const [notes, setNotes] = useState("");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
@@ -697,13 +697,13 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
           <>
             <p className="text-sm">{v.purpose}</p>
             <p className="text-xs text-muted-foreground">Passengers: {v.passengers ?? 1}</p>
-            <Textarea rows={2} placeholder="Optional note to requester" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            {canEdit && <Textarea rows={2} placeholder="Optional note to requester" value={notes} onChange={(e) => setNotes(e.target.value)} />}
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>
-              <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>
-              <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
+              {canEdit && <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>}
+              {canEdit && <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>}
+              {canEdit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
               <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
-              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
+              {canEdit && <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>}
             </div>
           </>
         ) : (
@@ -713,6 +713,7 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
     </Card>
   );
 }
+
 
 function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta, onDecideBulk, onDecide, onDelete, onUpdate }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
   const [notes, setNotes] = useState("");
