@@ -774,7 +774,7 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
 }
 
 
-function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta, onDelete, onUpdate, onDecide, onDecideBulk }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void }) {
+function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta, onDelete, onUpdate, onDecide, onDecideBulk, canEdit = true }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; canEdit?: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const meta = userMeta(userId);
   const statuses = Array.from(new Set(items.map((i) => i.status)));
@@ -809,15 +809,15 @@ function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta,
 
         <div className="flex flex-wrap gap-2 pt-1">
           <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(items, meta, weekStart)}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
-          {statusLabel !== "approved" && <Button size="sm" onClick={() => onDecideBulk(ids, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark all approved</Button>}
-          {statusLabel !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecideBulk(ids, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark all rejected</Button>}
-          <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Manage per day"}</Button>
+          {canEdit && statusLabel !== "approved" && <Button size="sm" onClick={() => onDecideBulk(ids, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark all approved</Button>}
+          {canEdit && statusLabel !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecideBulk(ids, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark all rejected</Button>}
+          {canEdit && <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Manage per day"}</Button>}
         </div>
 
-        {expanded && (
+        {expanded && canEdit && (
           <div className="space-y-2 pt-2">
             {items.map((v) => (
-              <VehicleManageCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDelete={onDelete} onUpdate={onUpdate} onDecide={onDecide} />
+              <VehicleManageCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDelete={onDelete} onUpdate={onUpdate} onDecide={onDecide} canEdit={canEdit} />
             ))}
           </div>
         )}
@@ -826,7 +826,7 @@ function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta,
   );
 }
 
-function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void }) {
+function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide, canEdit = true }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; canEdit?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
   return (
@@ -845,17 +845,18 @@ function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide
           <VehicleEditFields form={form} setForm={setForm} onSave={() => { onUpdate(v.id, { ...form, time_from: form.time_from || null, time_to: form.time_to || null }); setEditing(false); }} onCancel={() => setEditing(false)} />
         ) : (
           <div className="flex flex-wrap gap-2 pt-1">
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>
-            {v.status !== "approved" && <Button size="sm" onClick={() => onDecide(v.id, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark approved</Button>}
-            {v.status !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecide(v.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark rejected</Button>}
+            {canEdit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
+            {canEdit && v.status !== "approved" && <Button size="sm" onClick={() => onDecide(v.id, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark approved</Button>}
+            {canEdit && v.status !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecide(v.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark rejected</Button>}
             <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
-            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>
+            {canEdit && <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>}
           </div>
         )}
       </CardContent>
     </Card>
   );
 }
+
 
 function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; setForm: (f: any) => void; onSave: () => void; onCancel: () => void }) {
   return (
