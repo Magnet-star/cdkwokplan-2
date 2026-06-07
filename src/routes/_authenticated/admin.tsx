@@ -715,7 +715,7 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
 }
 
 
-function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta, onDecideBulk, onDecide, onDelete, onUpdate }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void }) {
+function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta, onDecideBulk, onDecide, onDelete, onUpdate, canEdit = true }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; canEdit?: boolean }) {
   const [notes, setNotes] = useState("");
   const [expanded, setExpanded] = useState(false);
   const meta = userMeta(userId);
@@ -742,27 +742,29 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
                   <p className="text-sm">{v.destination}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{v.purpose} · Passengers: {v.passengers ?? 1}</p>
                 </div>
-                <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(v.id)} title="Delete day"><Trash2 className="h-3.5 w-3.5" /></Button>
-                </div>
+                {canEdit && (
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(v.id)} title="Delete day"><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
 
-        <Textarea rows={2} placeholder="Optional note to requester (applies to all trips)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        {canEdit && <Textarea rows={2} placeholder="Optional note to requester (applies to all trips)" value={notes} onChange={(e) => setNotes(e.target.value)} />}
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => onDecideBulk(ids, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve all {items.length} trips</Button>
-          <Button size="sm" variant="destructive" onClick={() => onDecideBulk(ids, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject all</Button>
+          {canEdit && <Button size="sm" onClick={() => onDecideBulk(ids, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve all {items.length} trips</Button>}
+          {canEdit && <Button size="sm" variant="destructive" onClick={() => onDecideBulk(ids, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject all</Button>}
           <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(items, meta, weekStart)}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
-          <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Decide per day"}</Button>
+          {canEdit && <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Decide per day"}</Button>}
         </div>
 
-        {expanded && (
+        {expanded && canEdit && (
           <div className="space-y-2 pt-2">
             <p className="text-xs text-muted-foreground">Decide individual days separately:</p>
             {items.map((v) => (
-              <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={onDecide} onDelete={onDelete} onUpdate={onUpdate} />
+              <VehicleApproveCard key={v.id} v={v} userName={userName} userMeta={userMeta} onDecide={onDecide} onDelete={onDelete} onUpdate={onUpdate} canEdit={canEdit} />
             ))}
           </div>
         )}
@@ -770,6 +772,7 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
     </Card>
   );
 }
+
 
 function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta, onDelete, onUpdate, onDecide, onDecideBulk }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void }) {
   const [expanded, setExpanded] = useState(false);
