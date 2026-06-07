@@ -425,8 +425,8 @@ function AdminPage() {
             })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
             return groupList.map((g) => (
               g.items.length === 1
-                ? <VehicleApproveCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
-                : <VehicleWeeklyApproveCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDecideBulk={decideVehicleBulk} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} />
+                ? <VehicleApproveCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} canEdit={canEdit} />
+                : <VehicleWeeklyApproveCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDecideBulk={decideVehicleBulk} onDecide={decideVehicle} onDelete={deleteVehicle} onUpdate={updateVehicle} canEdit={canEdit} />
             ));
           })()}
           <h3 className="mt-6 font-serif text-lg">All recent requests</h3>
@@ -448,11 +448,12 @@ function AdminPage() {
             })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
             return groupList.map((g) => (
               g.items.length === 1
-                ? <VehicleManageCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} />
-                : <VehicleWeeklyManageCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} onDecideBulk={decideVehicleBulk} />
+                ? <VehicleManageCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} canEdit={canEdit} />
+                : <VehicleWeeklyManageCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} onDecideBulk={decideVehicleBulk} canEdit={canEdit} />
             ));
           })()}
         </TabsContent>
+
 
         <TabsContent value="depts" className="space-y-4 pt-4">
           <Card>
