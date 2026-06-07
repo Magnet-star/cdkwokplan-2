@@ -456,38 +456,48 @@ function AdminPage() {
 
 
         <TabsContent value="depts" className="space-y-4 pt-4">
-          <Card>
-            <CardHeader><CardTitle className="font-serif">New department</CardTitle></CardHeader>
-            <CardContent>
-              <form onSubmit={addDept} className="grid gap-3 md:grid-cols-3 md:items-end">
-                <div><Label>Name</Label><Input value={newDept.name} onChange={(e) => setNewDept({ ...newDept, name: e.target.value })} /></div>
-                <div className="md:col-span-2"><Label>Description</Label><Input value={newDept.description} onChange={(e) => setNewDept({ ...newDept, description: e.target.value })} /></div>
-                <Button type="submit" className="md:col-span-3 w-fit"><Plus className="mr-1 h-4 w-4" />Create</Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {depts.map((d) => (
-            <Card key={d.id}>
-              <CardHeader>
-                <CardTitle className="font-serif">{d.name}</CardTitle>
-                {d.description && <CardDescription>{d.description}</CardDescription>}
-              </CardHeader>
+          {canEdit && (
+            <Card>
+              <CardHeader><CardTitle className="font-serif">New department</CardTitle></CardHeader>
               <CardContent>
-                <Label>Head of Department</Label>
-                <Select value={d.hod_id ?? "none"} onValueChange={(v) => setHod(d.id, v === "none" ? null : v)}>
-                  <SelectTrigger className="max-w-sm"><SelectValue placeholder="Choose HOD" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">— None —</SelectItem>
-                    {users.filter((u) => u.department_id === d.id).map((u) => (
-                      <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <form onSubmit={addDept} className="grid gap-3 md:grid-cols-3 md:items-end">
+                  <div><Label>Name</Label><Input value={newDept.name} onChange={(e) => setNewDept({ ...newDept, name: e.target.value })} /></div>
+                  <div className="md:col-span-2"><Label>Description</Label><Input value={newDept.description} onChange={(e) => setNewDept({ ...newDept, description: e.target.value })} /></div>
+                  <Button type="submit" className="md:col-span-3 w-fit"><Plus className="mr-1 h-4 w-4" />Create</Button>
+                </form>
               </CardContent>
             </Card>
-          ))}
+          )}
+
+          {depts.map((d) => {
+            const hodUser = d.hod_id ? users.find((u) => u.id === d.hod_id) : null;
+            return (
+              <Card key={d.id}>
+                <CardHeader>
+                  <CardTitle className="font-serif">{d.name}</CardTitle>
+                  {d.description && <CardDescription>{d.description}</CardDescription>}
+                </CardHeader>
+                <CardContent>
+                  <Label>Head of Department</Label>
+                  {canEdit ? (
+                    <Select value={d.hod_id ?? "none"} onValueChange={(v) => setHod(d.id, v === "none" ? null : v)}>
+                      <SelectTrigger className="max-w-sm"><SelectValue placeholder="Choose HOD" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        {users.filter((u) => u.department_id === d.id).map((u) => (
+                          <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm">{hodUser?.full_name ?? <span className="text-muted-foreground">— Not assigned —</span>}</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </TabsContent>
+
 
         <TabsContent value="users" className="space-y-4 pt-4">
           <Card>
