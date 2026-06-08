@@ -1012,6 +1012,7 @@ function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, c
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={handleDownload}><Download className="mr-1 h-3.5 w-3.5" /> Download PDF</Button>
             </div>
+            {canEdit && (
               <div className="flex flex-wrap gap-2">
                 {status !== "approved" && <Button size="sm" onClick={() => setPlanStatus("approved")}><Check className="mr-1 h-3.5 w-3.5" /> Approve plan</Button>}
                 {status === "approved" && <Button size="sm" variant="outline" onClick={() => setPlanStatus("submitted")}>Unapprove</Button>}
