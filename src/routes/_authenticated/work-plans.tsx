@@ -32,7 +32,7 @@ interface Item {
 
 interface Plan {
   id: string;
-  status: "draft" | "submitted";
+  status: "draft" | "submitted" | "approved";
   signature: string | null;
   submitted_at: string | null;
   week_start_date: string;
