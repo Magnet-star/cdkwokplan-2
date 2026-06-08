@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format, startOfWeek, addDays, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { downloadWorkPlanPDF } from "@/lib/work-plan-pdf";
 
 export const Route = createFileRoute("/_authenticated/work-plans")({
   component: WorkPlansPage,
