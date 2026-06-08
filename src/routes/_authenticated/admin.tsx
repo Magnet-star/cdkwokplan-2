@@ -689,7 +689,7 @@ function AdminPage() {
             groupLabel="Work plans"
             emptyMessage={<Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
             renderItem={(p: any) => (
-              <WorkPlanReadCard plan={p} userName={userName} onChanged={load} canEdit={canEdit} />
+              <WorkPlanReadCard plan={p} userName={userName} users={users} depts={depts} onChanged={load} canEdit={canEdit} />
             )}
           />
         </TabsContent>
