@@ -953,6 +953,35 @@ function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, c
     toast.success(`Plan ${s}`);
     onChanged?.();
   };
+  const handleDownload = async () => {
+    let loaded = items;
+    if (loaded === null) {
+      const { data } = await supabase.from("work_plan_items").select("*").eq("work_plan_id", plan.id).order("activity_date");
+      loaded = (data as any[]) ?? [];
+      setItems(loaded);
+    }
+    const hod = users.find((u) => u.id === plan.user_id);
+    const dept = depts.find((d) => d.id === (plan.department_id ?? hod?.department_id));
+    downloadWorkPlanPDF({
+      weekStartDate: plan.week_start_date,
+      status: plan.status,
+      signature: plan.signature,
+      submittedAt: plan.submitted_at,
+      hodName: hod?.full_name ?? plan.signature ?? userName(plan.user_id),
+      hodPosition: hod?.position ?? null,
+      departmentName: dept?.name ?? "—",
+      items: (loaded ?? []).map((it: any) => ({
+        activity_date: it.activity_date,
+        activity: it.activity,
+        location: it.location,
+        needs_vehicle: !!it.needs_vehicle,
+        needs_money: !!it.needs_money,
+        money_amount: it.money_amount,
+        notes: it.notes,
+      })),
+    });
+  };
+
 
   return (
     <Card>
