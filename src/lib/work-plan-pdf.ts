@@ -90,15 +90,16 @@ export function downloadWorkPlanPDF(plan: WorkPlanPDFData) {
     if (dayItems.length === 0) {
       tableRows.push([dayLabel, "—", "—", "—", "—", "—"]);
     } else {
-      const activities = dayItems.map((it, idx) => `${dayItems.length > 1 ? `${idx + 1}. ` : ""}${it.activity}`).join("\n");
-      const locations = dayItems.map((it) => it.location || "—").join("\n");
-      const vehicle = dayItems.map((it) => (it.needs_vehicle ? "Yes" : "No")).join("\n");
+      const sep = dayItems.length > 1 ? "\n───────────────\n" : "\n";
+      const activities = dayItems.map((it, idx) => `${dayItems.length > 1 ? `${idx + 1}. ` : ""}${it.activity}`).join(sep);
+      const locations = dayItems.map((it) => it.location || "—").join(sep);
+      const vehicle = dayItems.map((it) => (it.needs_vehicle ? "Yes" : "No")).join(sep);
       const funds = dayItems.map((it) => {
         if (!it.needs_money) return "No";
         const amt = it.money_amount != null && it.money_amount !== "" ? ` (KES ${Number(it.money_amount).toLocaleString()})` : "";
         return `Yes${amt}`;
-      }).join("\n");
-      const notes = dayItems.map((it) => it.notes || "—").join("\n");
+      }).join(sep);
+      const notes = dayItems.map((it) => it.notes || "—").join(sep);
       tableRows.push([dayLabel, activities, locations, vehicle, funds, notes]);
     }
   }
