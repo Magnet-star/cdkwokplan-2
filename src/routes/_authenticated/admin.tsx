@@ -17,6 +17,7 @@ import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Plus, ShieldCheck, ShieldOff, Check, X, Trash2, UserPlus, Copy, Pencil, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
+import { downloadWorkPlanPDF } from "@/lib/work-plan-pdf";
 import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
 import { TimeGroupedList } from "@/components/TimeGroupedList";
 
@@ -688,7 +689,7 @@ function AdminPage() {
             groupLabel="Work plans"
             emptyMessage={<Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No work plans yet.</CardContent></Card>}
             renderItem={(p: any) => (
-              <WorkPlanReadCard plan={p} userName={userName} onChanged={load} canEdit={canEdit} />
+              <WorkPlanReadCard plan={p} userName={userName} users={users} depts={depts} onChanged={load} canEdit={canEdit} />
             )}
           />
         </TabsContent>
@@ -893,7 +894,7 @@ function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; set
   );
 }
 
-function WorkPlanReadCard({ plan, userName, onChanged, canEdit = true }: { plan: any; userName: (id: string) => string; onChanged?: () => void; canEdit?: boolean }) {
+function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, canEdit = true }: { plan: any; userName: (id: string) => string; users?: any[]; depts?: any[]; onChanged?: () => void; canEdit?: boolean }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[] | null>(null);
   const [editing, setEditing] = useState(false);
@@ -952,6 +953,35 @@ function WorkPlanReadCard({ plan, userName, onChanged, canEdit = true }: { plan:
     toast.success(`Plan ${s}`);
     onChanged?.();
   };
+  const handleDownload = async () => {
+    let loaded = items;
+    if (loaded === null) {
+      const { data } = await supabase.from("work_plan_items").select("*").eq("work_plan_id", plan.id).order("activity_date");
+      loaded = (data as any[]) ?? [];
+      setItems(loaded);
+    }
+    const hod = users.find((u) => u.id === plan.user_id);
+    const dept = depts.find((d) => d.id === (plan.department_id ?? hod?.department_id));
+    downloadWorkPlanPDF({
+      weekStartDate: plan.week_start_date,
+      status: plan.status,
+      signature: plan.signature,
+      submittedAt: plan.submitted_at,
+      hodName: hod?.full_name ?? plan.signature ?? userName(plan.user_id),
+      hodPosition: hod?.position ?? null,
+      departmentName: dept?.name ?? "—",
+      items: (loaded ?? []).map((it: any) => ({
+        activity_date: it.activity_date,
+        activity: it.activity,
+        location: it.location,
+        needs_vehicle: !!it.needs_vehicle,
+        needs_money: !!it.needs_money,
+        money_amount: it.money_amount,
+        notes: it.notes,
+      })),
+    });
+  };
+
 
   return (
     <Card>
@@ -979,6 +1009,9 @@ function WorkPlanReadCard({ plan, userName, onChanged, canEdit = true }: { plan:
         </button>
         {open && (
           <div className="mt-4 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={handleDownload}><Download className="mr-1 h-3.5 w-3.5" /> Download PDF</Button>
+            </div>
             {canEdit && (
               <div className="flex flex-wrap gap-2">
                 {status !== "approved" && <Button size="sm" onClick={() => setPlanStatus("approved")}><Check className="mr-1 h-3.5 w-3.5" /> Approve plan</Button>}

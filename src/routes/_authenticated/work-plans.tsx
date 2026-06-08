@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format, startOfWeek, addDays, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { downloadWorkPlanPDF } from "@/lib/work-plan-pdf";
 
 export const Route = createFileRoute("/_authenticated/work-plans")({
   component: WorkPlansPage,
@@ -31,7 +32,7 @@ interface Item {
 
 interface Plan {
   id: string;
-  status: "draft" | "submitted";
+  status: "draft" | "submitted" | "approved";
   signature: string | null;
   submitted_at: string | null;
   week_start_date: string;
@@ -157,7 +158,34 @@ function WorkPlansPage() {
     setBusy(false);
   };
 
-  const submitted = plan?.status === "submitted";
+  const handleDownload = async () => {
+    if (!plan) return;
+    let departmentName = "—";
+    if (profile?.department_id) {
+      const { data: d } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
+      departmentName = (d as any)?.name ?? "—";
+    }
+    downloadWorkPlanPDF({
+      weekStartDate: plan.week_start_date,
+      status: plan.status,
+      signature: plan.signature,
+      submittedAt: plan.submitted_at,
+      hodName: profile?.full_name ?? plan.signature ?? "",
+      hodPosition: profile?.position ?? null,
+      departmentName,
+      items: items.map((it) => ({
+        activity_date: it.activity_date,
+        activity: it.activity,
+        location: it.location || null,
+        needs_vehicle: it.needs_vehicle,
+        needs_money: it.needs_money,
+        money_amount: it.money_amount || null,
+        notes: it.notes || null,
+      })),
+    });
+  };
+
+  const submitted = plan?.status === "submitted" || plan?.status === "approved";
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -176,8 +204,9 @@ function WorkPlansPage() {
       </div>
 
       {submitted && !isEditing && (
-        <div className="rounded-md border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
-          Submitted on {plan?.submitted_at ? format(parseISO(plan.submitted_at), "PPp") : ""} — signed by {plan?.signature}.
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
+          <span>Submitted on {plan?.submitted_at ? format(parseISO(plan.submitted_at), "PPp") : ""} — signed by {plan?.signature}.</span>
+          <Button size="sm" variant="outline" onClick={handleDownload}><Download className="mr-1 h-3.5 w-3.5" /> Download PDF</Button>
         </div>
       )}
 
