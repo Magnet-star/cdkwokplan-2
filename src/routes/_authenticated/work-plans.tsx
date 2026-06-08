@@ -158,7 +158,34 @@ function WorkPlansPage() {
     setBusy(false);
   };
 
-  const submitted = plan?.status === "submitted";
+  const handleDownload = async () => {
+    if (!plan) return;
+    let departmentName = "—";
+    if (profile?.department_id) {
+      const { data: d } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
+      departmentName = (d as any)?.name ?? "—";
+    }
+    downloadWorkPlanPDF({
+      weekStartDate: plan.week_start_date,
+      status: plan.status,
+      signature: plan.signature,
+      submittedAt: plan.submitted_at,
+      hodName: profile?.full_name ?? plan.signature ?? "",
+      hodPosition: profile?.position ?? null,
+      departmentName,
+      items: items.map((it) => ({
+        activity_date: it.activity_date,
+        activity: it.activity,
+        location: it.location || null,
+        needs_vehicle: it.needs_vehicle,
+        needs_money: it.needs_money,
+        money_amount: it.money_amount || null,
+        notes: it.notes || null,
+      })),
+    });
+  };
+
+  const submitted = plan?.status === "submitted" || plan?.status === "approved";
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
