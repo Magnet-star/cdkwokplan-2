@@ -63,6 +63,25 @@ function DiocesePage() {
   const [creatingLead, setCreatingLead] = useState(false);
   const [editClergy, setEditClergy] = useState<ClergyRow | null>(null);
   const [creatingClergy, setCreatingClergy] = useState(false);
+  const [initialClergySnapshot, setInitialClergySnapshot] = useState<string>("");
+
+  const clergyIsDirty = () =>
+    !!editClergy && JSON.stringify(editClergy) !== initialClergySnapshot;
+
+  const closeClergyDialog = (force = false) => {
+    if (!force && clergyIsDirty()) {
+      if (!confirm("You have unsaved changes. Discard them?")) return;
+    }
+    setEditClergy(null);
+    setCreatingClergy(false);
+    setInitialClergySnapshot("");
+  };
+
+  const openClergyForEdit = (m: ClergyRow) => {
+    setCreatingClergy(false);
+    setEditClergy(m);
+    setInitialClergySnapshot(JSON.stringify(m));
+  };
 
   const load = async () => {
     setLoading(true);
