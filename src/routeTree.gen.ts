@@ -22,6 +22,7 @@ import { Route as AuthenticatedDioceseRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDepartmentRouteImport } from './routes/_authenticated/department'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDailyLogRouteImport } from './routes/_authenticated/daily-log'
+import { Route as AuthenticatedArchiveRouteImport } from './routes/_authenticated/archive'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const AuthRoute = AuthRouteImport.update({
@@ -91,6 +92,11 @@ const AuthenticatedDailyLogRoute = AuthenticatedDailyLogRouteImport.update({
   path: '/daily-log',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedArchiveRoute = AuthenticatedArchiveRouteImport.update({
+  id: '/archive',
+  path: '/archive',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/archive': typeof AuthenticatedArchiveRoute
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/department': typeof AuthenticatedDepartmentRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/archive': typeof AuthenticatedArchiveRoute
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/department': typeof AuthenticatedDepartmentRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/archive': typeof AuthenticatedArchiveRoute
   '/_authenticated/daily-log': typeof AuthenticatedDailyLogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/department': typeof AuthenticatedDepartmentRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin'
+    | '/archive'
     | '/daily-log'
     | '/dashboard'
     | '/department'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin'
+    | '/archive'
     | '/daily-log'
     | '/dashboard'
     | '/department'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/admin'
+    | '/_authenticated/archive'
     | '/_authenticated/daily-log'
     | '/_authenticated/dashboard'
     | '/_authenticated/department'
@@ -292,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDailyLogRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/archive': {
+      id: '/_authenticated/archive'
+      path: '/archive'
+      fullPath: '/archive'
+      preLoaderRoute: typeof AuthenticatedArchiveRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -304,6 +323,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedArchiveRoute: typeof AuthenticatedArchiveRoute
   AuthenticatedDailyLogRoute: typeof AuthenticatedDailyLogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDepartmentRoute: typeof AuthenticatedDepartmentRoute
@@ -318,6 +338,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedArchiveRoute: AuthenticatedArchiveRoute,
   AuthenticatedDailyLogRoute: AuthenticatedDailyLogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDepartmentRoute: AuthenticatedDepartmentRoute,
