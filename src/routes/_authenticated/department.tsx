@@ -71,8 +71,93 @@ function DepartmentPage() {
       setLogs((recentLogs as any) ?? []);
       setTrips((deptTrips as any) ?? []);
       setVehicles((fleet as any) ?? []);
+      loadRoster(id);
     })();
   }, [profile]);
+
+  const saveRoster = async () => {
+    if (!editRoster || !deptId) return;
+    const payload = {
+      department_id: deptId,
+      full_name: editRoster.full_name.trim(),
+      title: editRoster.title?.trim() || null,
+      phone: editRoster.phone?.trim() || null,
+      email: editRoster.email?.trim() || null,
+    };
+    if (!payload.full_name) { toast.error("Name is required"); return; }
+    const client: any = supabase;
+    const { error } = creatingRoster
+      ? await client.from("department_staff").insert(payload)
+      : await client.from("department_staff").update(payload).eq("id", editRoster.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(creatingRoster ? "Staff added" : "Updated");
+    setEditRoster(null);
+    setCreatingRoster(false);
+    loadRoster(deptId);
+  };
+
+  const removeRoster = async (id: string) => {
+    if (!confirm("Remove this staff entry?")) return;
+    const { error } = await (supabase as any).from("department_staff").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Removed");
+    if (deptId) loadRoster(deptId);
+  };
+
+  const startNewRoster = () => {
+    setCreatingRoster(true);
+    setEditRoster({ id: "", department_id: deptId ?? "", full_name: "", title: "", phone: "", email: "" });
+  };
+
+  const downloadRosterPDF = () => {
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    doc.setFillColor(102, 0, 0);
+    doc.rect(0, 0, pageW, 28, "F");
+    doc.setTextColor(255, 248, 220);
+    doc.setFont("times", "bold"); doc.setFontSize(18);
+    doc.text("Catholic Diocese of Kitale", 14, 14);
+    doc.setFont("times", "normal"); doc.setFontSize(11);
+    doc.text(`${deptName || "Department"} — Staff Roster`, 14, 22);
+
+    doc.setTextColor(40, 30, 30);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.text(`Generated: ${format(new Date(), "PPp")}`, 14, 36);
+    doc.text(`Total staff: ${roster.length}`, 14, 42);
+
+    autoTable(doc, {
+      startY: 48,
+      head: [["#", "Name", "Title", "Phone", "Email"]],
+      body: roster.map((r, i) => [
+        String(i + 1),
+        r.full_name,
+        r.title ?? "—",
+        r.phone ?? "—",
+        r.email ?? "—",
+      ]),
+      styles: { fontSize: 9, cellPadding: 3, valign: "top", overflow: "linebreak" },
+      headStyles: { fillColor: [102, 0, 0], textColor: 255, fontStyle: "bold" },
+      columnStyles: {
+        0: { cellWidth: 10, halign: "center" },
+        1: { cellWidth: 50, fontStyle: "bold" },
+        2: { cellWidth: 45 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: "auto" },
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    const pages = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+      doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(120);
+      doc.text(`${deptName || "Department"} Staff Roster — Page ${i} of ${pages}`,
+        pageW / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
+    }
+
+    doc.save(`Staff_Roster_${(deptName || "department").replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  };
+
 
   const nameFor = (uid: string) => staff.find((s) => s.id === uid)?.full_name ?? "—";
   const vehicleLabel = (vid: string | null) => {
