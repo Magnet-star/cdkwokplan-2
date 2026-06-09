@@ -226,6 +226,7 @@ function DiocesePage() {
     toast.success(creatingClergy ? "Added" : "Updated");
     setEditClergy(null);
     setCreatingClergy(false);
+    setInitialClergySnapshot("");
     load();
   };
 
