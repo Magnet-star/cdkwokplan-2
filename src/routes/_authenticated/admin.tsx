@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,9 @@ import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
 import { TimeGroupedList } from "@/components/TimeGroupedList";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+  }),
   component: AdminPage,
 });
 
@@ -31,6 +34,9 @@ function AdminPage() {
   const { isSuperAdmin, isAdministrator, user } = useAuth();
   const canEdit = isSuperAdmin;
   const canAccess = isSuperAdmin || isAdministrator;
+  const search = useSearch({ from: "/_authenticated/admin" });
+  const navigate = useNavigate({ from: "/_authenticated/admin" });
+  const tab = search.tab ?? "vehicles";
   const createUserFn = useServerFn(adminCreateUser);
   const deleteUserFn = useServerFn(adminDeleteUser);
   const [depts, setDepts] = useState<any[]>([]);
@@ -280,7 +286,7 @@ function AdminPage() {
 
 
 
-      <Tabs defaultValue="vehicles">
+      <Tabs value={tab} onValueChange={(v) => navigate({ search: { tab: v } })}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
           <TabsTrigger value="fleet">Fleet</TabsTrigger>

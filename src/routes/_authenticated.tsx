@@ -1,8 +1,8 @@
 import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck, CalendarDays, Eye } from "lucide-react";
+import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck, CalendarDays, Eye, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import dioceseLogo from "@/assets/diocese-logo.jpg";
 import { OfficeAttendanceButton } from "@/components/OfficeAttendanceButton";
@@ -25,6 +25,8 @@ function AuthLayout() {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>;
   }
 
+  const [adminOpen, setAdminOpen] = useState(false);
+
   const nav = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
     { to: "/work-plans", label: "Work Plans", icon: ClipboardList, show: true },
@@ -35,8 +37,20 @@ function AuthLayout() {
     { to: "/department", label: "My Department", icon: Building2, show: true },
     { to: "/leave-requests", label: "Leave Requests", icon: CalendarDays, show: true },
     { to: "/diocese", label: "Diocese at a Glance", icon: Eye, show: true },
-    { to: "/admin", label: "Administration", icon: Users, show: canViewAll },
   ];
+
+  const adminSegments = [
+    { to: "/admin", search: { tab: "vehicles" }, label: "Vehicle approvals" },
+    { to: "/admin", search: { tab: "fleet" }, label: "Fleet" },
+    { to: "/admin", search: { tab: "events" }, label: "Diocesan events" },
+    { to: "/admin", search: { tab: "depts" }, label: "Departments" },
+    { to: "/admin", search: { tab: "users" }, label: "Users & roles" },
+    { to: "/admin", search: { tab: "allplans" }, label: "Work plans" },
+    { to: "/admin", search: { tab: "cleanup" }, label: "Logs & plans" },
+    { to: "/admin", search: { tab: "attendance" }, label: "Office attendance" },
+  ];
+
+  const isAdminActive = location.pathname === "/admin" || location.pathname.startsWith("/admin/");
 
   const roleLabel = isSuperAdmin ? "Super Admin" : isAdministrator ? "Administrator" : isHod ? "Head of Department" : "Staff";
 
@@ -69,6 +83,41 @@ function AuthLayout() {
               </Link>
             );
           })}
+          {canViewAll && (
+            <div className="space-y-1">
+              <button
+                onClick={() => setAdminOpen((o) => !o)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-bold text-white transition-colors",
+                  isAdminActive ? "bg-white/20 text-white" : "hover:bg-white/10",
+                )}
+              >
+                <Users className="h-4 w-4" />
+                <span className="flex-1 text-left">Administration</span>
+                {adminOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+              </button>
+              {adminOpen && (
+                <div className="ml-2 space-y-0.5 border-l border-white/20 pl-3">
+                  {adminSegments.map(({ to, search, label }) => {
+                    const active = isAdminActive && location.search.includes(`tab=${(search as any).tab}`);
+                    return (
+                      <Link
+                        key={label}
+                        to={to}
+                        search={search as any}
+                        className={cn(
+                          "block rounded-md px-3 py-1.5 text-xs font-bold text-white transition-colors",
+                          active ? "bg-white/20 text-white" : "hover:bg-white/10",
+                        )}
+                      >
+                        {label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
         <div className="border-t border-white/20 p-4">
           <p className="truncate text-sm font-bold text-white">{profile?.full_name ?? user.email}</p>
@@ -100,6 +149,11 @@ function AuthLayout() {
               <Icon className="h-3.5 w-3.5" /> {label}
             </Link>
           ))}
+          {canViewAll && (
+            <Link to="/admin" className="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold text-white hover:bg-white/10 [&.active]:bg-white/20 [&.active]:text-white" activeOptions={{ exact: false }}>
+              <Users className="h-3.5 w-3.5" /> Administration
+            </Link>
+          )}
         </nav>
 
         <main className="flex-1 overflow-x-hidden p-4 md:p-8">
