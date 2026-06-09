@@ -43,6 +43,11 @@ function ArchivePage() {
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [newPw2, setNewPw2] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetAcctPw, setResetAcctPw] = useState("");
+  const [resetNewPw, setResetNewPw] = useState("");
+  const [resetNewPw2, setResetNewPw2] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const [docs, setDocs] = useState<Doc[]>([]);
   const [events, setEvents] = useState<Evt[]>([]);
@@ -124,6 +129,29 @@ function ArchivePage() {
     toast.success("Password updated");
     setCreds({ exists: true, salt, hash });
     setChangingPw(false); setCurrentPw(""); setNewPw(""); setNewPw2("");
+  };
+
+  const handleResetPassword = async () => {
+    if (!user?.email) return;
+    if (resetNewPw.length < 6) { toast.error("New password must be at least 6 characters"); return; }
+    if (resetNewPw !== resetNewPw2) { toast.error("Passwords do not match"); return; }
+    setResetting(true);
+    try {
+      // Re-verify identity using account login password
+      const { error: authErr } = await supabase.auth.signInWithPassword({ email: user.email, password: resetAcctPw });
+      if (authErr) { toast.error("Account password incorrect"); return; }
+      const salt = randomSalt();
+      const hash = await sha256Hex(salt + resetNewPw);
+      const client: any = supabase;
+      const { error } = creds?.exists
+        ? await client.from("archive_credentials").update({ password_salt: salt, password_hash: hash }).eq("user_id", user.id)
+        : await client.from("archive_credentials").insert({ user_id: user.id, password_salt: salt, password_hash: hash });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Archive password reset");
+      setCreds({ exists: true, salt, hash });
+      setResetOpen(false); setResetAcctPw(""); setResetNewPw(""); setResetNewPw2("");
+      setUnlocked(true);
+    } finally { setResetting(false); }
   };
 
   // ---- documents ----
@@ -229,6 +257,9 @@ function ArchivePage() {
                   <Input type="password" autoFocus value={pwInput} onChange={(e) => setPwInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleUnlock()} />
                 </div>
                 <Button className="w-full" onClick={handleUnlock}><ShieldCheck className="mr-2 h-4 w-4" /> Unlock</Button>
+                <button type="button" onClick={() => setResetOpen(true)} className="block w-full text-center text-xs text-muted-foreground hover:text-primary hover:underline">
+                  Forgot password? Reset it
+                </button>
               </>
             ) : (
               <>
@@ -244,6 +275,20 @@ function ArchivePage() {
             )}
           </CardContent>
         </Card>
+
+        <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Reset archive password</DialogTitle>
+              <DialogDescription>Confirm your account login password, then set a new archive password.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1"><Label>Your account login password</Label><Input type="password" value={resetAcctPw} onChange={(e) => setResetAcctPw(e.target.value)} /></div>
+              <div className="space-y-1"><Label>New archive password</Label><Input type="password" value={resetNewPw} onChange={(e) => setResetNewPw(e.target.value)} /></div>
+              <div className="space-y-1"><Label>Confirm new archive password</Label><Input type="password" value={resetNewPw2} onChange={(e) => setResetNewPw2(e.target.value)} /></div>
+            </div>
+            <DialogFooter><Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button><Button onClick={handleResetPassword} disabled={resetting}>{resetting ? "Resetting…" : "Reset password"}</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
