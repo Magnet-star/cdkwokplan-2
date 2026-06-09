@@ -239,8 +239,7 @@ function DiocesePage() {
   };
 
   const startNewClergy = () => {
-    setCreatingClergy(true);
-    setEditClergy({
+    const blank: ClergyRow = {
       id: "",
       full_name: "",
       category: "priest",
@@ -249,7 +248,10 @@ function DiocesePage() {
       assignment_role: "",
       other_positions: "",
       phone_number: "",
-    });
+    };
+    setCreatingClergy(true);
+    setEditClergy(blank);
+    setInitialClergySnapshot(JSON.stringify(blank));
   };
 
   return (
