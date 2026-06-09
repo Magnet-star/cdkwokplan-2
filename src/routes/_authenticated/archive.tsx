@@ -257,6 +257,9 @@ function ArchivePage() {
                   <Input type="password" autoFocus value={pwInput} onChange={(e) => setPwInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleUnlock()} />
                 </div>
                 <Button className="w-full" onClick={handleUnlock}><ShieldCheck className="mr-2 h-4 w-4" /> Unlock</Button>
+                <button type="button" onClick={() => setResetOpen(true)} className="block w-full text-center text-xs text-muted-foreground hover:text-primary hover:underline">
+                  Forgot password? Reset it
+                </button>
               </>
             ) : (
               <>
