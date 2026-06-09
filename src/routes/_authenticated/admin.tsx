@@ -34,6 +34,9 @@ function AdminPage() {
   const { isSuperAdmin, isAdministrator, user } = useAuth();
   const canEdit = isSuperAdmin;
   const canAccess = isSuperAdmin || isAdministrator;
+  const search = useSearch({ from: "/_authenticated/admin" });
+  const navigate = useNavigate({ from: "/_authenticated/admin" });
+  const tab = search.tab ?? "vehicles";
   const createUserFn = useServerFn(adminCreateUser);
   const deleteUserFn = useServerFn(adminDeleteUser);
   const [depts, setDepts] = useState<any[]>([]);
