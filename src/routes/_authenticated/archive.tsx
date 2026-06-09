@@ -131,6 +131,29 @@ function ArchivePage() {
     setChangingPw(false); setCurrentPw(""); setNewPw(""); setNewPw2("");
   };
 
+  const handleResetPassword = async () => {
+    if (!user?.email) return;
+    if (resetNewPw.length < 6) { toast.error("New password must be at least 6 characters"); return; }
+    if (resetNewPw !== resetNewPw2) { toast.error("Passwords do not match"); return; }
+    setResetting(true);
+    try {
+      // Re-verify identity using account login password
+      const { error: authErr } = await supabase.auth.signInWithPassword({ email: user.email, password: resetAcctPw });
+      if (authErr) { toast.error("Account password incorrect"); return; }
+      const salt = randomSalt();
+      const hash = await sha256Hex(salt + resetNewPw);
+      const client: any = supabase;
+      const { error } = creds?.exists
+        ? await client.from("archive_credentials").update({ password_salt: salt, password_hash: hash }).eq("user_id", user.id)
+        : await client.from("archive_credentials").insert({ user_id: user.id, password_salt: salt, password_hash: hash });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Archive password reset");
+      setCreds({ exists: true, salt, hash });
+      setResetOpen(false); setResetAcctPw(""); setResetNewPw(""); setResetNewPw2("");
+      setUnlocked(true);
+    } finally { setResetting(false); }
+  };
+
   // ---- documents ----
   const handleUpload = async () => {
     if (!user || !file) return;
