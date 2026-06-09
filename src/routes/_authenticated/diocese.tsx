@@ -54,7 +54,7 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 function DiocesePage() {
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, canViewAll } = useAuth();
   const [leadership, setLeadership] = useState<LeadershipRow[]>([]);
   const [clergy, setClergy] = useState<ClergyRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,9 +65,14 @@ function DiocesePage() {
 
   const load = async () => {
     setLoading(true);
+    // Admins can read the base table (including phone numbers); everyone else
+    // reads from the safe public view that excludes phone_number.
+    const clergyQuery = canViewAll
+      ? supabase.from("clergy_members").select("*").order("full_name")
+      : supabase.from("clergy_members_public" as any).select("*").order("full_name");
     const [{ data: l }, { data: c }] = await Promise.all([
       supabase.from("diocese_leadership").select("*").order("sort_order"),
-      supabase.from("clergy_members").select("*").order("full_name"),
+      clergyQuery,
     ]);
     setLeadership((l as any) ?? []);
     setClergy((c as any) ?? []);

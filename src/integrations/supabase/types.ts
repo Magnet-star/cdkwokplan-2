@@ -696,9 +696,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      clergy_members_public: {
+        Row: {
+          assignment_role: string | null
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          current_assignment: string | null
+          full_name: string | null
+          home_parish: string | null
+          id: string | null
+          notes: string | null
+          ordination_date: string | null
+          other_positions: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_role?: string | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_assignment?: string | null
+          full_name?: string | null
+          home_parish?: string | null
+          id?: string | null
+          notes?: string | null
+          ordination_date?: string | null
+          other_positions?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_role?: string | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_assignment?: string | null
+          full_name?: string | null
+          home_parish?: string | null
+          id?: string | null
+          notes?: string | null
+          ordination_date?: string | null
+          other_positions?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_clergy_phone: { Args: { _id: string }; Returns: string }
       get_user_department: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
