@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWorkPlansRouteImport } from './routes/_authenticated/work-plans'
 import { Route as AuthenticatedVehicleRequestsRouteImport } from './routes/_authenticated/vehicle-requests'
+import { Route as AuthenticatedSecretariatStaffRouteImport } from './routes/_authenticated/secretariat-staff'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedLeaveRequestsRouteImport } from './routes/_authenticated/leave-requests'
 import { Route as AuthenticatedDriversLogRouteImport } from './routes/_authenticated/drivers-log'
@@ -46,6 +47,12 @@ const AuthenticatedVehicleRequestsRoute =
   AuthenticatedVehicleRequestsRouteImport.update({
     id: '/vehicle-requests',
     path: '/vehicle-requests',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSecretariatStaffRoute =
+  AuthenticatedSecretariatStaffRouteImport.update({
+    id: '/secretariat-staff',
+    path: '/secretariat-staff',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/drivers-log': typeof AuthenticatedDriversLogRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/secretariat-staff': typeof AuthenticatedSecretariatStaffRoute
   '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/work-plans': typeof AuthenticatedWorkPlansRoute
 }
@@ -115,6 +123,7 @@ export interface FileRoutesByTo {
   '/drivers-log': typeof AuthenticatedDriversLogRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/secretariat-staff': typeof AuthenticatedSecretariatStaffRoute
   '/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/work-plans': typeof AuthenticatedWorkPlansRoute
 }
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/_authenticated/drivers-log': typeof AuthenticatedDriversLogRoute
   '/_authenticated/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/secretariat-staff': typeof AuthenticatedSecretariatStaffRoute
   '/_authenticated/vehicle-requests': typeof AuthenticatedVehicleRequestsRoute
   '/_authenticated/work-plans': typeof AuthenticatedWorkPlansRoute
 }
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/drivers-log'
     | '/leave-requests'
     | '/reports'
+    | '/secretariat-staff'
     | '/vehicle-requests'
     | '/work-plans'
   fileRoutesByTo: FileRoutesByTo
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/drivers-log'
     | '/leave-requests'
     | '/reports'
+    | '/secretariat-staff'
     | '/vehicle-requests'
     | '/work-plans'
   id:
@@ -176,6 +188,7 @@ export interface FileRouteTypes {
     | '/_authenticated/drivers-log'
     | '/_authenticated/leave-requests'
     | '/_authenticated/reports'
+    | '/_authenticated/secretariat-staff'
     | '/_authenticated/vehicle-requests'
     | '/_authenticated/work-plans'
   fileRoutesById: FileRoutesById
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/vehicle-requests'
       fullPath: '/vehicle-requests'
       preLoaderRoute: typeof AuthenticatedVehicleRequestsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/secretariat-staff': {
+      id: '/_authenticated/secretariat-staff'
+      path: '/secretariat-staff'
+      fullPath: '/secretariat-staff'
+      preLoaderRoute: typeof AuthenticatedSecretariatStaffRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/reports': {
@@ -291,6 +311,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDriversLogRoute: typeof AuthenticatedDriversLogRoute
   AuthenticatedLeaveRequestsRoute: typeof AuthenticatedLeaveRequestsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSecretariatStaffRoute: typeof AuthenticatedSecretariatStaffRoute
   AuthenticatedVehicleRequestsRoute: typeof AuthenticatedVehicleRequestsRoute
   AuthenticatedWorkPlansRoute: typeof AuthenticatedWorkPlansRoute
 }
@@ -304,6 +325,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDriversLogRoute: AuthenticatedDriversLogRoute,
   AuthenticatedLeaveRequestsRoute: AuthenticatedLeaveRequestsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSecretariatStaffRoute: AuthenticatedSecretariatStaffRoute,
   AuthenticatedVehicleRequestsRoute: AuthenticatedVehicleRequestsRoute,
   AuthenticatedWorkPlansRoute: AuthenticatedWorkPlansRoute,
 }
