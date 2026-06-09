@@ -187,7 +187,7 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             {(isHod || isSuperAdmin) && <Link to="/department"><Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">Open department view</Button></Link>}
-            {isSuperAdmin && <Link to="/admin"><Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Administration</Button></Link>}
+            {isSuperAdmin && <Link to="/admin" search={{ tab: undefined }}><Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Administration</Button></Link>}
           </CardContent>
         </Card>
       )}
