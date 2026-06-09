@@ -60,6 +60,7 @@ function DiocesePage() {
   const [loading, setLoading] = useState(true);
 
   const [editLead, setEditLead] = useState<LeadershipRow | null>(null);
+  const [creatingLead, setCreatingLead] = useState(false);
   const [editClergy, setEditClergy] = useState<ClergyRow | null>(null);
   const [creatingClergy, setCreatingClergy] = useState(false);
 
