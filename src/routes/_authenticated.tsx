@@ -132,8 +132,7 @@ function AuthLayout() {
             return (
               <a
                 href={guideUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                download
                 className="mt-4 flex items-center gap-3 rounded-md border border-white/30 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-white/10"
               >
                 <BookOpen className="h-4 w-4" />
@@ -187,7 +186,7 @@ function AuthLayout() {
                   : null;
             if (!guideUrl) return null;
             return (
-              <a href={guideUrl} target="_blank" rel="noopener noreferrer" className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/10">
+              <a href={guideUrl} download className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/10">
                 <BookOpen className="h-3.5 w-3.5" /> User Guide
               </a>
             );
