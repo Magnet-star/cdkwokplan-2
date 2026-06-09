@@ -166,7 +166,7 @@ function Dashboard() {
           <CardContent className="space-y-2 overflow-hidden">
             {feed.length === 0 && <p className="text-sm text-muted-foreground">No submissions yet.</p>}
             {feed.map((s) => (
-              <Link key={`${s.kind}-${s.id}`} to="/admin" className="flex w-full max-w-full flex-col gap-1.5 overflow-hidden rounded-lg border border-border bg-card px-3 py-2 text-sm transition-colors hover:bg-muted/80 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+              <Link key={`${s.kind}-${s.id}`} to="/admin" search={{ tab: undefined }} className="flex w-full max-w-full flex-col gap-1.5 overflow-hidden rounded-lg border border-border bg-card px-3 py-2 text-sm transition-colors hover:bg-muted/80 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="break-words [overflow-wrap:anywhere]"><span className="font-semibold text-foreground">{s.user}</span> · {s.label}</p>
                   <p className="text-xs text-muted-foreground">{format(new Date(s.when), "PPp")}</p>
