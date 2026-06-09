@@ -16,6 +16,7 @@ function AuthLayout() {
   const { user, loading, profile, isSuperAdmin, isAdministrator, isHod, canViewAll, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [adminOpen, setAdminOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -24,8 +25,6 @@ function AuthLayout() {
   if (loading || !user) {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>;
   }
-
-  const [adminOpen, setAdminOpen] = useState(false);
 
   const nav = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
