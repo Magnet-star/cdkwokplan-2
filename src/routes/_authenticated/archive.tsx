@@ -43,6 +43,11 @@ function ArchivePage() {
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [newPw2, setNewPw2] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetAcctPw, setResetAcctPw] = useState("");
+  const [resetNewPw, setResetNewPw] = useState("");
+  const [resetNewPw2, setResetNewPw2] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const [docs, setDocs] = useState<Doc[]>([]);
   const [events, setEvents] = useState<Evt[]>([]);
