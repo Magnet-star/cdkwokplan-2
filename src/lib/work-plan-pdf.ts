@@ -90,7 +90,7 @@ export function downloadWorkPlanPDF(plan: WorkPlanPDFData) {
     if (dayItems.length === 0) {
       tableRows.push([dayLabel, "—", "—", "—", "—", "—"]);
     } else {
-      const sep = dayItems.length > 1 ? "\n───────────────\n" : "\n";
+      const sep = dayItems.length > 1 ? "\n\n" : "\n";
       const activities = dayItems.map((it, idx) => `${dayItems.length > 1 ? `${idx + 1}. ` : ""}${it.activity}`).join(sep);
       const locations = dayItems.map((it) => it.location || "—").join(sep);
       const vehicle = dayItems.map((it) => (it.needs_vehicle ? "Yes" : "No")).join(sep);
