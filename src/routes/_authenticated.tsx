@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthLayout() {
-  const { user, loading, profile, isSuperAdmin, isAdministrator, isHod, canViewAll, signOut } = useAuth();
+  const { user, loading, profile, isSuperAdmin, isAdministrator, isHod, isDriver, canViewAll, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [adminOpen, setAdminOpen] = useState(false);
