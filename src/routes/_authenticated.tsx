@@ -27,7 +27,7 @@ function AuthLayout() {
   }
 
   const nav = [
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
+    { to: "/dashboard", label: "Home", icon: LayoutDashboard, show: true },
     { to: "/work-plans", label: "Work Plans", icon: ClipboardList, show: true },
     { to: "/vehicle-requests", label: "Vehicle Requests", icon: Car, show: true },
     { to: "/drivers-log", label: "Drivers Log", icon: Truck, show: true },
