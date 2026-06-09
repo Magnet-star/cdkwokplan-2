@@ -103,6 +103,50 @@ export type Database = {
           },
         ]
       }
+      department_staff: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department_id: string
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department_id: string
+          email?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_staff_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string
