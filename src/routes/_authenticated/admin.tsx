@@ -286,7 +286,7 @@ function AdminPage() {
 
 
 
-      <Tabs value={tab} onValueChange={(v) => navigate({ search: (prev) => ({ ...prev, tab: v }) })}>
+      <Tabs value={tab} onValueChange={(v) => navigate({ search: { tab: v } })}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
           <TabsTrigger value="fleet">Fleet</TabsTrigger>
