@@ -25,6 +25,8 @@ function AuthLayout() {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>;
   }
 
+  const [adminOpen, setAdminOpen] = useState(false);
+
   const nav = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
     { to: "/work-plans", label: "Work Plans", icon: ClipboardList, show: true },
@@ -35,8 +37,20 @@ function AuthLayout() {
     { to: "/department", label: "My Department", icon: Building2, show: true },
     { to: "/leave-requests", label: "Leave Requests", icon: CalendarDays, show: true },
     { to: "/diocese", label: "Diocese at a Glance", icon: Eye, show: true },
-    { to: "/admin", label: "Administration", icon: Users, show: canViewAll },
   ];
+
+  const adminSegments = [
+    { to: "/admin", search: { tab: "vehicles" }, label: "Vehicle approvals" },
+    { to: "/admin", search: { tab: "fleet" }, label: "Fleet" },
+    { to: "/admin", search: { tab: "events" }, label: "Diocesan events" },
+    { to: "/admin", search: { tab: "depts" }, label: "Departments" },
+    { to: "/admin", search: { tab: "users" }, label: "Users & roles" },
+    { to: "/admin", search: { tab: "allplans" }, label: "Work plans" },
+    { to: "/admin", search: { tab: "cleanup" }, label: "Logs & plans" },
+    { to: "/admin", search: { tab: "attendance" }, label: "Office attendance" },
+  ];
+
+  const isAdminActive = location.pathname === "/admin" || location.pathname.startsWith("/admin/");
 
   const roleLabel = isSuperAdmin ? "Super Admin" : isAdministrator ? "Administrator" : isHod ? "Head of Department" : "Staff";
 
