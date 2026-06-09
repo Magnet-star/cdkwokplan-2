@@ -177,6 +177,21 @@ function AuthLayout() {
               <Users className="h-3.5 w-3.5" /> Administration
             </Link>
           )}
+          {(() => {
+            const guideUrl = isSuperAdmin
+              ? "/guides/SuperAdmin_User_Guide.pdf"
+              : isHod
+                ? "/guides/HOD_User_Guide.pdf"
+                : isDriver
+                  ? "/guides/Driver_User_Guide.pdf"
+                  : null;
+            if (!guideUrl) return null;
+            return (
+              <a href={guideUrl} target="_blank" rel="noopener noreferrer" className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/10">
+                <BookOpen className="h-3.5 w-3.5" /> User Guide
+              </a>
+            );
+          })()}
         </nav>
 
         <main className="flex-1 overflow-x-hidden p-4 md:p-8">
