@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tansta
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck, CalendarDays, Eye, ChevronDown, ChevronRight, UsersRound, Lock } from "lucide-react";
+import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck, CalendarDays, Eye, ChevronDown, ChevronRight, UsersRound, Lock, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import dioceseLogo from "@/assets/diocese-logo.jpg";
 import { OfficeAttendanceButton } from "@/components/OfficeAttendanceButton";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthLayout() {
-  const { user, loading, profile, isSuperAdmin, isAdministrator, isHod, canViewAll, signOut } = useAuth();
+  const { user, loading, profile, isSuperAdmin, isAdministrator, isHod, isDriver, canViewAll, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [adminOpen, setAdminOpen] = useState(false);
@@ -120,6 +120,27 @@ function AuthLayout() {
               )}
             </div>
           )}
+          {(() => {
+            const guideUrl = isSuperAdmin
+              ? "/guides/SuperAdmin_User_Guide.pdf"
+              : isHod
+                ? "/guides/HOD_User_Guide.pdf"
+                : isDriver
+                  ? "/guides/Driver_User_Guide.pdf"
+                  : null;
+            if (!guideUrl) return null;
+            return (
+              <a
+                href={guideUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex items-center gap-3 rounded-md border border-white/30 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-white/10"
+              >
+                <BookOpen className="h-4 w-4" />
+                User Guide
+              </a>
+            );
+          })()}
         </nav>
         <div className="border-t border-white/20 p-4">
           <p className="truncate text-sm font-bold text-white">{profile?.full_name ?? user.email}</p>
@@ -156,6 +177,21 @@ function AuthLayout() {
               <Users className="h-3.5 w-3.5" /> Administration
             </Link>
           )}
+          {(() => {
+            const guideUrl = isSuperAdmin
+              ? "/guides/SuperAdmin_User_Guide.pdf"
+              : isHod
+                ? "/guides/HOD_User_Guide.pdf"
+                : isDriver
+                  ? "/guides/Driver_User_Guide.pdf"
+                  : null;
+            if (!guideUrl) return null;
+            return (
+              <a href={guideUrl} target="_blank" rel="noopener noreferrer" className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/10">
+                <BookOpen className="h-3.5 w-3.5" /> User Guide
+              </a>
+            );
+          })()}
         </nav>
 
         <main className="flex-1 overflow-x-hidden p-4 md:p-8">
