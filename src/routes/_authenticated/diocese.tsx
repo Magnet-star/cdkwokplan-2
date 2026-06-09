@@ -67,7 +67,7 @@ function DiocesePage() {
     setLoading(true);
     // Admins can read the base table (including phone numbers); everyone else
     // reads from the safe public view that excludes phone_number.
-    const clergyQuery = isSuperAdmin
+    const clergyQuery = canViewAll
       ? supabase.from("clergy_members").select("*").order("full_name")
       : supabase.from("clergy_members_public" as any).select("*").order("full_name");
     const [{ data: l }, { data: c }] = await Promise.all([
