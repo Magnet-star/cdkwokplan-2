@@ -208,6 +208,108 @@ function DepartmentPage() {
       </Card>
 
       <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="font-serif flex items-center gap-2">
+                <Users className="h-5 w-5" /> Department Staff Roster ({roster.length})
+              </CardTitle>
+              <CardDescription>Maintained by the Head of Department. Includes names, titles, phones and emails.</CardDescription>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(canManageRoster || isSuperAdmin) && roster.length > 0 && (
+                <Button size="sm" variant="outline" onClick={downloadRosterPDF}>
+                  <Download className="mr-2 h-4 w-4" /> Download PDF
+                </Button>
+              )}
+              {canManageRoster && (
+                <Button size="sm" onClick={startNewRoster}>
+                  <Plus className="mr-2 h-4 w-4" /> Add staff
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {roster.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No staff listed yet.{canManageRoster ? " Use “Add staff” to start your roster." : ""}</p>
+          ) : (
+            <div className="overflow-x-auto rounded-md border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium w-10">#</th>
+                    <th className="px-3 py-2 text-left font-medium">Name</th>
+                    <th className="px-3 py-2 text-left font-medium">Title</th>
+                    <th className="px-3 py-2 text-left font-medium">Phone</th>
+                    <th className="px-3 py-2 text-left font-medium">Email</th>
+                    {canManageRoster && <th className="px-3 py-2 text-right font-medium w-24">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {roster.map((r, i) => (
+                    <tr key={r.id} className="border-t hover:bg-muted/50">
+                      <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
+                      <td className="px-3 py-2 font-medium">{r.full_name}</td>
+                      <td className="px-3 py-2">{r.title ?? <span className="text-muted-foreground">—</span>}</td>
+                      <td className="px-3 py-2">
+                        {r.phone ? <a href={`tel:${r.phone}`} className="text-primary hover:underline">{r.phone}</a> : <span className="text-muted-foreground">—</span>}
+                      </td>
+                      <td className="px-3 py-2">
+                        {r.email ? <a href={`mailto:${r.email}`} className="text-primary hover:underline">{r.email}</a> : <span className="text-muted-foreground">—</span>}
+                      </td>
+                      {canManageRoster && (
+                        <td className="px-3 py-2 text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => { setCreatingRoster(false); setEditRoster(r); }}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => removeRoster(r.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!editRoster} onOpenChange={(o) => { if (!o) { setEditRoster(null); setCreatingRoster(false); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{creatingRoster ? "Add staff member" : "Edit staff member"}</DialogTitle></DialogHeader>
+          {editRoster && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>Full name *</Label>
+                <Input value={editRoster.full_name} onChange={(e) => setEditRoster({ ...editRoster, full_name: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Title / Position</Label>
+                <Input value={editRoster.title ?? ""} onChange={(e) => setEditRoster({ ...editRoster, title: e.target.value })} placeholder="e.g. Programs Officer" />
+              </div>
+              <div className="space-y-1">
+                <Label>Phone</Label>
+                <Input value={editRoster.phone ?? ""} onChange={(e) => setEditRoster({ ...editRoster, phone: e.target.value })} placeholder="e.g. +254 712 345 678" />
+              </div>
+              <div className="space-y-1">
+                <Label>Email</Label>
+                <Input type="email" value={editRoster.email ?? ""} onChange={(e) => setEditRoster({ ...editRoster, email: e.target.value })} placeholder="name@example.org" />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditRoster(null); setCreatingRoster(false); }}>Cancel</Button>
+            <Button onClick={saveRoster}>{creatingRoster ? "Add" : "Save"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Card>
         <CardHeader><CardTitle className="font-serif">Recent work plans</CardTitle><CardDescription>Submitted plans appear here.</CardDescription></CardHeader>
         <CardContent>
           {plans.length === 0 ? <p className="text-sm text-muted-foreground">None yet.</p> : (
