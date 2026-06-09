@@ -83,6 +83,41 @@ function AuthLayout() {
               </Link>
             );
           })}
+          {canViewAll && (
+            <div className="space-y-1">
+              <button
+                onClick={() => setAdminOpen((o) => !o)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-bold text-white transition-colors",
+                  isAdminActive ? "bg-white/20 text-white" : "hover:bg-white/10",
+                )}
+              >
+                <Users className="h-4 w-4" />
+                <span className="flex-1 text-left">Administration</span>
+                {adminOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+              </button>
+              {adminOpen && (
+                <div className="ml-2 space-y-0.5 border-l border-white/20 pl-3">
+                  {adminSegments.map(({ to, search, label }) => {
+                    const active = isAdminActive && location.search.includes(`tab=${(search as any).tab}`);
+                    return (
+                      <Link
+                        key={label}
+                        to={to}
+                        search={search as any}
+                        className={cn(
+                          "block rounded-md px-3 py-1.5 text-xs font-bold text-white transition-colors",
+                          active ? "bg-white/20 text-white" : "hover:bg-white/10",
+                        )}
+                      >
+                        {label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
         <div className="border-t border-white/20 p-4">
           <p className="truncate text-sm font-bold text-white">{profile?.full_name ?? user.email}</p>
