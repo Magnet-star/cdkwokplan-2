@@ -275,6 +275,13 @@ function ArchivePage() {
             )}
           </CardContent>
         </Card>
+        <ResetPasswordDialog
+          open={resetOpen} onOpenChange={setResetOpen}
+          acctPw={resetAcctPw} setAcctPw={setResetAcctPw}
+          newPw={resetNewPw} setNewPw={setResetNewPw}
+          newPw2={resetNewPw2} setNewPw2={setResetNewPw2}
+          loading={resetting} onSubmit={handleResetPassword}
+        />
       </div>
     );
   }
