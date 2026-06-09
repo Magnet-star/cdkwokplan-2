@@ -34,8 +34,8 @@ function AdminPage() {
   const { isSuperAdmin, isAdministrator, user } = useAuth();
   const canEdit = isSuperAdmin;
   const canAccess = isSuperAdmin || isAdministrator;
-  const search = useSearch({ from: "/_authenticated/admin" });
-  const navigate = useNavigate({ from: "/_authenticated/admin" });
+  const search = useSearch({ from: "/_authenticated/admin" }) as { tab?: string };
+  const navigate = useNavigate();
   const tab = search.tab ?? "vehicles";
   const createUserFn = useServerFn(adminCreateUser);
   const deleteUserFn = useServerFn(adminDeleteUser);
@@ -286,7 +286,7 @@ function AdminPage() {
 
 
 
-      <Tabs value={tab} onValueChange={(v) => navigate({ search: { tab: v } })}>
+      <Tabs value={tab} onValueChange={(v) => navigate({ to: "/admin", search: { tab: v } })}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
           <TabsTrigger value="fleet">Fleet</TabsTrigger>
