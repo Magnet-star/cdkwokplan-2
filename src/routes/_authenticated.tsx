@@ -120,6 +120,27 @@ function AuthLayout() {
               )}
             </div>
           )}
+          {(() => {
+            const guideUrl = isSuperAdmin
+              ? "/guides/SuperAdmin_User_Guide.pdf"
+              : isHod
+                ? "/guides/HOD_User_Guide.pdf"
+                : isDriver
+                  ? "/guides/Driver_User_Guide.pdf"
+                  : null;
+            if (!guideUrl) return null;
+            return (
+              <a
+                href={guideUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex items-center gap-3 rounded-md border border-white/30 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-white/10"
+              >
+                <BookOpen className="h-4 w-4" />
+                User Guide
+              </a>
+            );
+          })()}
         </nav>
         <div className="border-t border-white/20 p-4">
           <p className="truncate text-sm font-bold text-white">{profile?.full_name ?? user.email}</p>
