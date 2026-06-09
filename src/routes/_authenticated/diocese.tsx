@@ -63,6 +63,25 @@ function DiocesePage() {
   const [creatingLead, setCreatingLead] = useState(false);
   const [editClergy, setEditClergy] = useState<ClergyRow | null>(null);
   const [creatingClergy, setCreatingClergy] = useState(false);
+  const [initialClergySnapshot, setInitialClergySnapshot] = useState<string>("");
+
+  const clergyIsDirty = () =>
+    !!editClergy && JSON.stringify(editClergy) !== initialClergySnapshot;
+
+  const closeClergyDialog = (force = false) => {
+    if (!force && clergyIsDirty()) {
+      if (!confirm("You have unsaved changes. Discard them?")) return;
+    }
+    setEditClergy(null);
+    setCreatingClergy(false);
+    setInitialClergySnapshot("");
+  };
+
+  const openClergyForEdit = (m: ClergyRow) => {
+    setCreatingClergy(false);
+    setEditClergy(m);
+    setInitialClergySnapshot(JSON.stringify(m));
+  };
 
   const load = async () => {
     setLoading(true);
@@ -207,6 +226,7 @@ function DiocesePage() {
     toast.success(creatingClergy ? "Added" : "Updated");
     setEditClergy(null);
     setCreatingClergy(false);
+    setInitialClergySnapshot("");
     load();
   };
 
@@ -219,8 +239,7 @@ function DiocesePage() {
   };
 
   const startNewClergy = () => {
-    setCreatingClergy(true);
-    setEditClergy({
+    const blank: ClergyRow = {
       id: "",
       full_name: "",
       category: "priest",
@@ -229,7 +248,10 @@ function DiocesePage() {
       assignment_role: "",
       other_positions: "",
       phone_number: "",
-    });
+    };
+    setCreatingClergy(true);
+    setEditClergy(blank);
+    setInitialClergySnapshot(JSON.stringify(blank));
   };
 
   return (
@@ -344,7 +366,7 @@ function DiocesePage() {
                       {isSuperAdmin && (
                         <td className="px-3 py-2 text-right">
                           <div className="flex justify-end gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => { setCreatingClergy(false); setEditClergy(m); }}>
+                            <Button size="sm" variant="ghost" onClick={() => openClergyForEdit(m)}>
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => removeClergy(m.id)}>
@@ -407,7 +429,7 @@ function DiocesePage() {
       </Dialog>
 
       {/* Edit/create clergy dialog */}
-      <Dialog open={!!editClergy} onOpenChange={(o) => { if (!o) { setEditClergy(null); setCreatingClergy(false); } }}>
+      <Dialog open={!!editClergy} onOpenChange={(o) => { if (!o) closeClergyDialog(); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{creatingClergy ? "Add member" : "Edit member"}</DialogTitle></DialogHeader>
           {editClergy && (
@@ -459,7 +481,7 @@ function DiocesePage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setEditClergy(null); setCreatingClergy(false); }}>Cancel</Button>
+            <Button variant="outline" onClick={() => closeClergyDialog()}>Cancel</Button>
             <Button onClick={saveClergy}>Save</Button>
           </DialogFooter>
         </DialogContent>
