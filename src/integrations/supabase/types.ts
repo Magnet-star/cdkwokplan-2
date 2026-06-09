@@ -696,7 +696,7 @@ export type Database = {
       }
     }
     Views: {
-      clergy_members_admin: {
+      clergy_members_public: {
         Row: {
           assignment_role: string | null
           category: string | null
@@ -709,7 +709,6 @@ export type Database = {
           notes: string | null
           ordination_date: string | null
           other_positions: string | null
-          phone_number: string | null
           updated_at: string | null
         }
         Insert: {
@@ -724,7 +723,6 @@ export type Database = {
           notes?: string | null
           ordination_date?: string | null
           other_positions?: string | null
-          phone_number?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -739,7 +737,6 @@ export type Database = {
           notes?: string | null
           ordination_date?: string | null
           other_positions?: string | null
-          phone_number?: string | null
           updated_at?: string | null
         }
         Relationships: []
