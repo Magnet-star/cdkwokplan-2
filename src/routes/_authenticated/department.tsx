@@ -28,7 +28,7 @@ interface RosterRow {
 }
 
 function DepartmentPage() {
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin, isHod } = useAuth();
   const [deptId, setDeptId] = useState<string | null>(null);
   const [deptName, setDeptName] = useState<string>("");
   const [staff, setStaff] = useState<any[]>([]);
@@ -36,6 +36,20 @@ function DepartmentPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [trips, setTrips] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [roster, setRoster] = useState<RosterRow[]>([]);
+  const [editRoster, setEditRoster] = useState<RosterRow | null>(null);
+  const [creatingRoster, setCreatingRoster] = useState(false);
+
+  const canManageRoster = isSuperAdmin || isHod;
+
+  const loadRoster = async (id: string) => {
+    const { data } = await (supabase as any)
+      .from("department_staff")
+      .select("*")
+      .eq("department_id", id)
+      .order("full_name");
+    setRoster((data as RosterRow[]) ?? []);
+  };
 
   useEffect(() => {
     (async () => {
