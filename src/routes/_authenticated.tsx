@@ -37,6 +37,7 @@ function AuthLayout() {
     { to: "/leave-requests", label: "Leave Requests", icon: CalendarDays, show: true },
     { to: "/diocese", label: "Diocese at a Glance", icon: Eye, show: true },
     { to: "/secretariat-staff", label: "Secretariat Staff", icon: UsersRound, show: isSuperAdmin },
+    { to: "/archive", label: "Archive", icon: Lock, show: true },
   ];
 
   const adminSegments = [
