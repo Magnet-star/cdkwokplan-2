@@ -362,12 +362,33 @@ function DiocesePage() {
         </TabsContent>
       </Tabs>
 
-      {/* Edit leadership dialog */}
-      <Dialog open={!!editLead} onOpenChange={(o) => !o && setEditLead(null)}>
+      {/* Edit/create leadership dialog */}
+      <Dialog open={!!editLead} onOpenChange={(o) => { if (!o) { setEditLead(null); setCreatingLead(false); } }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editLead?.position_title}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{creatingLead ? "Add leadership position" : editLead?.position_title}</DialogTitle>
+          </DialogHeader>
           {editLead && (
             <div className="space-y-3">
+              {creatingLead && (
+                <div className="space-y-1">
+                  <Label>Position title *</Label>
+                  <Input
+                    value={editLead.position_title}
+                    onChange={(e) => setEditLead({ ...editLead, position_title: e.target.value })}
+                    placeholder="e.g. Vicar General, Chancellor, Director of Caritas"
+                  />
+                </div>
+              )}
+              {!creatingLead && (
+                <div className="space-y-1">
+                  <Label>Position title</Label>
+                  <Input
+                    value={editLead.position_title}
+                    onChange={(e) => setEditLead({ ...editLead, position_title: e.target.value })}
+                  />
+                </div>
+              )}
               <div className="space-y-1">
                 <Label>Holder name</Label>
                 <Input value={editLead.holder_name ?? ""} onChange={(e) => setEditLead({ ...editLead, holder_name: e.target.value })} placeholder="e.g. Rt. Rev. John Doe" />
@@ -379,8 +400,8 @@ function DiocesePage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditLead(null)}>Cancel</Button>
-            <Button onClick={saveLeadership}>Save</Button>
+            <Button variant="outline" onClick={() => { setEditLead(null); setCreatingLead(false); }}>Cancel</Button>
+            <Button onClick={saveLeadership}>{creatingLead ? "Add" : "Save"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
