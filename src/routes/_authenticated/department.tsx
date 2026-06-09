@@ -5,12 +5,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format, parseISO } from "date-fns";
-import { FileBarChart } from "lucide-react";
+import { FileBarChart, Plus, Pencil, Trash2, Download, Users } from "lucide-react";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export const Route = createFileRoute("/_authenticated/department")({
   component: DepartmentPage,
 });
+
+interface RosterRow {
+  id: string;
+  department_id: string;
+  full_name: string;
+  title: string | null;
+  phone: string | null;
+  email: string | null;
+}
 
 function DepartmentPage() {
   const { profile } = useAuth();
