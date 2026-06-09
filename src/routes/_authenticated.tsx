@@ -151,7 +151,7 @@ function AuthLayout() {
             </Link>
           ))}
           {canViewAll && (
-            <Link to="/admin" className="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold text-white hover:bg-white/10 [&.active]:bg-white/20 [&.active]:text-white" activeOptions={{ exact: false }}>
+            <Link to="/admin" search={{ tab: undefined }} className="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold text-white hover:bg-white/10 [&.active]:bg-white/20 [&.active]:text-white" activeOptions={{ exact: false }}>
               <Users className="h-3.5 w-3.5" /> Administration
             </Link>
           )}
