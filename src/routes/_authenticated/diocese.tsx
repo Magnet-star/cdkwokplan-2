@@ -253,6 +253,13 @@ function DiocesePage() {
         </TabsList>
 
         <TabsContent value="leadership" className="space-y-3">
+          {isSuperAdmin && (
+            <div className="flex justify-end">
+              <Button onClick={startNewLeadership} size="sm">
+                <Plus className="mr-2 h-4 w-4" /> Add leader
+              </Button>
+            </div>
+          )}
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading…</p>
           ) : (
@@ -264,9 +271,14 @@ function DiocesePage() {
                     <CardDescription>{l.holder_name || <em className="text-muted-foreground">Not filled</em>}</CardDescription>
                   </div>
                   {isSuperAdmin && (
-                    <Button size="sm" variant="ghost" onClick={() => setEditLead(l)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => { setCreatingLead(false); setEditLead(l); }}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => removeLeadership(l.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </CardHeader>
                 {l.notes && (
