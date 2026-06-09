@@ -99,7 +99,8 @@ function AuthLayout() {
               {adminOpen && (
                 <div className="ml-2 space-y-0.5 border-l border-white/20 pl-3">
                   {adminSegments.map(({ to, search, label }) => {
-                    const active = isAdminActive && location.search.includes(`tab=${(search as any).tab}`);
+                    const currentTab = (location.search as any)?.tab;
+                    const active = isAdminActive && currentTab === (search as any).tab;
                     return (
                       <Link
                         key={label}
