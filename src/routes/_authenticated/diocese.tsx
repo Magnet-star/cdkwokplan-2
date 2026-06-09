@@ -366,7 +366,7 @@ function DiocesePage() {
                       {isSuperAdmin && (
                         <td className="px-3 py-2 text-right">
                           <div className="flex justify-end gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => { setCreatingClergy(false); setEditClergy(m); }}>
+                            <Button size="sm" variant="ghost" onClick={() => openClergyForEdit(m)}>
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => removeClergy(m.id)}>
