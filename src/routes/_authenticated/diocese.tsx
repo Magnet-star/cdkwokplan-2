@@ -136,14 +136,56 @@ function DiocesePage() {
 
   const saveLeadership = async () => {
     if (!editLead) return;
-    const { error } = await supabase
-      .from("diocese_leadership")
-      .update({ holder_name: editLead.holder_name, notes: editLead.notes })
-      .eq("id", editLead.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Updated");
+    if (creatingLead) {
+      const title = editLead.position_title.trim();
+      if (!title) { toast.error("Position title is required"); return; }
+      const key = (editLead.position_key || title)
+        .toLowerCase().trim().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || `pos_${Date.now()}`;
+      const maxOrder = leadership.reduce((m, l) => Math.max(m, l.sort_order ?? 0), 0);
+      const { error } = await supabase.from("diocese_leadership").insert({
+        position_key: key,
+        position_title: title,
+        holder_name: editLead.holder_name || null,
+        notes: editLead.notes || null,
+        sort_order: maxOrder + 10,
+      });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Leadership position added");
+    } else {
+      const { error } = await supabase
+        .from("diocese_leadership")
+        .update({
+          position_title: editLead.position_title,
+          holder_name: editLead.holder_name,
+          notes: editLead.notes,
+        })
+        .eq("id", editLead.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Updated");
+    }
     setEditLead(null);
+    setCreatingLead(false);
     load();
+  };
+
+  const removeLeadership = async (id: string) => {
+    if (!confirm("Remove this leadership position?")) return;
+    const { error } = await supabase.from("diocese_leadership").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Removed");
+    load();
+  };
+
+  const startNewLeadership = () => {
+    setCreatingLead(true);
+    setEditLead({
+      id: "",
+      position_key: "",
+      position_title: "",
+      holder_name: "",
+      notes: "",
+      sort_order: 0,
+    });
   };
 
   const saveClergy = async () => {
