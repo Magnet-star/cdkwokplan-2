@@ -429,7 +429,7 @@ function DiocesePage() {
       </Dialog>
 
       {/* Edit/create clergy dialog */}
-      <Dialog open={!!editClergy} onOpenChange={(o) => { if (!o) { setEditClergy(null); setCreatingClergy(false); } }}>
+      <Dialog open={!!editClergy} onOpenChange={(o) => { if (!o) closeClergyDialog(); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{creatingClergy ? "Add member" : "Edit member"}</DialogTitle></DialogHeader>
           {editClergy && (
