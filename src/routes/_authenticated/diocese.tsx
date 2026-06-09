@@ -60,6 +60,7 @@ function DiocesePage() {
   const [loading, setLoading] = useState(true);
 
   const [editLead, setEditLead] = useState<LeadershipRow | null>(null);
+  const [creatingLead, setCreatingLead] = useState(false);
   const [editClergy, setEditClergy] = useState<ClergyRow | null>(null);
   const [creatingClergy, setCreatingClergy] = useState(false);
 
@@ -135,14 +136,56 @@ function DiocesePage() {
 
   const saveLeadership = async () => {
     if (!editLead) return;
-    const { error } = await supabase
-      .from("diocese_leadership")
-      .update({ holder_name: editLead.holder_name, notes: editLead.notes })
-      .eq("id", editLead.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Updated");
+    if (creatingLead) {
+      const title = editLead.position_title.trim();
+      if (!title) { toast.error("Position title is required"); return; }
+      const key = (editLead.position_key || title)
+        .toLowerCase().trim().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || `pos_${Date.now()}`;
+      const maxOrder = leadership.reduce((m, l) => Math.max(m, l.sort_order ?? 0), 0);
+      const { error } = await supabase.from("diocese_leadership").insert({
+        position_key: key,
+        position_title: title,
+        holder_name: editLead.holder_name || null,
+        notes: editLead.notes || null,
+        sort_order: maxOrder + 10,
+      });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Leadership position added");
+    } else {
+      const { error } = await supabase
+        .from("diocese_leadership")
+        .update({
+          position_title: editLead.position_title,
+          holder_name: editLead.holder_name,
+          notes: editLead.notes,
+        })
+        .eq("id", editLead.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Updated");
+    }
     setEditLead(null);
+    setCreatingLead(false);
     load();
+  };
+
+  const removeLeadership = async (id: string) => {
+    if (!confirm("Remove this leadership position?")) return;
+    const { error } = await supabase.from("diocese_leadership").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Removed");
+    load();
+  };
+
+  const startNewLeadership = () => {
+    setCreatingLead(true);
+    setEditLead({
+      id: "",
+      position_key: "",
+      position_title: "",
+      holder_name: "",
+      notes: "",
+      sort_order: 0,
+    });
   };
 
   const saveClergy = async () => {
@@ -210,6 +253,13 @@ function DiocesePage() {
         </TabsList>
 
         <TabsContent value="leadership" className="space-y-3">
+          {isSuperAdmin && (
+            <div className="flex justify-end">
+              <Button onClick={startNewLeadership} size="sm">
+                <Plus className="mr-2 h-4 w-4" /> Add leader
+              </Button>
+            </div>
+          )}
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading…</p>
           ) : (
@@ -221,9 +271,14 @@ function DiocesePage() {
                     <CardDescription>{l.holder_name || <em className="text-muted-foreground">Not filled</em>}</CardDescription>
                   </div>
                   {isSuperAdmin && (
-                    <Button size="sm" variant="ghost" onClick={() => setEditLead(l)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => { setCreatingLead(false); setEditLead(l); }}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => removeLeadership(l.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </CardHeader>
                 {l.notes && (
@@ -307,12 +362,33 @@ function DiocesePage() {
         </TabsContent>
       </Tabs>
 
-      {/* Edit leadership dialog */}
-      <Dialog open={!!editLead} onOpenChange={(o) => !o && setEditLead(null)}>
+      {/* Edit/create leadership dialog */}
+      <Dialog open={!!editLead} onOpenChange={(o) => { if (!o) { setEditLead(null); setCreatingLead(false); } }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editLead?.position_title}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{creatingLead ? "Add leadership position" : editLead?.position_title}</DialogTitle>
+          </DialogHeader>
           {editLead && (
             <div className="space-y-3">
+              {creatingLead && (
+                <div className="space-y-1">
+                  <Label>Position title *</Label>
+                  <Input
+                    value={editLead.position_title}
+                    onChange={(e) => setEditLead({ ...editLead, position_title: e.target.value })}
+                    placeholder="e.g. Vicar General, Chancellor, Director of Caritas"
+                  />
+                </div>
+              )}
+              {!creatingLead && (
+                <div className="space-y-1">
+                  <Label>Position title</Label>
+                  <Input
+                    value={editLead.position_title}
+                    onChange={(e) => setEditLead({ ...editLead, position_title: e.target.value })}
+                  />
+                </div>
+              )}
               <div className="space-y-1">
                 <Label>Holder name</Label>
                 <Input value={editLead.holder_name ?? ""} onChange={(e) => setEditLead({ ...editLead, holder_name: e.target.value })} placeholder="e.g. Rt. Rev. John Doe" />
@@ -324,8 +400,8 @@ function DiocesePage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditLead(null)}>Cancel</Button>
-            <Button onClick={saveLeadership}>Save</Button>
+            <Button variant="outline" onClick={() => { setEditLead(null); setCreatingLead(false); }}>Cancel</Button>
+            <Button onClick={saveLeadership}>{creatingLead ? "Add" : "Save"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
