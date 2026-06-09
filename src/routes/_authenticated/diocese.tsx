@@ -481,7 +481,7 @@ function DiocesePage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setEditClergy(null); setCreatingClergy(false); }}>Cancel</Button>
+            <Button variant="outline" onClick={() => closeClergyDialog()}>Cancel</Button>
             <Button onClick={saveClergy}>Save</Button>
           </DialogFooter>
         </DialogContent>
