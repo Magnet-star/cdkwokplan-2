@@ -649,6 +649,66 @@ function DiocesePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit/create assignment dialog */}
+      <Dialog open={!!editAssignment} onOpenChange={(o) => { if (!o) { setEditAssignment(null); setCreatingAssignment(false); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{creatingAssignment ? "Add posting" : "Edit posting"}</DialogTitle>
+          </DialogHeader>
+          {editAssignment && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>Position *</Label>
+                <Input
+                  value={editAssignment.position}
+                  onChange={(e) => setEditAssignment({ ...editAssignment, position: e.target.value })}
+                  placeholder="e.g. Parish Priest, Curate, Chaplain"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Parish / Place of service</Label>
+                <Input
+                  value={editAssignment.parish ?? ""}
+                  onChange={(e) => setEditAssignment({ ...editAssignment, parish: e.target.value })}
+                  placeholder="e.g. St. Mary's Cathedral, Kitale"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>From</Label>
+                  <Input
+                    type="date"
+                    value={editAssignment.start_date ?? ""}
+                    onChange={(e) => setEditAssignment({ ...editAssignment, start_date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>To <span className="text-xs text-muted-foreground">(leave blank if current)</span></Label>
+                  <Input
+                    type="date"
+                    value={editAssignment.end_date ?? ""}
+                    onChange={(e) => setEditAssignment({ ...editAssignment, end_date: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Notes</Label>
+                <Textarea
+                  rows={3}
+                  value={editAssignment.notes ?? ""}
+                  onChange={(e) => setEditAssignment({ ...editAssignment, notes: e.target.value })}
+                  placeholder="Optional notes about this posting"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditAssignment(null); setCreatingAssignment(false); }}>Cancel</Button>
+            <Button onClick={saveAssignment}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
