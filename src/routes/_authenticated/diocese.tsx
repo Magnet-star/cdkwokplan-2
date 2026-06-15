@@ -41,6 +41,16 @@ interface ClergyRow {
   phone_number: string | null;
 }
 
+interface AssignmentRow {
+  id: string;
+  clergy_id: string;
+  parish: string | null;
+  position: string;
+  start_date: string | null;
+  end_date: string | null;
+  notes: string | null;
+}
+
 const CATEGORY_LABEL: Record<string, string> = {
   priest: "Priest",
   religious_man: "Religious Man",
