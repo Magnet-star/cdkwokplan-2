@@ -423,10 +423,26 @@ function DiocesePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {clergy.map((m, idx) => (
-                    <tr key={m.id} className="border-t hover:bg-muted/50">
+                  {clergy.map((m, idx) => {
+                    const isOpen = expandedClergy === m.id;
+                    const hist = assignmentsByClergy[m.id] ?? [];
+                    const histLoading = assignmentsLoading[m.id];
+                    const colSpan = isSuperAdmin ? 8 : 7;
+                    return (
+                    <Fragment key={m.id}>
+                    <tr className="border-t hover:bg-muted/50">
                       <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
-                      <td className="px-3 py-2 font-medium">{m.full_name}</td>
+                      <td className="px-3 py-2 font-medium">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(m.id)}
+                          className="flex items-center gap-1 text-left hover:text-primary hover:underline"
+                          aria-expanded={isOpen}
+                        >
+                          {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                          {m.full_name}
+                        </button>
+                      </td>
                       <td className="px-3 py-2">{m.home_parish ?? <span className="text-muted-foreground">—</span>}</td>
                       <td className="px-3 py-2">{m.current_assignment ?? <span className="text-muted-foreground">—</span>}</td>
                       <td className="px-3 py-2">
@@ -460,7 +476,70 @@ function DiocesePage() {
                         </td>
                       )}
                     </tr>
-                  ))}
+                    {isOpen && (
+                      <tr className="bg-muted/30 border-t">
+                        <td colSpan={colSpan} className="px-6 py-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <h4 className="flex items-center gap-2 text-sm font-semibold">
+                                <History className="h-4 w-4" /> Posting history — {m.full_name}
+                              </h4>
+                              {canEditAssignments && (
+                                <Button size="sm" onClick={() => startNewAssignment(m.id)}>
+                                  <Plus className="mr-1 h-3.5 w-3.5" /> Add posting
+                                </Button>
+                              )}
+                            </div>
+                            {histLoading ? (
+                              <p className="text-xs text-muted-foreground">Loading history…</p>
+                            ) : hist.length === 0 ? (
+                              <p className="text-xs text-muted-foreground">No postings recorded yet.</p>
+                            ) : (
+                              <div className="overflow-x-auto rounded border bg-background">
+                                <table className="w-full text-xs">
+                                  <thead className="bg-muted/60">
+                                    <tr>
+                                      <th className="px-2 py-1.5 text-left font-medium">Position</th>
+                                      <th className="px-2 py-1.5 text-left font-medium">Parish / Place</th>
+                                      <th className="px-2 py-1.5 text-left font-medium">From</th>
+                                      <th className="px-2 py-1.5 text-left font-medium">To</th>
+                                      <th className="px-2 py-1.5 text-left font-medium">Notes</th>
+                                      {canEditAssignments && <th className="px-2 py-1.5 text-right font-medium w-20">Actions</th>}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {hist.map((a) => (
+                                      <tr key={a.id} className="border-t">
+                                        <td className="px-2 py-1.5 font-medium">{a.position}</td>
+                                        <td className="px-2 py-1.5">{a.parish ?? <span className="text-muted-foreground">—</span>}</td>
+                                        <td className="px-2 py-1.5">{a.start_date ? format(new Date(a.start_date), "MMM yyyy") : <span className="text-muted-foreground">—</span>}</td>
+                                        <td className="px-2 py-1.5">{a.end_date ? format(new Date(a.end_date), "MMM yyyy") : <Badge variant="secondary" className="text-[10px]">Present</Badge>}</td>
+                                        <td className="px-2 py-1.5 text-muted-foreground">{a.notes ?? ""}</td>
+                                        {canEditAssignments && (
+                                          <td className="px-2 py-1.5 text-right">
+                                            <div className="flex justify-end gap-0.5">
+                                              <Button size="sm" variant="ghost" onClick={() => { setCreatingAssignment(false); setEditAssignment(a); }}>
+                                                <Pencil className="h-3.5 w-3.5" />
+                                              </Button>
+                                              <Button size="sm" variant="ghost" onClick={() => removeAssignment(a)}>
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                              </Button>
+                                            </div>
+                                          </td>
+                                        )}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
