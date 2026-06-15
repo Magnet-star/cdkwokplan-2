@@ -1,0 +1,1 @@
+GRANT SELECT ON public.clergy_members TO authenticated;
