@@ -293,9 +293,17 @@ function WorkPlansPage() {
                           {it.needs_money && (
                             <div className="flex items-center gap-2">
                               <Label className="text-xs">Amount (KES)</Label>
-                              <Input type="number" className="w-32" value={it.money_amount} onChange={(e) => updateItem(idx, { money_amount: e.target.value })} />
+                              <Input
+                                type="text"
+                                inputMode="decimal"
+                                className="w-40"
+                                placeholder="e.g. 5000"
+                                value={it.money_amount}
+                                onChange={(e) => updateItem(idx, { money_amount: e.target.value.replace(/[^\d.]/g, "") })}
+                              />
                             </div>
                           )}
+
                           <Button size="sm" variant="ghost" className="ml-auto text-destructive hover:text-destructive" onClick={() => removeItem(idx)}>
                             <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
                           </Button>
