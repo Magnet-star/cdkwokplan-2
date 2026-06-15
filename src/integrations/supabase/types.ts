@@ -134,6 +134,57 @@ export type Database = {
         }
         Relationships: []
       }
+      clergy_assignments: {
+        Row: {
+          clergy_id: string
+          created_at: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          parish: string | null
+          position: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          clergy_id: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          parish?: string | null
+          position: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clergy_id?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          parish?: string | null
+          position?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clergy_assignments_clergy_id_fkey"
+            columns: ["clergy_id"]
+            isOneToOne: false
+            referencedRelation: "clergy_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clergy_assignments_clergy_id_fkey"
+            columns: ["clergy_id"]
+            isOneToOne: false
+            referencedRelation: "clergy_members_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clergy_members: {
         Row: {
           assignment_role: string | null

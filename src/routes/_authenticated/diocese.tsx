@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Download, Church, Phone, Hash } from "lucide-react";
+import { Pencil, Plus, Trash2, Download, Church, Phone, Hash, ChevronRight, ChevronDown, History } from "lucide-react";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -41,6 +41,16 @@ interface ClergyRow {
   phone_number: string | null;
 }
 
+interface AssignmentRow {
+  id: string;
+  clergy_id: string;
+  parish: string | null;
+  position: string;
+  start_date: string | null;
+  end_date: string | null;
+  notes: string | null;
+}
+
 const CATEGORY_LABEL: Record<string, string> = {
   priest: "Priest",
   religious_man: "Religious Man",
@@ -55,6 +65,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 function DiocesePage() {
   const { isSuperAdmin, canViewAll } = useAuth();
+  const canEditAssignments = canViewAll;
   const [leadership, setLeadership] = useState<LeadershipRow[]>([]);
   const [clergy, setClergy] = useState<ClergyRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +75,79 @@ function DiocesePage() {
   const [editClergy, setEditClergy] = useState<ClergyRow | null>(null);
   const [creatingClergy, setCreatingClergy] = useState(false);
   const [initialClergySnapshot, setInitialClergySnapshot] = useState<string>("");
+
+  // Assignment history state
+  const [expandedClergy, setExpandedClergy] = useState<string | null>(null);
+  const [assignmentsByClergy, setAssignmentsByClergy] = useState<Record<string, AssignmentRow[]>>({});
+  const [assignmentsLoading, setAssignmentsLoading] = useState<Record<string, boolean>>({});
+  const [editAssignment, setEditAssignment] = useState<AssignmentRow | null>(null);
+  const [creatingAssignment, setCreatingAssignment] = useState(false);
+
+  const loadAssignments = async (clergyId: string) => {
+    setAssignmentsLoading((p) => ({ ...p, [clergyId]: true }));
+    const { data, error } = await supabase
+      .from("clergy_assignments" as any)
+      .select("*")
+      .eq("clergy_id", clergyId)
+      .order("start_date", { ascending: false, nullsFirst: false });
+    if (error) toast.error(error.message);
+    setAssignmentsByClergy((p) => ({ ...p, [clergyId]: ((data as any) ?? []) as AssignmentRow[] }));
+    setAssignmentsLoading((p) => ({ ...p, [clergyId]: false }));
+  };
+
+  const toggleExpanded = (clergyId: string) => {
+    if (expandedClergy === clergyId) {
+      setExpandedClergy(null);
+    } else {
+      setExpandedClergy(clergyId);
+      if (!assignmentsByClergy[clergyId]) loadAssignments(clergyId);
+    }
+  };
+
+  const startNewAssignment = (clergyId: string) => {
+    setCreatingAssignment(true);
+    setEditAssignment({
+      id: "",
+      clergy_id: clergyId,
+      parish: "",
+      position: "",
+      start_date: "",
+      end_date: "",
+      notes: "",
+    });
+  };
+
+  const saveAssignment = async () => {
+    if (!editAssignment) return;
+    const position = editAssignment.position.trim();
+    if (!position) { toast.error("Position is required"); return; }
+    const payload = {
+      clergy_id: editAssignment.clergy_id,
+      parish: editAssignment.parish || null,
+      position,
+      start_date: editAssignment.start_date || null,
+      end_date: editAssignment.end_date || null,
+      notes: editAssignment.notes || null,
+    };
+    const { error } = creatingAssignment
+      ? await supabase.from("clergy_assignments" as any).insert(payload)
+      : await supabase.from("clergy_assignments" as any).update(payload).eq("id", editAssignment.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(creatingAssignment ? "Added" : "Updated");
+    const cid = editAssignment.clergy_id;
+    setEditAssignment(null);
+    setCreatingAssignment(false);
+    loadAssignments(cid);
+  };
+
+  const removeAssignment = async (a: AssignmentRow) => {
+    if (!confirm("Remove this posting from history?")) return;
+    const { error } = await supabase.from("clergy_assignments" as any).delete().eq("id", a.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Removed");
+    loadAssignments(a.clergy_id);
+  };
+
 
   const clergyIsDirty = () =>
     !!editClergy && JSON.stringify(editClergy) !== initialClergySnapshot;
@@ -339,10 +423,26 @@ function DiocesePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {clergy.map((m, idx) => (
-                    <tr key={m.id} className="border-t hover:bg-muted/50">
+                  {clergy.map((m, idx) => {
+                    const isOpen = expandedClergy === m.id;
+                    const hist = assignmentsByClergy[m.id] ?? [];
+                    const histLoading = assignmentsLoading[m.id];
+                    const colSpan = isSuperAdmin ? 8 : 7;
+                    return (
+                    <Fragment key={m.id}>
+                    <tr className="border-t hover:bg-muted/50">
                       <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
-                      <td className="px-3 py-2 font-medium">{m.full_name}</td>
+                      <td className="px-3 py-2 font-medium">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(m.id)}
+                          className="flex items-center gap-1 text-left hover:text-primary hover:underline"
+                          aria-expanded={isOpen}
+                        >
+                          {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                          {m.full_name}
+                        </button>
+                      </td>
                       <td className="px-3 py-2">{m.home_parish ?? <span className="text-muted-foreground">—</span>}</td>
                       <td className="px-3 py-2">{m.current_assignment ?? <span className="text-muted-foreground">—</span>}</td>
                       <td className="px-3 py-2">
@@ -376,7 +476,70 @@ function DiocesePage() {
                         </td>
                       )}
                     </tr>
-                  ))}
+                    {isOpen && (
+                      <tr className="bg-muted/30 border-t">
+                        <td colSpan={colSpan} className="px-6 py-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <h4 className="flex items-center gap-2 text-sm font-semibold">
+                                <History className="h-4 w-4" /> Posting history — {m.full_name}
+                              </h4>
+                              {canEditAssignments && (
+                                <Button size="sm" onClick={() => startNewAssignment(m.id)}>
+                                  <Plus className="mr-1 h-3.5 w-3.5" /> Add posting
+                                </Button>
+                              )}
+                            </div>
+                            {histLoading ? (
+                              <p className="text-xs text-muted-foreground">Loading history…</p>
+                            ) : hist.length === 0 ? (
+                              <p className="text-xs text-muted-foreground">No postings recorded yet.</p>
+                            ) : (
+                              <div className="overflow-x-auto rounded border bg-background">
+                                <table className="w-full text-xs">
+                                  <thead className="bg-muted/60">
+                                    <tr>
+                                      <th className="px-2 py-1.5 text-left font-medium">Position</th>
+                                      <th className="px-2 py-1.5 text-left font-medium">Parish / Place</th>
+                                      <th className="px-2 py-1.5 text-left font-medium">From</th>
+                                      <th className="px-2 py-1.5 text-left font-medium">To</th>
+                                      <th className="px-2 py-1.5 text-left font-medium">Notes</th>
+                                      {canEditAssignments && <th className="px-2 py-1.5 text-right font-medium w-20">Actions</th>}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {hist.map((a) => (
+                                      <tr key={a.id} className="border-t">
+                                        <td className="px-2 py-1.5 font-medium">{a.position}</td>
+                                        <td className="px-2 py-1.5">{a.parish ?? <span className="text-muted-foreground">—</span>}</td>
+                                        <td className="px-2 py-1.5">{a.start_date ? format(new Date(a.start_date), "MMM yyyy") : <span className="text-muted-foreground">—</span>}</td>
+                                        <td className="px-2 py-1.5">{a.end_date ? format(new Date(a.end_date), "MMM yyyy") : <Badge variant="secondary" className="text-[10px]">Present</Badge>}</td>
+                                        <td className="px-2 py-1.5 text-muted-foreground">{a.notes ?? ""}</td>
+                                        {canEditAssignments && (
+                                          <td className="px-2 py-1.5 text-right">
+                                            <div className="flex justify-end gap-0.5">
+                                              <Button size="sm" variant="ghost" onClick={() => { setCreatingAssignment(false); setEditAssignment(a); }}>
+                                                <Pencil className="h-3.5 w-3.5" />
+                                              </Button>
+                                              <Button size="sm" variant="ghost" onClick={() => removeAssignment(a)}>
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                              </Button>
+                                            </div>
+                                          </td>
+                                        )}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -483,6 +646,66 @@ function DiocesePage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => closeClergyDialog()}>Cancel</Button>
             <Button onClick={saveClergy}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit/create assignment dialog */}
+      <Dialog open={!!editAssignment} onOpenChange={(o) => { if (!o) { setEditAssignment(null); setCreatingAssignment(false); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{creatingAssignment ? "Add posting" : "Edit posting"}</DialogTitle>
+          </DialogHeader>
+          {editAssignment && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>Position *</Label>
+                <Input
+                  value={editAssignment.position}
+                  onChange={(e) => setEditAssignment({ ...editAssignment, position: e.target.value })}
+                  placeholder="e.g. Parish Priest, Curate, Chaplain"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Parish / Place of service</Label>
+                <Input
+                  value={editAssignment.parish ?? ""}
+                  onChange={(e) => setEditAssignment({ ...editAssignment, parish: e.target.value })}
+                  placeholder="e.g. St. Mary's Cathedral, Kitale"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>From</Label>
+                  <Input
+                    type="date"
+                    value={editAssignment.start_date ?? ""}
+                    onChange={(e) => setEditAssignment({ ...editAssignment, start_date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>To <span className="text-xs text-muted-foreground">(leave blank if current)</span></Label>
+                  <Input
+                    type="date"
+                    value={editAssignment.end_date ?? ""}
+                    onChange={(e) => setEditAssignment({ ...editAssignment, end_date: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Notes</Label>
+                <Textarea
+                  rows={3}
+                  value={editAssignment.notes ?? ""}
+                  onChange={(e) => setEditAssignment({ ...editAssignment, notes: e.target.value })}
+                  placeholder="Optional notes about this posting"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditAssignment(null); setCreatingAssignment(false); }}>Cancel</Button>
+            <Button onClick={saveAssignment}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
