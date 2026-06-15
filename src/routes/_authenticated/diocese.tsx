@@ -75,6 +75,79 @@ function DiocesePage() {
   const [creatingClergy, setCreatingClergy] = useState(false);
   const [initialClergySnapshot, setInitialClergySnapshot] = useState<string>("");
 
+  // Assignment history state
+  const [expandedClergy, setExpandedClergy] = useState<string | null>(null);
+  const [assignmentsByClergy, setAssignmentsByClergy] = useState<Record<string, AssignmentRow[]>>({});
+  const [assignmentsLoading, setAssignmentsLoading] = useState<Record<string, boolean>>({});
+  const [editAssignment, setEditAssignment] = useState<AssignmentRow | null>(null);
+  const [creatingAssignment, setCreatingAssignment] = useState(false);
+
+  const loadAssignments = async (clergyId: string) => {
+    setAssignmentsLoading((p) => ({ ...p, [clergyId]: true }));
+    const { data, error } = await supabase
+      .from("clergy_assignments" as any)
+      .select("*")
+      .eq("clergy_id", clergyId)
+      .order("start_date", { ascending: false, nullsFirst: false });
+    if (error) toast.error(error.message);
+    setAssignmentsByClergy((p) => ({ ...p, [clergyId]: ((data as any) ?? []) as AssignmentRow[] }));
+    setAssignmentsLoading((p) => ({ ...p, [clergyId]: false }));
+  };
+
+  const toggleExpanded = (clergyId: string) => {
+    if (expandedClergy === clergyId) {
+      setExpandedClergy(null);
+    } else {
+      setExpandedClergy(clergyId);
+      if (!assignmentsByClergy[clergyId]) loadAssignments(clergyId);
+    }
+  };
+
+  const startNewAssignment = (clergyId: string) => {
+    setCreatingAssignment(true);
+    setEditAssignment({
+      id: "",
+      clergy_id: clergyId,
+      parish: "",
+      position: "",
+      start_date: "",
+      end_date: "",
+      notes: "",
+    });
+  };
+
+  const saveAssignment = async () => {
+    if (!editAssignment) return;
+    const position = editAssignment.position.trim();
+    if (!position) { toast.error("Position is required"); return; }
+    const payload = {
+      clergy_id: editAssignment.clergy_id,
+      parish: editAssignment.parish || null,
+      position,
+      start_date: editAssignment.start_date || null,
+      end_date: editAssignment.end_date || null,
+      notes: editAssignment.notes || null,
+    };
+    const { error } = creatingAssignment
+      ? await supabase.from("clergy_assignments" as any).insert(payload)
+      : await supabase.from("clergy_assignments" as any).update(payload).eq("id", editAssignment.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(creatingAssignment ? "Added" : "Updated");
+    const cid = editAssignment.clergy_id;
+    setEditAssignment(null);
+    setCreatingAssignment(false);
+    loadAssignments(cid);
+  };
+
+  const removeAssignment = async (a: AssignmentRow) => {
+    if (!confirm("Remove this posting from history?")) return;
+    const { error } = await supabase.from("clergy_assignments" as any).delete().eq("id", a.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Removed");
+    loadAssignments(a.clergy_id);
+  };
+
+
   const clergyIsDirty = () =>
     !!editClergy && JSON.stringify(editClergy) !== initialClergySnapshot;
 
