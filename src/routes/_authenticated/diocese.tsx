@@ -65,6 +65,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 function DiocesePage() {
   const { isSuperAdmin, canViewAll } = useAuth();
+  const canEditAssignments = canViewAll;
   const [leadership, setLeadership] = useState<LeadershipRow[]>([]);
   const [clergy, setClergy] = useState<ClergyRow[]>([]);
   const [loading, setLoading] = useState(true);
