@@ -40,6 +40,9 @@ function Dashboard() {
   const [feed, setFeed] = useState<Submission[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [eventDepts, setEventDepts] = useState<Record<string, string>>({});
+  const [depts, setDepts] = useState<any[]>([]);
+  const [editEvent, setEditEvent] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
