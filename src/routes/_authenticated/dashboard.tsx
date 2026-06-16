@@ -5,14 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, startOfWeek } from "date-fns";
-import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays, ChevronDown, Download } from "lucide-react";
+import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays, ChevronDown, Download, Pencil } from "lucide-react";
 import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -34,6 +40,9 @@ function Dashboard() {
   const [feed, setFeed] = useState<Submission[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [eventDepts, setEventDepts] = useState<Record<string, string>>({});
+  const [depts, setDepts] = useState<any[]>([]);
+  const [editEvent, setEditEvent] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -78,13 +87,12 @@ function Dashboard() {
 
       const today = format(new Date(), "yyyy-MM-dd");
       const farAhead = format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), "yyyy-MM-dd");
-      const [{ data: evs }, { data: allDepts }] = await Promise.all([
-        supabase.from("diocesan_events").select("*").gte("event_date", today).lte("event_date", farAhead).order("event_date", { ascending: true }),
-        supabase.from("departments").select("id,name"),
-      ]);
+      const allDeptsRes = await supabase.from("departments").select("id,name").order("name");
+      setDepts((allDeptsRes.data as any[]) ?? []);
+      const { data: evs } = await supabase.from("diocesan_events").select("*").gte("event_date", today).lte("event_date", farAhead).order("event_date", { ascending: true });
       setEvents((evs as any) ?? []);
       const map: Record<string, string> = {};
-      ((allDepts as any[]) ?? []).forEach((d) => { map[d.id] = d.name; });
+      ((allDeptsRes.data as any[]) ?? []).forEach((d) => { map[d.id] = d.name; });
       setEventDepts(map);
     })();
   }, [user, profile?.department_id, isSuperAdmin]);
@@ -115,6 +123,22 @@ function Dashboard() {
       headStyles: { fillColor: [128, 0, 32] },
     });
     doc.save(`diocesan-events-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  };
+
+  const saveEventEdit = async () => {
+    if (!editEvent?.title?.trim() || !editEvent?.event_date) return;
+    const { error } = await supabase.from("diocesan_events").update({
+      title: editEvent.title.trim(),
+      event_date: editEvent.event_date,
+      department_id: editEvent.department_id === "none" || !editEvent.department_id ? null : editEvent.department_id,
+      venue: editEvent.venue?.trim() || null,
+      notes: editEvent.notes?.trim() || null,
+    }).eq("id", editEvent.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Event updated");
+    setEvents((prev) => prev.map((e) => e.id === editEvent.id ? { ...e, ...editEvent } : e));
+    setEditDialogOpen(false);
+    setEditEvent(null);
   };
 
   const dashboardBody = (
@@ -174,6 +198,7 @@ function Dashboard() {
                         <TableHead>Venue</TableHead>
                         <TableHead>Spearheaded By</TableHead>
                         <TableHead>Notes</TableHead>
+                        {isSuperAdmin && <TableHead>Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -184,6 +209,13 @@ function Dashboard() {
                           <TableCell>{ev.venue ?? "—"}</TableCell>
                           <TableCell>{ev.department_id ? eventDepts[ev.department_id] ?? "—" : "—"}</TableCell>
                           <TableCell className="max-w-xs whitespace-pre-wrap break-words text-xs text-muted-foreground">{ev.notes ?? ""}</TableCell>
+                          {isSuperAdmin && (
+                            <TableCell>
+                              <Button size="sm" variant="ghost" onClick={() => { setEditEvent({ ...ev }); setEditDialogOpen(true); }}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -194,6 +226,37 @@ function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Event Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Diocesan Event</DialogTitle>
+          </DialogHeader>
+          {editEvent && (
+            <div className="grid gap-3">
+              <div><Label>Title *</Label><Input required maxLength={200} value={editEvent.title} onChange={(e) => setEditEvent({ ...editEvent, title: e.target.value })} /></div>
+              <div><Label>Date *</Label><Input required type="date" value={editEvent.event_date} onChange={(e) => setEditEvent({ ...editEvent, event_date: e.target.value })} /></div>
+              <div>
+                <Label>Department spearheading</Label>
+                <Select value={editEvent.department_id ?? "none"} onValueChange={(v) => setEditEvent({ ...editEvent, department_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— None —</SelectItem>
+                    {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Venue</Label><Input maxLength={200} value={editEvent.venue ?? ""} onChange={(e) => setEditEvent({ ...editEvent, venue: e.target.value })} /></div>
+              <div><Label>Notes</Label><Textarea maxLength={2000} value={editEvent.notes ?? ""} onChange={(e) => setEditEvent({ ...editEvent, notes: e.target.value })} /></div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+                <Button onClick={saveEventEdit}>Save Changes</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
 
       {/* Welcome */}
