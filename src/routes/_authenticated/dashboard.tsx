@@ -7,8 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, startOfWeek } from "date-fns";
-import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays } from "lucide-react";
+import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays, ChevronDown, Download } from "lucide-react";
 import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -73,9 +77,9 @@ function Dashboard() {
       setDept((deptRow.data as { name: string } | null)?.name ?? null);
 
       const today = format(new Date(), "yyyy-MM-dd");
-      const twoWeeksAhead = format(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), "yyyy-MM-dd");
+      const farAhead = format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), "yyyy-MM-dd");
       const [{ data: evs }, { data: allDepts }] = await Promise.all([
-        supabase.from("diocesan_events").select("*").gte("event_date", today).lte("event_date", twoWeeksAhead).order("event_date", { ascending: true }),
+        supabase.from("diocesan_events").select("*").gte("event_date", today).lte("event_date", farAhead).order("event_date", { ascending: true }),
         supabase.from("departments").select("id,name"),
       ]);
       setEvents((evs as any) ?? []);
@@ -86,6 +90,32 @@ function Dashboard() {
   }, [user, profile?.department_id, isSuperAdmin]);
 
   const weekLabel = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "MMMM d, yyyy");
+
+  const oneWeekAheadMs = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const thisWeekEvents = events.filter((ev) => +new Date(ev.event_date) <= oneWeekAheadMs);
+  const laterEvents = events.filter((ev) => +new Date(ev.event_date) > oneWeekAheadMs);
+
+  const downloadEventsPdf = () => {
+    const doc = new jsPDF({ orientation: "landscape" });
+    doc.setFontSize(16);
+    doc.text("Upcoming Diocesan Events", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${format(new Date(), "PPP")}`, 14, 22);
+    autoTable(doc, {
+      startY: 28,
+      head: [["Date", "Title", "Venue", "Spearheaded By", "Notes"]],
+      body: events.map((ev) => [
+        format(new Date(ev.event_date), "EEE, MMM d, yyyy"),
+        ev.title ?? "",
+        ev.venue ?? "",
+        ev.department_id ? eventDepts[ev.department_id] ?? "" : "",
+        ev.notes ?? "",
+      ]),
+      styles: { fontSize: 9, cellPadding: 2 },
+      headStyles: { fillColor: [128, 0, 32] },
+    });
+    doc.save(`diocesan-events-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  };
 
   const dashboardBody = (
     <div className="space-y-6">
@@ -98,14 +128,14 @@ function Dashboard() {
             </div>
             <CardTitle className="font-serif text-primary">Upcoming Diocesan Events</CardTitle>
           </div>
-          <CardDescription>Events happening within the next two weeks.</CardDescription>
+          <CardDescription>Events happening within the next one week.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
 
-          {events.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No events in the next two weeks.</p>
+          {thisWeekEvents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No events in the next one week.</p>
           ) : (
-            events.map((ev) => (
+            thisWeekEvents.map((ev) => (
               <div key={ev.id} className="overflow-hidden rounded-lg border border-border/60 bg-gradient-to-r from-card to-[oklch(0.96_0.03_145_/_0.15)] p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
@@ -122,8 +152,49 @@ function Dashboard() {
               </div>
             ))
           )}
+
+          {events.length > 0 && (
+            <Collapsible className="rounded-lg border border-border/60 bg-card/40">
+              <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-medium text-primary hover:bg-muted/40 [&[data-state=open]>svg]:rotate-180">
+                <span>All upcoming events ({events.length}){laterEvents.length > 0 && <> · {laterEvents.length} beyond this week</>}</span>
+                <ChevronDown className="h-4 w-4 shrink-0 transition-transform" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 p-3 pt-0">
+                <div className="flex justify-end">
+                  <Button size="sm" variant="outline" onClick={downloadEventsPdf} className="gap-2">
+                    <Download className="h-4 w-4" /> Download PDF
+                  </Button>
+                </div>
+                <div className="overflow-x-auto rounded-md border border-border/60">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Venue</TableHead>
+                        <TableHead>Spearheaded By</TableHead>
+                        <TableHead>Notes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {events.map((ev) => (
+                        <TableRow key={ev.id}>
+                          <TableCell className="whitespace-nowrap">{format(new Date(ev.event_date), "MMM d, yyyy")}</TableCell>
+                          <TableCell>{ev.title}</TableCell>
+                          <TableCell>{ev.venue ?? "—"}</TableCell>
+                          <TableCell>{ev.department_id ? eventDepts[ev.department_id] ?? "—" : "—"}</TableCell>
+                          <TableCell className="max-w-xs whitespace-pre-wrap break-words text-xs text-muted-foreground">{ev.notes ?? ""}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </CardContent>
       </Card>
+
 
       {/* Welcome */}
       <div className="overflow-hidden rounded-xl bg-primary p-5 text-white shadow-md">
