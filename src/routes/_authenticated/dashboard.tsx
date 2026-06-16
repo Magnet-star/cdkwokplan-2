@@ -87,13 +87,12 @@ function Dashboard() {
 
       const today = format(new Date(), "yyyy-MM-dd");
       const farAhead = format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), "yyyy-MM-dd");
-      const [{ data: evs }, { data: allDepts }] = await Promise.all([
-        supabase.from("diocesan_events").select("*").gte("event_date", today).lte("event_date", farAhead).order("event_date", { ascending: true }),
-        supabase.from("departments").select("id,name"),
-      ]);
+      const allDeptsRes = await supabase.from("departments").select("id,name").order("name");
+      setDepts((allDeptsRes.data as any[]) ?? []);
+      const { data: evs } = await supabase.from("diocesan_events").select("*").gte("event_date", today).lte("event_date", farAhead).order("event_date", { ascending: true });
       setEvents((evs as any) ?? []);
       const map: Record<string, string> = {};
-      ((allDepts as any[]) ?? []).forEach((d) => { map[d.id] = d.name; });
+      ((allDeptsRes.data as any[]) ?? []).forEach((d) => { map[d.id] = d.name; });
       setEventDepts(map);
     })();
   }, [user, profile?.department_id, isSuperAdmin]);
