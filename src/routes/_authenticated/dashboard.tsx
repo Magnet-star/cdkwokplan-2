@@ -144,7 +144,7 @@ function Dashboard() {
   const dashboardBody = (
     <div className="space-y-6">
       {/* Upcoming Events - Maroon themed */}
-      <Card className="border-l-4 border-l-primary bg-gradient-to-br from-card to-[oklch(0.97_0.02_25_/_0.3)]">
+      <Card className="border-l-4 border-l-red-700 bg-red-50 dark:bg-red-950/30">
         <CardHeader>
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -160,7 +160,7 @@ function Dashboard() {
             <p className="text-sm text-muted-foreground">No events in the next one week.</p>
           ) : (
             thisWeekEvents.map((ev) => (
-              <div key={ev.id} className="overflow-hidden rounded-lg border border-border/60 bg-gradient-to-r from-card to-[oklch(0.96_0.03_145_/_0.15)] p-3">
+              <div key={ev.id} className="overflow-hidden rounded-lg border border-red-300 dark:border-red-900 bg-red-100 dark:bg-red-900/40 p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <p className="break-words font-medium text-foreground">{ev.title}</p>
