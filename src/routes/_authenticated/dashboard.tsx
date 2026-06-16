@@ -208,6 +208,13 @@ function Dashboard() {
                           <TableCell>{ev.venue ?? "—"}</TableCell>
                           <TableCell>{ev.department_id ? eventDepts[ev.department_id] ?? "—" : "—"}</TableCell>
                           <TableCell className="max-w-xs whitespace-pre-wrap break-words text-xs text-muted-foreground">{ev.notes ?? ""}</TableCell>
+                          {isSuperAdmin && (
+                            <TableCell>
+                              <Button size="sm" variant="ghost" onClick={() => { setEditEvent({ ...ev }); setEditDialogOpen(true); }}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -218,6 +225,37 @@ function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Event Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Diocesan Event</DialogTitle>
+          </DialogHeader>
+          {editEvent && (
+            <div className="grid gap-3">
+              <div><Label>Title *</Label><Input required maxLength={200} value={editEvent.title} onChange={(e) => setEditEvent({ ...editEvent, title: e.target.value })} /></div>
+              <div><Label>Date *</Label><Input required type="date" value={editEvent.event_date} onChange={(e) => setEditEvent({ ...editEvent, event_date: e.target.value })} /></div>
+              <div>
+                <Label>Department spearheading</Label>
+                <Select value={editEvent.department_id ?? "none"} onValueChange={(v) => setEditEvent({ ...editEvent, department_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— None —</SelectItem>
+                    {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Venue</Label><Input maxLength={200} value={editEvent.venue ?? ""} onChange={(e) => setEditEvent({ ...editEvent, venue: e.target.value })} /></div>
+              <div><Label>Notes</Label><Textarea maxLength={2000} value={editEvent.notes ?? ""} onChange={(e) => setEditEvent({ ...editEvent, notes: e.target.value })} /></div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+                <Button onClick={saveEventEdit}>Save Changes</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
 
       {/* Welcome */}
