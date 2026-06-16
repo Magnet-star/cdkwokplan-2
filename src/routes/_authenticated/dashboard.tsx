@@ -198,6 +198,7 @@ function Dashboard() {
                         <TableHead>Venue</TableHead>
                         <TableHead>Spearheaded By</TableHead>
                         <TableHead>Notes</TableHead>
+                        {isSuperAdmin && <TableHead>Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
