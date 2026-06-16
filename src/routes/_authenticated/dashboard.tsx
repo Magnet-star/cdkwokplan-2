@@ -125,6 +125,22 @@ function Dashboard() {
     doc.save(`diocesan-events-${format(new Date(), "yyyy-MM-dd")}.pdf`);
   };
 
+  const saveEventEdit = async () => {
+    if (!editEvent?.title?.trim() || !editEvent?.event_date) return;
+    const { error } = await supabase.from("diocesan_events").update({
+      title: editEvent.title.trim(),
+      event_date: editEvent.event_date,
+      department_id: editEvent.department_id === "none" || !editEvent.department_id ? null : editEvent.department_id,
+      venue: editEvent.venue?.trim() || null,
+      notes: editEvent.notes?.trim() || null,
+    }).eq("id", editEvent.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Event updated");
+    setEvents((prev) => prev.map((e) => e.id === editEvent.id ? { ...e, ...editEvent } : e));
+    setEditDialogOpen(false);
+    setEditEvent(null);
+  };
+
   const dashboardBody = (
     <div className="space-y-6">
       {/* Upcoming Events - Maroon themed */}
