@@ -327,6 +327,8 @@ function DSWeeklyVehicleRequestsView() {
   const [drivers, setDrivers] = useState<DriverOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [prepare, setPrepare] = useState<{ weekStart: string; weekEnd: string; items: DSRow[] } | null>(null);
+  const [savedRefresh, setSavedRefresh] = useState(0);
+
 
   useEffect(() => {
     (async () => {
