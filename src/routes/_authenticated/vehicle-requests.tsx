@@ -317,25 +317,43 @@ function weekLabel(weekStartISO: string) {
   return `VEHICLE REQUESTS FOR WEEK [${format(s, "EEE MMM d")} TO ${format(e, "EEE MMM d, yyyy")}]`;
 }
 
+interface FleetVehicle { id: string; registration: string; make_model: string | null }
+interface DriverOption { id: string; full_name: string }
+
 function DSWeeklyVehicleRequestsView() {
   const [rows, setRows] = useState<DSRow[]>([]);
   const [departments, setDepartments] = useState<Record<string, string>>({});
+  const [vehicles, setVehicles] = useState<FleetVehicle[]>([]);
+  const [drivers, setDrivers] = useState<DriverOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [prepare, setPrepare] = useState<{ weekStart: string; weekEnd: string; items: DSRow[] } | null>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [{ data: vr }, { data: depts }] = await Promise.all([
+      const [{ data: vr }, { data: depts }, { data: veh }, { data: driverRoles }] = await Promise.all([
         supabase
           .from("vehicle_requests")
           .select("id,user_id,department_id,week_start_date,date_needed,destination,purpose,passengers,status,created_at")
           .order("date_needed", { ascending: false }),
         supabase.from("departments").select("id,name"),
+        supabase.from("vehicles").select("id,registration,make_model").eq("active", true).order("registration"),
+        supabase.from("user_roles").select("user_id").eq("role", "driver"),
       ]);
       setRows((vr as DSRow[]) ?? []);
       const map: Record<string, string> = {};
       (depts ?? []).forEach((d: any) => { map[d.id] = d.name; });
       setDepartments(map);
+      setVehicles((veh as FleetVehicle[]) ?? []);
+      const driverIds = (driverRoles ?? []).map((r: any) => r.user_id);
+      if (driverIds.length > 0) {
+        const { data: dProfiles } = await supabase
+          .from("profiles")
+          .select("id,full_name")
+          .in("id", driverIds)
+          .order("full_name");
+        setDrivers((dProfiles as DriverOption[]) ?? []);
+      } else setDrivers([]);
       setLoading(false);
     })();
   }, []);
