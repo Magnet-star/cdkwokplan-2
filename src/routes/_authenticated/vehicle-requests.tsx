@@ -572,10 +572,14 @@ function DSWeeklyVehicleRequestsView() {
         departments={departments}
         vehicles={vehicles}
         drivers={drivers}
+        onUploaded={() => setSavedRefresh((n) => n + 1)}
       />
+
+      <SavedWeeklyPdfs refreshKey={savedRefresh} />
     </div>
   );
 }
+
 
 function PrepareWeeklyPdfDialog({
   open,
