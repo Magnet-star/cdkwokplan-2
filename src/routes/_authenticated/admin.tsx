@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { adminCreateUser, adminDeleteUser } from "@/lib/admin-users.functions";
+import { adminCreateUser, adminDeleteUser, adminUpdateUser } from "@/lib/admin-users.functions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,9 @@ function AdminPage() {
   const tab = search.tab ?? "vehicles";
   const createUserFn = useServerFn(adminCreateUser);
   const deleteUserFn = useServerFn(adminDeleteUser);
+  const updateUserFn = useServerFn(adminUpdateUser);
+  const [editUser, setEditUser] = useState<{ id: string; full_name: string; email: string; password: string } | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [depts, setDepts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [rolesByUser, setRolesByUser] = useState<Record<string, Role[]>>({});
@@ -578,10 +582,17 @@ function AdminPage() {
                       </div>
                       {locked && <p className="mt-2 text-xs text-muted-foreground">This account is protected and can only be edited by the owner.</p>}
                     </div>
-                    {canEdit && !isSelf && !locked && (
-                      <Button size="sm" variant="destructive" onClick={() => deleteUser(u.id, u.full_name)}>
-                        <Trash2 className="mr-1 h-3.5 w-3.5" />Delete user
-                      </Button>
+                    {canEdit && !locked && (
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setEditUser({ id: u.id, full_name: u.full_name ?? "", email: u.email ?? "", password: "" })}>
+                          <Pencil className="mr-1 h-3.5 w-3.5" />Edit
+                        </Button>
+                        {!isSelf && (
+                          <Button size="sm" variant="destructive" onClick={() => deleteUser(u.id, u.full_name)}>
+                            <Trash2 className="mr-1 h-3.5 w-3.5" />Delete user
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
                   {canEdit ? (
@@ -612,6 +623,50 @@ function AdminPage() {
               </Card>
             );
           })}
+
+          <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit user</DialogTitle>
+                <DialogDescription>Update the user's name, email, or reset their password. Leave password blank to keep it unchanged.</DialogDescription>
+              </DialogHeader>
+              {editUser && (
+                <div className="grid gap-3">
+                  <div><Label>Full name</Label><Input value={editUser.full_name} onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })} /></div>
+                  <div><Label>Email (login)</Label><Input type="email" value={editUser.email} onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} /></div>
+                  <div>
+                    <Label>New password (optional, min 8 chars)</Label>
+                    <Input type="text" value={editUser.password} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} placeholder="Leave blank to keep current" />
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
+                <Button
+                  disabled={savingEdit}
+                  onClick={async () => {
+                    if (!editUser) return;
+                    if (editUser.password && editUser.password.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+                    setSavingEdit(true);
+                    try {
+                      await updateUserFn({ data: {
+                        userId: editUser.id,
+                        fullName: editUser.full_name.trim(),
+                        email: editUser.email.trim(),
+                        password: editUser.password || undefined,
+                      }});
+                      toast.success("User updated");
+                      setEditUser(null);
+                      load();
+                    } catch (err: any) {
+                      toast.error(err?.message ?? "Failed to update user");
+                    }
+                    setSavingEdit(false);
+                  }}
+                >{savingEdit ? "Saving…" : "Save changes"}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
         </TabsContent>
 

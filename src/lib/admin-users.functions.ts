@@ -77,3 +77,46 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+const UpdateUserSchema = z.object({
+  userId: z.string().uuid(),
+  fullName: z.string().trim().min(1).max(120).optional(),
+  email: z.string().trim().email().max(255).optional(),
+  password: z.string().min(8).max(72).optional().or(z.literal("")),
+});
+
+export const adminUpdateUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => UpdateUserSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: roleRows, error: roleErr } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (roleErr) throw new Error(roleErr.message);
+    const isSuper = (roleRows ?? []).some((r: any) => r.role === "super_admin");
+    if (!isSuper) throw new Error("Only super admins can edit users");
+    if (data.userId === "788b3a81-1631-4b53-a08d-35ce5d605f4e" && data.userId !== context.userId) {
+      throw new Error("This account is protected and cannot be modified");
+    }
+
+    const authUpdate: { email?: string; password?: string; user_metadata?: Record<string, unknown> } = {};
+    if (data.email) authUpdate.email = data.email;
+    if (data.password && data.password.length >= 8) authUpdate.password = data.password;
+    if (data.fullName) authUpdate.user_metadata = { full_name: data.fullName };
+
+    if (Object.keys(authUpdate).length > 0) {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, authUpdate);
+      if (error) throw new Error(error.message);
+    }
+
+    const profileUpdate: { full_name?: string; email?: string } = {};
+    if (data.fullName) profileUpdate.full_name = data.fullName;
+    if (data.email) profileUpdate.email = data.email;
+    if (Object.keys(profileUpdate).length > 0) {
+      const { error } = await supabaseAdmin.from("profiles").update(profileUpdate).eq("id", data.userId);
+      if (error) throw new Error(error.message);
+    }
+
+    return { ok: true };
+  });
