@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, endOfWeek, parseISO, addDays } from "date-fns";
 import { toast } from "sonner";
 import { Car, Plus, Download, Trash2, ChevronDown, ChevronRight, FolderOpen } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
 import { downloadDSWeeklyVehicleRequestsPDF, type DSWeeklyVRRow } from "@/lib/weekly-ds-vehicle-pdf";
 
@@ -315,25 +317,43 @@ function weekLabel(weekStartISO: string) {
   return `VEHICLE REQUESTS FOR WEEK [${format(s, "EEE MMM d")} TO ${format(e, "EEE MMM d, yyyy")}]`;
 }
 
+interface FleetVehicle { id: string; registration: string; make_model: string | null }
+interface DriverOption { id: string; full_name: string }
+
 function DSWeeklyVehicleRequestsView() {
   const [rows, setRows] = useState<DSRow[]>([]);
   const [departments, setDepartments] = useState<Record<string, string>>({});
+  const [vehicles, setVehicles] = useState<FleetVehicle[]>([]);
+  const [drivers, setDrivers] = useState<DriverOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [prepare, setPrepare] = useState<{ weekStart: string; weekEnd: string; items: DSRow[] } | null>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [{ data: vr }, { data: depts }] = await Promise.all([
+      const [{ data: vr }, { data: depts }, { data: veh }, { data: driverRoles }] = await Promise.all([
         supabase
           .from("vehicle_requests")
           .select("id,user_id,department_id,week_start_date,date_needed,destination,purpose,passengers,status,created_at")
           .order("date_needed", { ascending: false }),
         supabase.from("departments").select("id,name"),
+        supabase.from("vehicles").select("id,registration,make_model").eq("active", true).order("registration"),
+        supabase.from("user_roles").select("user_id").eq("role", "driver"),
       ]);
       setRows((vr as DSRow[]) ?? []);
       const map: Record<string, string> = {};
       (depts ?? []).forEach((d: any) => { map[d.id] = d.name; });
       setDepartments(map);
+      setVehicles((veh as FleetVehicle[]) ?? []);
+      const driverIds = (driverRoles ?? []).map((r: any) => r.user_id);
+      if (driverIds.length > 0) {
+        const { data: dProfiles } = await supabase
+          .from("profiles")
+          .select("id,full_name")
+          .in("id", driverIds)
+          .order("full_name");
+        setDrivers((dProfiles as DriverOption[]) ?? []);
+      } else setDrivers([]);
       setLoading(false);
     })();
   }, []);
@@ -419,7 +439,7 @@ function DSWeeklyVehicleRequestsView() {
               disabled={!currentWeek || currentWeek.items.length === 0}
               onClick={() =>
                 currentWeek &&
-                downloadDSWeeklyVehicleRequestsPDF(toDSRows(currentWeek.items), currentWeekStart, currentWeekEnd)
+                setPrepare({ weekStart: currentWeekStart, weekEnd: currentWeekEnd, items: currentWeek.items })
               }
             >
               <Download className="mr-1 h-4 w-4" />Download weekly PDF
@@ -460,11 +480,11 @@ function DSWeeklyVehicleRequestsView() {
                             items={w.items}
                             departments={departments}
                             onDownload={() =>
-                              downloadDSWeeklyVehicleRequestsPDF(
-                                toDSRows(w.items),
-                                w.weekStart,
-                                format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
-                              )
+                              setPrepare({
+                                weekStart: w.weekStart,
+                                weekEnd: format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
+                                items: w.items,
+                              })
                             }
                           />
                         ))}
@@ -480,11 +500,11 @@ function DSWeeklyVehicleRequestsView() {
                           items={w.items}
                           departments={departments}
                           onDownload={() =>
-                            downloadDSWeeklyVehicleRequestsPDF(
-                              toDSRows(w.items),
-                              w.weekStart,
-                              format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
-                            )
+                            setPrepare({
+                              weekStart: w.weekStart,
+                              weekEnd: format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
+                              items: w.items,
+                            })
                           }
                         />
                       ))}
@@ -517,11 +537,11 @@ function DSWeeklyVehicleRequestsView() {
                         items={w.items}
                         departments={departments}
                         onDownload={() =>
-                          downloadDSWeeklyVehicleRequestsPDF(
-                            toDSRows(w.items),
-                            w.weekStart,
-                            format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
-                          )
+                          setPrepare({
+                            weekStart: w.weekStart,
+                            weekEnd: format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
+                            items: w.items,
+                          })
                         }
                       />
                     ))}
@@ -540,7 +560,148 @@ function DSWeeklyVehicleRequestsView() {
           </CardContent>
         </Card>
       )}
+
+      <PrepareWeeklyPdfDialog
+        open={!!prepare}
+        onOpenChange={(o) => { if (!o) setPrepare(null); }}
+        weekStart={prepare?.weekStart ?? ""}
+        weekEnd={prepare?.weekEnd ?? ""}
+        items={prepare?.items ?? []}
+        departments={departments}
+        vehicles={vehicles}
+        drivers={drivers}
+      />
     </div>
+  );
+}
+
+function PrepareWeeklyPdfDialog({
+  open,
+  onOpenChange,
+  weekStart,
+  weekEnd,
+  items,
+  departments,
+  vehicles,
+  drivers,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  weekStart: string;
+  weekEnd: string;
+  items: DSRow[];
+  departments: Record<string, string>;
+  vehicles: FleetVehicle[];
+  drivers: DriverOption[];
+}) {
+  const [assignments, setAssignments] = useState<Record<string, { vehicle: string; driver: string }>>({});
+
+  useEffect(() => {
+    if (open) setAssignments({});
+  }, [open, weekStart]);
+
+  const sorted = useMemo(
+    () =>
+      [...items].sort(
+        (a, b) =>
+          a.date_needed.localeCompare(b.date_needed) ||
+          (departments[a.department_id ?? ""] ?? "").localeCompare(departments[b.department_id ?? ""] ?? ""),
+      ),
+    [items, departments],
+  );
+
+  const setField = (id: string, field: "vehicle" | "driver", value: string) =>
+    setAssignments((a) => ({ ...a, [id]: { vehicle: a[id]?.vehicle ?? "", driver: a[id]?.driver ?? "", [field]: value } }));
+
+  const handleDownload = () => {
+    const rows: DSWeeklyVRRow[] = sorted.map((r) => {
+      const { start, end } = splitRoute(r.destination);
+      return {
+        department: departments[r.department_id ?? ""] ?? "—",
+        date_needed: r.date_needed,
+        from: start,
+        destination: end,
+        purpose: r.purpose,
+        passengers: r.passengers,
+        vehicle: assignments[r.id]?.vehicle ?? "",
+        driver: assignments[r.id]?.driver ?? "",
+      };
+    });
+    downloadDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-serif">Assign vehicles &amp; drivers</DialogTitle>
+          <DialogDescription>
+            Pick a vehicle and driver for each trip. Leave blank to keep the field empty on the printed PDF.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 py-2">
+          {sorted.map((r) => {
+            const { start, end } = splitRoute(r.destination);
+            return (
+              <div key={r.id} className="rounded-md border border-border p-3">
+                <p className="text-sm font-medium">
+                  {format(parseISO(r.date_needed), "EEE, MMM d")} · {departments[r.department_id ?? ""] ?? "—"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {start || "—"} → {end} · Passengers: {r.passengers ?? 1}
+                </p>
+                <div className="mt-2 grid gap-2 md:grid-cols-2">
+                  <div>
+                    <Label className="text-xs">Vehicle</Label>
+                    <Select
+                      value={assignments[r.id]?.vehicle ?? ""}
+                      onValueChange={(v) => setField(r.id, "vehicle", v === "__none__" ? "" : v)}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select vehicle" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Leave blank —</SelectItem>
+                        {vehicles.map((v) => (
+                          <SelectItem key={v.id} value={`${v.registration}${v.make_model ? ` (${v.make_model})` : ""}`}>
+                            {v.registration}{v.make_model ? ` — ${v.make_model}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Driver</Label>
+                    <Select
+                      value={assignments[r.id]?.driver ?? ""}
+                      onValueChange={(v) => setField(r.id, "driver", v === "__none__" ? "" : v)}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select driver" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Leave blank —</SelectItem>
+                        {drivers.map((d) => (
+                          <SelectItem key={d.id} value={d.full_name}>{d.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {sorted.length === 0 && (
+            <p className="text-sm text-muted-foreground">No trips to assign.</p>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleDownload} disabled={sorted.length === 0}>
+            <Download className="mr-1 h-4 w-4" />Download PDF
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
