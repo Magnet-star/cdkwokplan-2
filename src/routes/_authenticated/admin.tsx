@@ -335,17 +335,22 @@ function AdminPage() {
             </Card>
           )}
 
-          <TimeGroupedList
-            items={events}
-            getDate={(ev: any) => parseISO(ev.event_date)}
-            keyOf={(ev: any) => ev.id}
-            groupLabel="Diocesan events"
-            emptyMessage={<Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No events yet. {canEdit && "Add one above."}</CardContent></Card>}
-            renderItem={(ev: any) => {
+          {(() => {
+            if (events.length === 0) {
+              return <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No events yet. {canEdit && "Add one above."}</CardContent></Card>;
+            }
+            const currentYear = new Date().getFullYear();
+            const byYear: Record<string, any[]> = {};
+            events.forEach((ev) => {
+              const y = String(parseISO(ev.event_date).getFullYear());
+              (byYear[y] ||= []).push(ev);
+            });
+            const years = Object.keys(byYear).sort((a, b) => Number(b) - Number(a));
+            const renderEv = (ev: any) => {
               const dept = depts.find((d) => d.id === ev.department_id);
               const past = new Date(ev.event_date) < new Date(new Date().toDateString());
               return (
-                <Card>
+                <Card key={ev.id}>
                   <CardContent className="flex flex-wrap items-start justify-between gap-3 py-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -363,8 +368,20 @@ function AdminPage() {
                   </CardContent>
                 </Card>
               );
-            }}
-          />
+            };
+            return years.map((y) => (
+              <details key={y} open={Number(y) === currentYear} className="rounded-lg border border-border bg-card/40">
+                <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 text-sm font-medium hover:bg-muted/40">
+                  <span>Events {y} <span className="text-muted-foreground">({byYear[y].length})</span></span>
+                  <ChevronDown className="h-4 w-4" />
+                </summary>
+                <div className="space-y-3 p-3">
+                  {byYear[y].map(renderEv)}
+                </div>
+              </details>
+            ));
+          })()}
+
 
         </TabsContent>
 
@@ -457,12 +474,32 @@ function AdminPage() {
               weekStart: items[0].week_start_date ?? items[0].date_needed,
               userId: items[0].user_id,
             })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
-            return groupList.map((g) => (
-              g.items.length === 1
-                ? <VehicleManageCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} canEdit={canEdit} />
-                : <VehicleWeeklyManageCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} onDecideBulk={decideVehicleBulk} canEdit={canEdit} />
+
+            const byMonth: Record<string, typeof groupList> = {};
+            groupList.forEach((g) => {
+              const d = parseISO(g.weekStart);
+              const monthKey = format(d, "yyyy-MM");
+              (byMonth[monthKey] ||= []).push(g);
+            });
+            const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
+            const currentMonth = format(new Date(), "yyyy-MM");
+            return months.map((m) => (
+              <details key={m} open={m === currentMonth} className="rounded-lg border border-border bg-card/40">
+                <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 text-sm font-medium hover:bg-muted/40">
+                  <span>{format(parseISO(m + "-01"), "MMMM yyyy")} <span className="text-muted-foreground">({byMonth[m].reduce((n, g) => n + g.items.length, 0)} requests)</span></span>
+                  <ChevronDown className="h-4 w-4" />
+                </summary>
+                <div className="space-y-3 p-3">
+                  {byMonth[m].map((g) => (
+                    g.items.length === 1
+                      ? <VehicleManageCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} canEdit={canEdit} />
+                      : <VehicleWeeklyManageCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} onDecideBulk={decideVehicleBulk} canEdit={canEdit} />
+                  ))}
+                </div>
+              </details>
             ));
           })()}
+
         </TabsContent>
 
 
