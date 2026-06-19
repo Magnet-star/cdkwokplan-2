@@ -35,8 +35,14 @@ const emptyTrip = (): TripRow => ({
 });
 
 export const Route = createFileRoute("/_authenticated/vehicle-requests")({
-  component: VehicleRequestsPage,
+  component: VehicleRequestsRoute,
 });
+
+function VehicleRequestsRoute() {
+  const { isSuperAdmin } = useAuth();
+  if (isSuperAdmin) return <DSWeeklyVehicleRequestsView />;
+  return <VehicleRequestsPage />;
+}
 
 interface VR {
   id: string;
