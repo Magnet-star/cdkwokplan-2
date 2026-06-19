@@ -624,6 +624,50 @@ function AdminPage() {
             );
           })}
 
+          <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit user</DialogTitle>
+                <DialogDescription>Update the user's name, email, or reset their password. Leave password blank to keep it unchanged.</DialogDescription>
+              </DialogHeader>
+              {editUser && (
+                <div className="grid gap-3">
+                  <div><Label>Full name</Label><Input value={editUser.full_name} onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })} /></div>
+                  <div><Label>Email (login)</Label><Input type="email" value={editUser.email} onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} /></div>
+                  <div>
+                    <Label>New password (optional, min 8 chars)</Label>
+                    <Input type="text" value={editUser.password} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} placeholder="Leave blank to keep current" />
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
+                <Button
+                  disabled={savingEdit}
+                  onClick={async () => {
+                    if (!editUser) return;
+                    if (editUser.password && editUser.password.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+                    setSavingEdit(true);
+                    try {
+                      await updateUserFn({ data: {
+                        userId: editUser.id,
+                        fullName: editUser.full_name.trim(),
+                        email: editUser.email.trim(),
+                        password: editUser.password || undefined,
+                      }});
+                      toast.success("User updated");
+                      setEditUser(null);
+                      load();
+                    } catch (err: any) {
+                      toast.error(err?.message ?? "Failed to update user");
+                    }
+                    setSavingEdit(false);
+                  }}
+                >{savingEdit ? "Saving…" : "Save changes"}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
         </TabsContent>
 
         <TabsContent value="cleanup" className="space-y-6 pt-4">
