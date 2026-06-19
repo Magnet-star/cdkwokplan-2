@@ -108,5 +108,15 @@ export function buildDSWeeklyVehicleRequestsPDF(
   doc.text(`Generated ${format(new Date(), "PPp")}`, 14, pageH - 8);
 
   const filename = `Weekly_Vehicle_Requests_${weekStartISO}_to_${weekEndISO}.pdf`;
+  return { doc, filename };
+}
+
+export function downloadDSWeeklyVehicleRequestsPDF(
+  rows: DSWeeklyVRRow[],
+  weekStartISO: string,
+  weekEndISO: string,
+) {
+  const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStartISO, weekEndISO);
   doc.save(filename);
 }
+
