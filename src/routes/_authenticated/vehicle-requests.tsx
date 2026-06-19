@@ -560,7 +560,148 @@ function DSWeeklyVehicleRequestsView() {
           </CardContent>
         </Card>
       )}
+
+      <PrepareWeeklyPdfDialog
+        open={!!prepare}
+        onOpenChange={(o) => { if (!o) setPrepare(null); }}
+        weekStart={prepare?.weekStart ?? ""}
+        weekEnd={prepare?.weekEnd ?? ""}
+        items={prepare?.items ?? []}
+        departments={departments}
+        vehicles={vehicles}
+        drivers={drivers}
+      />
     </div>
+  );
+}
+
+function PrepareWeeklyPdfDialog({
+  open,
+  onOpenChange,
+  weekStart,
+  weekEnd,
+  items,
+  departments,
+  vehicles,
+  drivers,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  weekStart: string;
+  weekEnd: string;
+  items: DSRow[];
+  departments: Record<string, string>;
+  vehicles: FleetVehicle[];
+  drivers: DriverOption[];
+}) {
+  const [assignments, setAssignments] = useState<Record<string, { vehicle: string; driver: string }>>({});
+
+  useEffect(() => {
+    if (open) setAssignments({});
+  }, [open, weekStart]);
+
+  const sorted = useMemo(
+    () =>
+      [...items].sort(
+        (a, b) =>
+          a.date_needed.localeCompare(b.date_needed) ||
+          (departments[a.department_id ?? ""] ?? "").localeCompare(departments[b.department_id ?? ""] ?? ""),
+      ),
+    [items, departments],
+  );
+
+  const setField = (id: string, field: "vehicle" | "driver", value: string) =>
+    setAssignments((a) => ({ ...a, [id]: { vehicle: a[id]?.vehicle ?? "", driver: a[id]?.driver ?? "", [field]: value } }));
+
+  const handleDownload = () => {
+    const rows: DSWeeklyVRRow[] = sorted.map((r) => {
+      const { start, end } = splitRoute(r.destination);
+      return {
+        department: departments[r.department_id ?? ""] ?? "—",
+        date_needed: r.date_needed,
+        from: start,
+        destination: end,
+        purpose: r.purpose,
+        passengers: r.passengers,
+        vehicle: assignments[r.id]?.vehicle ?? "",
+        driver: assignments[r.id]?.driver ?? "",
+      };
+    });
+    downloadDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-serif">Assign vehicles &amp; drivers</DialogTitle>
+          <DialogDescription>
+            Pick a vehicle and driver for each trip. Leave blank to keep the field empty on the printed PDF.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 py-2">
+          {sorted.map((r) => {
+            const { start, end } = splitRoute(r.destination);
+            return (
+              <div key={r.id} className="rounded-md border border-border p-3">
+                <p className="text-sm font-medium">
+                  {format(parseISO(r.date_needed), "EEE, MMM d")} · {departments[r.department_id ?? ""] ?? "—"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {start || "—"} → {end} · Passengers: {r.passengers ?? 1}
+                </p>
+                <div className="mt-2 grid gap-2 md:grid-cols-2">
+                  <div>
+                    <Label className="text-xs">Vehicle</Label>
+                    <Select
+                      value={assignments[r.id]?.vehicle ?? ""}
+                      onValueChange={(v) => setField(r.id, "vehicle", v === "__none__" ? "" : v)}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select vehicle" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Leave blank —</SelectItem>
+                        {vehicles.map((v) => (
+                          <SelectItem key={v.id} value={`${v.registration}${v.make_model ? ` (${v.make_model})` : ""}`}>
+                            {v.registration}{v.make_model ? ` — ${v.make_model}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Driver</Label>
+                    <Select
+                      value={assignments[r.id]?.driver ?? ""}
+                      onValueChange={(v) => setField(r.id, "driver", v === "__none__" ? "" : v)}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select driver" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Leave blank —</SelectItem>
+                        {drivers.map((d) => (
+                          <SelectItem key={d.id} value={d.full_name}>{d.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {sorted.length === 0 && (
+            <p className="text-sm text-muted-foreground">No trips to assign.</p>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleDownload} disabled={sorted.length === 0}>
+            <Download className="mr-1 h-4 w-4" />Download PDF
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
