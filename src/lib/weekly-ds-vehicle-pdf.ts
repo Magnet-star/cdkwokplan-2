@@ -9,6 +9,8 @@ export interface DSWeeklyVRRow {
   destination: string;
   purpose?: string | null;
   passengers?: number | null;
+  vehicle?: string | null;
+  driver?: string | null;
 }
 
 function sanitize(value: string): string {
