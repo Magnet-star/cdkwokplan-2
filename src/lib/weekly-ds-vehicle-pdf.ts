@@ -68,8 +68,8 @@ export function downloadDSWeeklyVehicleRequestsPDF(
       format(parseISO(r.date_needed), "MMM d, yyyy"),
       sanitize(r.from || "-"),
       sanitize(r.destination || "-"),
-      "", // blank for vehicle
-      "", // blank for driver
+      sanitize(r.vehicle || ""),
+      sanitize(r.driver || ""),
     ]),
     styles: { fontSize: 9, cellPadding: 4, valign: "middle", minCellHeight: 12 },
     headStyles: { fillColor: [102, 0, 0], textColor: 255, halign: "center" },
