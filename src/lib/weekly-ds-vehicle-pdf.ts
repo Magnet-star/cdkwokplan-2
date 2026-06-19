@@ -23,14 +23,15 @@ function sanitize(value: string): string {
     .replace(/\u2022/g, "*");
 }
 
-export function downloadDSWeeklyVehicleRequestsPDF(
+export function buildDSWeeklyVehicleRequestsPDF(
   rows: DSWeeklyVRRow[],
   weekStartISO: string,
   weekEndISO: string,
-) {
+): { doc: jsPDF; filename: string } {
   const doc = new jsPDF({ orientation: "landscape" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
+
 
   // Header banner
   doc.setFillColor(102, 0, 0);
@@ -107,5 +108,15 @@ export function downloadDSWeeklyVehicleRequestsPDF(
   doc.text(`Generated ${format(new Date(), "PPp")}`, 14, pageH - 8);
 
   const filename = `Weekly_Vehicle_Requests_${weekStartISO}_to_${weekEndISO}.pdf`;
+  return { doc, filename };
+}
+
+export function downloadDSWeeklyVehicleRequestsPDF(
+  rows: DSWeeklyVRRow[],
+  weekStartISO: string,
+  weekEndISO: string,
+) {
+  const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStartISO, weekEndISO);
   doc.save(filename);
 }
+
