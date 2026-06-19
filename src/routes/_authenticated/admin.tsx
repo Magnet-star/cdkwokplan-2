@@ -474,12 +474,32 @@ function AdminPage() {
               weekStart: items[0].week_start_date ?? items[0].date_needed,
               userId: items[0].user_id,
             })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
-            return groupList.map((g) => (
-              g.items.length === 1
-                ? <VehicleManageCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} canEdit={canEdit} />
-                : <VehicleWeeklyManageCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} onDecideBulk={decideVehicleBulk} canEdit={canEdit} />
+
+            const byMonth: Record<string, typeof groupList> = {};
+            groupList.forEach((g) => {
+              const d = parseISO(g.weekStart);
+              const monthKey = format(d, "yyyy-MM");
+              (byMonth[monthKey] ||= []).push(g);
+            });
+            const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
+            const currentMonth = format(new Date(), "yyyy-MM");
+            return months.map((m) => (
+              <details key={m} open={m === currentMonth} className="rounded-lg border border-border bg-card/40">
+                <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 text-sm font-medium hover:bg-muted/40">
+                  <span>{format(parseISO(m + "-01"), "MMMM yyyy")} <span className="text-muted-foreground">({byMonth[m].reduce((n, g) => n + g.items.length, 0)} requests)</span></span>
+                  <ChevronDown className="h-4 w-4" />
+                </summary>
+                <div className="space-y-3 p-3">
+                  {byMonth[m].map((g) => (
+                    g.items.length === 1
+                      ? <VehicleManageCard key={g.key} v={g.items[0]} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} canEdit={canEdit} />
+                      : <VehicleWeeklyManageCard key={g.key} items={g.items} weekStart={g.weekStart} userId={g.userId} userName={userName} userMeta={userMeta} onDelete={deleteVehicle} onUpdate={updateVehicle} onDecide={decideVehicle} onDecideBulk={decideVehicleBulk} canEdit={canEdit} />
+                  ))}
+                </div>
+              </details>
             ));
           })()}
+
         </TabsContent>
 
 
