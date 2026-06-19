@@ -855,3 +855,119 @@ function CollapsibleFolder({
     </div>
   );
 }
+
+interface SavedPdfEntry {
+  name: string;
+  path: string;
+  weekStart: string;
+  weekEnd: string;
+  created_at: string;
+  size: number | null;
+}
+
+function SavedWeeklyPdfs({ refreshKey }: { refreshKey: number }) {
+  const [entries, setEntries] = useState<SavedPdfEntry[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const load = async () => {
+    setEntries(null);
+    const { data: folders, error } = await supabase.storage
+      .from("weekly-vehicle-pdfs")
+      .list("", { limit: 100, sortBy: { column: "name", order: "desc" } });
+    if (error) {
+      toast.error(`Could not load saved PDFs: ${error.message}`);
+      setEntries([]);
+      return;
+    }
+    const all: SavedPdfEntry[] = [];
+    for (const f of folders ?? []) {
+      if (!f.name) continue;
+      const m = f.name.match(/^(\d{4}-\d{2}-\d{2})_to_(\d{4}-\d{2}-\d{2})$/);
+      if (!m) continue;
+      const { data: files } = await supabase.storage
+        .from("weekly-vehicle-pdfs")
+        .list(f.name, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+      for (const file of files ?? []) {
+        if (!file.name) continue;
+        all.push({
+          name: file.name,
+          path: `${f.name}/${file.name}`,
+          weekStart: m[1],
+          weekEnd: m[2],
+          created_at: (file as any).created_at ?? "",
+          size: (file as any).metadata?.size ?? null,
+        });
+      }
+    }
+    all.sort((a, b) => b.weekStart.localeCompare(a.weekStart) || b.created_at.localeCompare(a.created_at));
+    setEntries(all);
+  };
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [refreshKey]);
+
+  const openPdf = async (path: string) => {
+    setBusy(path);
+    const { data, error } = await supabase.storage
+      .from("weekly-vehicle-pdfs")
+      .createSignedUrl(path, 60 * 10);
+    setBusy(null);
+    if (error || !data?.signedUrl) {
+      toast.error(error?.message ?? "Could not open PDF");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const removePdf = async (path: string) => {
+    if (!confirm("Delete this saved PDF? Other super admins will lose access to it.")) return;
+    setBusy(path);
+    const { error } = await supabase.storage.from("weekly-vehicle-pdfs").remove([path]);
+    setBusy(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Deleted");
+    load();
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-serif">Saved weekly PDFs</CardTitle>
+        <CardDescription>
+          Prepared weekly vehicle request PDFs (with vehicles & drivers filled in) shared with all super admins.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {entries === null ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No prepared PDFs saved yet.</p>
+        ) : (
+          <div className="divide-y divide-border rounded-md border border-border">
+            {entries.map((e) => (
+              <div key={e.path} className="flex flex-wrap items-center justify-between gap-2 p-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">
+                    Week of {format(parseISO(e.weekStart), "EEE, MMM d")} – {format(parseISO(e.weekEnd), "EEE, MMM d, yyyy")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {e.name}
+                    {e.created_at ? ` · saved ${format(parseISO(e.created_at), "PPp")}` : ""}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" disabled={busy === e.path} onClick={() => openPdf(e.path)}>
+                    <Download className="mr-1 h-3.5 w-3.5" />Open
+                  </Button>
+                  <Button size="sm" variant="ghost" disabled={busy === e.path} onClick={() => removePdf(e.path)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
