@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { format, startOfWeek, parseISO } from "date-fns";
+import { format, startOfWeek, endOfWeek, parseISO, addDays } from "date-fns";
 import { toast } from "sonner";
-import { Car, Plus, Download, Trash2 } from "lucide-react";
+import { Car, Plus, Download, Trash2, ChevronDown, ChevronRight, FolderOpen } from "lucide-react";
 import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
+import { downloadDSWeeklyVehicleRequestsPDF, type DSWeeklyVRRow } from "@/lib/weekly-ds-vehicle-pdf";
 
 interface TripRow {
   date_needed: string;
