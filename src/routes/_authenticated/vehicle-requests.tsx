@@ -623,7 +623,7 @@ function PrepareWeeklyPdfDialog({
   const setField = (id: string, field: "vehicle" | "driver", value: string) =>
     setAssignments((a) => ({ ...a, [id]: { vehicle: a[id]?.vehicle ?? "", driver: a[id]?.driver ?? "", [field]: value } }));
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const rows: DSWeeklyVRRow[] = sorted.map((r) => {
       const { start, end } = splitRoute(r.destination);
       return {
@@ -637,9 +637,27 @@ function PrepareWeeklyPdfDialog({
         driver: assignments[r.id]?.driver ?? "",
       };
     });
-    downloadDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd);
-    onOpenChange(false);
+    setUploading(true);
+    try {
+      const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd);
+      doc.save(filename);
+      const blob = doc.output("blob");
+      const path = `${weekStart}_to_${weekEnd}/${Date.now()}_${filename}`;
+      const { error } = await supabase.storage
+        .from("weekly-vehicle-pdfs")
+        .upload(path, blob, { contentType: "application/pdf", upsert: false });
+      if (error) {
+        toast.error(`PDF downloaded, but saving to shared folder failed: ${error.message}`);
+      } else {
+        toast.success("PDF downloaded and saved for other super admins");
+        onUploaded?.();
+      }
+    } finally {
+      setUploading(false);
+      onOpenChange(false);
+    }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
