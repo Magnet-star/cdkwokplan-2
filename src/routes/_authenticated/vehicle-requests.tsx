@@ -439,7 +439,7 @@ function DSWeeklyVehicleRequestsView() {
               disabled={!currentWeek || currentWeek.items.length === 0}
               onClick={() =>
                 currentWeek &&
-                downloadDSWeeklyVehicleRequestsPDF(toDSRows(currentWeek.items), currentWeekStart, currentWeekEnd)
+                setPrepare({ weekStart: currentWeekStart, weekEnd: currentWeekEnd, items: currentWeek.items })
               }
             >
               <Download className="mr-1 h-4 w-4" />Download weekly PDF
