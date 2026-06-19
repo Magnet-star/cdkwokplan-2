@@ -280,3 +280,388 @@ function StatusBadge({ s }: { s: VR["status"] }) {
   if (s === "rejected") return <Badge variant="destructive">Rejected</Badge>;
   return <Badge variant="outline">Pending</Badge>;
 }
+
+// ============================================================
+// Diocesan Secretary / Super Admin consolidated weekly view
+// ============================================================
+
+interface DSRow {
+  id: string;
+  user_id: string;
+  department_id: string | null;
+  week_start_date: string;
+  date_needed: string;
+  destination: string; // stored as "From -> To" or just To
+  purpose: string;
+  passengers: number | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+}
+
+function splitRoute(value: string): { start: string; end: string } {
+  const cleaned = (value || "").replace(/\u2192/g, "->");
+  const parts = cleaned.split(/\s*->\s*/);
+  if (parts.length >= 2) return { start: parts[0].trim(), end: parts.slice(1).join(" -> ").trim() };
+  return { start: "", end: cleaned.trim() };
+}
+
+function weekKey(d: Date) {
+  return format(startOfWeek(d, { weekStartsOn: 1 }), "yyyy-MM-dd");
+}
+
+function weekLabel(weekStartISO: string) {
+  const s = parseISO(weekStartISO);
+  const e = addDays(s, 6);
+  return `VEHICLE REQUESTS FOR WEEK [${format(s, "EEE MMM d")} TO ${format(e, "EEE MMM d, yyyy")}]`;
+}
+
+function DSWeeklyVehicleRequestsView() {
+  const [rows, setRows] = useState<DSRow[]>([]);
+  const [departments, setDepartments] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const [{ data: vr }, { data: depts }] = await Promise.all([
+        supabase
+          .from("vehicle_requests")
+          .select("id,user_id,department_id,week_start_date,date_needed,destination,purpose,passengers,status,created_at")
+          .order("date_needed", { ascending: false }),
+        supabase.from("departments").select("id,name"),
+      ]);
+      setRows((vr as DSRow[]) ?? []);
+      const map: Record<string, string> = {};
+      (depts ?? []).forEach((d: any) => { map[d.id] = d.name; });
+      setDepartments(map);
+      setLoading(false);
+    })();
+  }, []);
+
+  const currentWeekStart = useMemo(() => weekKey(new Date()), []);
+  const currentWeekEnd = useMemo(
+    () => format(endOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"),
+    [],
+  );
+
+  // Group by week_start_date (fallback compute from date_needed)
+  const grouped = useMemo(() => {
+    const byWeek = new Map<string, DSRow[]>();
+    for (const r of rows) {
+      const wk = r.week_start_date ?? weekKey(parseISO(r.date_needed));
+      const arr = byWeek.get(wk) ?? [];
+      arr.push(r);
+      byWeek.set(wk, arr);
+    }
+    return Array.from(byWeek.entries())
+      .map(([wk, items]) => ({ weekStart: wk, items }))
+      .sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+  }, [rows]);
+
+  const currentWeek = grouped.find((g) => g.weekStart === currentWeekStart);
+  const pastWeeks = grouped.filter((g) => g.weekStart !== currentWeekStart && g.weekStart < currentWeekStart);
+
+  // Group past weeks by year -> month
+  const byYearMonth = useMemo(() => {
+    const map = new Map<number, Map<number, typeof pastWeeks>>();
+    for (const g of pastWeeks) {
+      const d = parseISO(g.weekStart);
+      const y = d.getFullYear();
+      const m = d.getMonth();
+      if (!map.has(y)) map.set(y, new Map());
+      const ym = map.get(y)!;
+      if (!ym.has(m)) ym.set(m, []);
+      ym.get(m)!.push(g);
+    }
+    return map;
+  }, [pastWeeks]);
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  const toDSRows = (items: DSRow[]): DSWeeklyVRRow[] =>
+    items.map((r) => {
+      const { start, end } = splitRoute(r.destination);
+      return {
+        department: departments[r.department_id ?? ""] ?? "—",
+        date_needed: r.date_needed,
+        from: start,
+        destination: end,
+        purpose: r.purpose,
+        passengers: r.passengers,
+      };
+    });
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div>
+        <h1 className="font-serif text-3xl">Vehicle Requests</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Consolidated weekly view for the Diocesan Secretary. Download one PDF per week with all departments' trips.
+        </p>
+      </div>
+
+      {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+
+      {/* Current week */}
+      <Card className="border-l-4 border-l-primary">
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="font-serif">This week</CardTitle>
+              <CardDescription>
+                {format(parseISO(currentWeekStart), "EEE, MMM d")} – {format(parseISO(currentWeekEnd), "EEE, MMM d, yyyy")}
+              </CardDescription>
+            </div>
+            <Button
+              size="sm"
+              disabled={!currentWeek || currentWeek.items.length === 0}
+              onClick={() =>
+                currentWeek &&
+                downloadDSWeeklyVehicleRequestsPDF(toDSRows(currentWeek.items), currentWeekStart, currentWeekEnd)
+              }
+            >
+              <Download className="mr-1 h-4 w-4" />Download weekly PDF
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!currentWeek || currentWeek.items.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No vehicle requests submitted for this week yet.</p>
+          ) : (
+            <WeekBreakdown items={currentWeek.items} departments={departments} />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Past weeks: current year prior months first, then prior years */}
+      {Array.from(byYearMonth.entries())
+        .sort((a, b) => b[0] - a[0])
+        .map(([year, monthsMap]) => {
+          const monthsSorted = Array.from(monthsMap.entries()).sort((a, b) => b[0] - a[0]);
+          // If year is current year, show months individually (inline list of week folders for current month, collapsed for older months)
+          if (year === currentYear) {
+            return (
+              <div key={year} className="space-y-3">
+                {monthsSorted.map(([month, weeks]) => {
+                  const label = format(new Date(year, month, 1), "MMMM yyyy");
+                  // Past weeks of current month: show inline as week folders
+                  if (month === currentMonth) {
+                    return (
+                      <div key={month} className="space-y-2">
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Earlier this month ({label})
+                        </h3>
+                        {weeks.map((w) => (
+                          <WeekFolder
+                            key={w.weekStart}
+                            weekStart={w.weekStart}
+                            items={w.items}
+                            departments={departments}
+                            onDownload={() =>
+                              downloadDSWeeklyVehicleRequestsPDF(
+                                toDSRows(w.items),
+                                w.weekStart,
+                                format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
+                              )
+                            }
+                          />
+                        ))}
+                      </div>
+                    );
+                  }
+                  return (
+                    <CollapsibleFolder key={month} label={label} count={weeks.reduce((a, b) => a + b.items.length, 0)} icon="month">
+                      {weeks.map((w) => (
+                        <WeekFolder
+                          key={w.weekStart}
+                          weekStart={w.weekStart}
+                          items={w.items}
+                          departments={departments}
+                          onDownload={() =>
+                            downloadDSWeeklyVehicleRequestsPDF(
+                              toDSRows(w.items),
+                              w.weekStart,
+                              format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
+                            )
+                          }
+                        />
+                      ))}
+                    </CollapsibleFolder>
+                  );
+                })}
+              </div>
+            );
+          }
+          // Prior years: year folder containing month folders containing week folders
+          const yearTotal = monthsSorted.reduce(
+            (acc, [, weeks]) => acc + weeks.reduce((a, b) => a + b.items.length, 0),
+            0,
+          );
+          return (
+            <CollapsibleFolder key={year} label={String(year)} count={yearTotal} icon="year">
+              {monthsSorted.map(([month, weeks]) => {
+                const label = format(new Date(year, month, 1), "MMMM yyyy");
+                return (
+                  <CollapsibleFolder
+                    key={month}
+                    label={label}
+                    count={weeks.reduce((a, b) => a + b.items.length, 0)}
+                    icon="month"
+                  >
+                    {weeks.map((w) => (
+                      <WeekFolder
+                        key={w.weekStart}
+                        weekStart={w.weekStart}
+                        items={w.items}
+                        departments={departments}
+                        onDownload={() =>
+                          downloadDSWeeklyVehicleRequestsPDF(
+                            toDSRows(w.items),
+                            w.weekStart,
+                            format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
+                          )
+                        }
+                      />
+                    ))}
+                  </CollapsibleFolder>
+                );
+              })}
+            </CollapsibleFolder>
+          );
+        })}
+
+      {!loading && grouped.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-2 py-12 text-center text-muted-foreground">
+            <Car className="h-8 w-8" />
+            <p>No vehicle requests on record.</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function WeekBreakdown({ items, departments }: { items: DSRow[]; departments: Record<string, string> }) {
+  // Group by date, then by department
+  const byDate = new Map<string, DSRow[]>();
+  for (const r of items) {
+    const arr = byDate.get(r.date_needed) ?? [];
+    arr.push(r);
+    byDate.set(r.date_needed, arr);
+  }
+  const days = Array.from(byDate.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+  return (
+    <div className="space-y-4">
+      {days.map(([date, dayRows]) => {
+        const byDept = new Map<string, DSRow[]>();
+        for (const r of dayRows) {
+          const key = departments[r.department_id ?? ""] ?? "—";
+          const arr = byDept.get(key) ?? [];
+          arr.push(r);
+          byDept.set(key, arr);
+        }
+        return (
+          <div key={date} className="rounded-md border border-border">
+            <div className="border-b border-border bg-muted/40 px-3 py-2 text-sm font-semibold">
+              {format(parseISO(date), "EEEE, MMM d, yyyy")} · {dayRows.length} trip{dayRows.length > 1 ? "s" : ""}
+            </div>
+            <div className="divide-y divide-border">
+              {Array.from(byDept.entries())
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .map(([dept, deptRows]) => (
+                  <div key={dept} className="p-3">
+                    <p className="text-sm font-medium">{dept}</p>
+                    <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+                      {deptRows.map((r) => {
+                        const { start, end } = splitRoute(r.destination);
+                        return (
+                          <li key={r.id}>
+                            <span className="font-medium text-foreground">{start || "—"} → {end}</span>
+                            {r.purpose ? ` · ${r.purpose}` : ""} · Passengers: {r.passengers ?? 1}
+                            <Badge variant="outline" className="ml-2 text-[10px]">{r.status}</Badge>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function WeekFolder({
+  weekStart,
+  items,
+  departments,
+  onDownload,
+}: {
+  weekStart: string;
+  items: DSRow[];
+  departments: Record<string, string>;
+  onDownload: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-md border border-border">
+      <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
+        <button type="button" onClick={() => setOpen((o) => !o)} className="flex flex-1 items-center gap-2 text-left">
+          <FolderOpen className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{weekLabel(weekStart)}</span>
+          <span className="text-xs text-muted-foreground">· {items.length} trip{items.length > 1 ? "s" : ""}</span>
+        </button>
+        <Button size="sm" variant="outline" onClick={onDownload}>
+          <Download className="mr-1 h-3.5 w-3.5" />PDF
+        </Button>
+        <button type="button" onClick={() => setOpen((o) => !o)}>
+          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </button>
+      </div>
+      {open && (
+        <div className="border-t border-border p-3">
+          <WeekBreakdown items={items} departments={departments} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CollapsibleFolder({
+  label,
+  count,
+  icon,
+  children,
+}: {
+  label: string;
+  count: number;
+  icon: "month" | "year";
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-md border border-border">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40"
+      >
+        <span className="flex items-center gap-2 text-sm font-medium">
+          <FolderOpen className="h-4 w-4 text-muted-foreground" />
+          {icon === "year" ? `Year ${label}` : label}
+        </span>
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+          {count} trip{count === 1 ? "" : "s"}
+          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </span>
+      </button>
+      {open && <div className="space-y-2 border-t border-border p-3">{children}</div>}
+    </div>
+  );
+}
