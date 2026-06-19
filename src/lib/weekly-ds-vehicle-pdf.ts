@@ -23,14 +23,15 @@ function sanitize(value: string): string {
     .replace(/\u2022/g, "*");
 }
 
-export function downloadDSWeeklyVehicleRequestsPDF(
+export function buildDSWeeklyVehicleRequestsPDF(
   rows: DSWeeklyVRRow[],
   weekStartISO: string,
   weekEndISO: string,
-) {
+): { doc: jsPDF; filename: string } {
   const doc = new jsPDF({ orientation: "landscape" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
+
 
   // Header banner
   doc.setFillColor(102, 0, 0);
