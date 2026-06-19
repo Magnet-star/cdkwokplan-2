@@ -582,10 +582,17 @@ function AdminPage() {
                       </div>
                       {locked && <p className="mt-2 text-xs text-muted-foreground">This account is protected and can only be edited by the owner.</p>}
                     </div>
-                    {canEdit && !isSelf && !locked && (
-                      <Button size="sm" variant="destructive" onClick={() => deleteUser(u.id, u.full_name)}>
-                        <Trash2 className="mr-1 h-3.5 w-3.5" />Delete user
-                      </Button>
+                    {canEdit && !locked && (
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setEditUser({ id: u.id, full_name: u.full_name ?? "", email: u.email ?? "", password: "" })}>
+                          <Pencil className="mr-1 h-3.5 w-3.5" />Edit
+                        </Button>
+                        {!isSelf && (
+                          <Button size="sm" variant="destructive" onClick={() => deleteUser(u.id, u.full_name)}>
+                            <Trash2 className="mr-1 h-3.5 w-3.5" />Delete user
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
                   {canEdit ? (
