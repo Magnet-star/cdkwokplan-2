@@ -500,11 +500,11 @@ function DSWeeklyVehicleRequestsView() {
                           items={w.items}
                           departments={departments}
                           onDownload={() =>
-                            downloadDSWeeklyVehicleRequestsPDF(
-                              toDSRows(w.items),
-                              w.weekStart,
-                              format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
-                            )
+                            setPrepare({
+                              weekStart: w.weekStart,
+                              weekEnd: format(addDays(parseISO(w.weekStart), 6), "yyyy-MM-dd"),
+                              items: w.items,
+                            })
                           }
                         />
                       ))}
