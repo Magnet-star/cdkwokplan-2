@@ -577,6 +577,12 @@ function DSWeeklyVehicleRequestsView() {
         onUploaded={() => setSavedRefresh((n) => n + 1)}
       />
 
+      <AllWeeklyWorkPlansSection
+        weekStart={currentWeekStart}
+        weekEnd={currentWeekEnd}
+        departments={departments}
+      />
+
       <SavedWeeklyPdfs refreshKey={savedRefresh} />
     </div>
   );
