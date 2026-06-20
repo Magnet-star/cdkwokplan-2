@@ -30,6 +30,7 @@ function AuthLayout() {
     { to: "/dashboard", label: "Home", icon: LayoutDashboard, show: true },
     { to: "/work-plans", label: "Work Plans", icon: ClipboardList, show: true },
     { to: "/vehicle-requests", label: "Vehicle Requests", icon: Car, show: true },
+    { to: "/all-workplans", label: "All Workplans", icon: ClipboardList, show: canViewAll },
     { to: "/drivers-log", label: "Drivers Log", icon: Truck, show: true },
     { to: "/daily-log", label: "Daily Log", icon: BookText, show: true },
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart, show: true },

@@ -23,6 +23,7 @@ import { Route as AuthenticatedDepartmentRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDailyLogRouteImport } from './routes/_authenticated/daily-log'
 import { Route as AuthenticatedArchiveRouteImport } from './routes/_authenticated/archive'
+import { Route as AuthenticatedAllWorkplansRouteImport } from './routes/_authenticated/all-workplans'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const AuthRoute = AuthRouteImport.update({
@@ -97,6 +98,12 @@ const AuthenticatedArchiveRoute = AuthenticatedArchiveRouteImport.update({
   path: '/archive',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAllWorkplansRoute =
+  AuthenticatedAllWorkplansRouteImport.update({
+    id: '/all-workplans',
+    path: '/all-workplans',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/all-workplans': typeof AuthenticatedAllWorkplansRoute
   '/archive': typeof AuthenticatedArchiveRoute
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -123,6 +131,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/all-workplans': typeof AuthenticatedAllWorkplansRoute
   '/archive': typeof AuthenticatedArchiveRoute
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -141,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/all-workplans': typeof AuthenticatedAllWorkplansRoute
   '/_authenticated/archive': typeof AuthenticatedArchiveRoute
   '/_authenticated/daily-log': typeof AuthenticatedDailyLogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin'
+    | '/all-workplans'
     | '/archive'
     | '/daily-log'
     | '/dashboard'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin'
+    | '/all-workplans'
     | '/archive'
     | '/daily-log'
     | '/dashboard'
@@ -192,6 +204,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/admin'
+    | '/_authenticated/all-workplans'
     | '/_authenticated/archive'
     | '/_authenticated/daily-log'
     | '/_authenticated/dashboard'
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedArchiveRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/all-workplans': {
+      id: '/_authenticated/all-workplans'
+      path: '/all-workplans'
+      fullPath: '/all-workplans'
+      preLoaderRoute: typeof AuthenticatedAllWorkplansRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -323,6 +343,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAllWorkplansRoute: typeof AuthenticatedAllWorkplansRoute
   AuthenticatedArchiveRoute: typeof AuthenticatedArchiveRoute
   AuthenticatedDailyLogRoute: typeof AuthenticatedDailyLogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -338,6 +359,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAllWorkplansRoute: AuthenticatedAllWorkplansRoute,
   AuthenticatedArchiveRoute: AuthenticatedArchiveRoute,
   AuthenticatedDailyLogRoute: AuthenticatedDailyLogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
