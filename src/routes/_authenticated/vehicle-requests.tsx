@@ -15,8 +15,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
 import { downloadDSWeeklyVehicleRequestsPDF, buildDSWeeklyVehicleRequestsPDF, type DSWeeklyVRRow } from "@/lib/weekly-ds-vehicle-pdf";
-import { downloadAllDepartmentsWorkPlansPDF, type DeptWorkPlanPDF } from "@/lib/all-workplans-pdf";
-import { ClipboardList } from "lucide-react";
 
 interface TripRow {
   date_needed: string;
@@ -577,11 +575,6 @@ function DSWeeklyVehicleRequestsView() {
         onUploaded={() => setSavedRefresh((n) => n + 1)}
       />
 
-      <AllWeeklyWorkPlansSection
-        weekStart={currentWeekStart}
-        weekEnd={currentWeekEnd}
-        departments={departments}
-      />
 
       <SavedWeeklyPdfs refreshKey={savedRefresh} />
     </div>
