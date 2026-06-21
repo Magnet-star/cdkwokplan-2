@@ -79,9 +79,24 @@ export function buildAllDepartmentsWorkPlansPDF(
     doc.text(`Page ${i} of ${pageCount}`, pageW - 14, pageH - 8, { align: "right" });
   }
 
-  const fname = `all-work-plans-${weekStartDate}.pdf`;
-  doc.save(fname);
+  const filename = `all-work-plans-${weekStartDate}.pdf`;
+  const blob = doc.output("blob");
+  return { blob, filename };
 }
+
+export function downloadAllDepartmentsWorkPlansPDF(
+  plans: DeptWorkPlanPDF[],
+  weekStartDate: string,
+): { blob: Blob; filename: string } {
+  const result = buildAllDepartmentsWorkPlansPDF(plans, weekStartDate);
+  const url = URL.createObjectURL(result.blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = result.filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return result;
+}
+
 
 function renderDepartmentSection(
   doc: jsPDF,
