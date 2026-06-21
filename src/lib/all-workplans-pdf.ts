@@ -16,11 +16,12 @@ export interface DeptWorkPlanPDF {
 const DIOCESAN_SECRETARY = "REV. FR. JAMES ORANGA";
 const DIOCESE = "Catholic Diocese of Kitale";
 
-export function downloadAllDepartmentsWorkPlansPDF(
+export function buildAllDepartmentsWorkPlansPDF(
   plans: DeptWorkPlanPDF[],
   weekStartDate: string,
-) {
+): { blob: Blob; filename: string } {
   const doc = new jsPDF();
+
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const weekStart = parseISO(weekStartDate);
