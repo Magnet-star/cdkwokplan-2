@@ -663,6 +663,39 @@ export type Database = {
           },
         ]
       }
+      saved_weekly_workplans: {
+        Row: {
+          created_at: string
+          department_count: number
+          file_path: string
+          generated_by: string | null
+          generated_by_name: string | null
+          id: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string
+          department_count?: number
+          file_path: string
+          generated_by?: string | null
+          generated_by_name?: string | null
+          id?: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string
+          department_count?: number
+          file_path?: string
+          generated_by?: string | null
+          generated_by_name?: string | null
+          id?: string
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       uploaded_reports: {
         Row: {
           department_id: string | null
@@ -967,6 +1000,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_email_by_phone: { Args: { _phone: string }; Returns: string }
     }
     Enums: {
       app_role: "super_admin" | "hod" | "staff" | "administrator" | "driver"

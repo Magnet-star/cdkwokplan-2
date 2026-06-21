@@ -54,9 +54,10 @@ function AdminPage() {
   const [newEvent, setNewEvent] = useState({ title: "", event_date: "", department_id: "none", venue: "", notes: "" });
 
   // Create user state
-  const [nu, setNu] = useState<{ email: string; password: string; fullName: string; departmentId: string; position: string; roles: Role[] }>(
-    { email: "", password: "", fullName: "", departmentId: "none", position: "", roles: ["staff"] }
+  const [nu, setNu] = useState<{ email: string; password: string; fullName: string; phone: string; departmentId: string; position: string; roles: Role[] }>(
+    { email: "", password: "", fullName: "", phone: "", departmentId: "none", position: "", roles: ["staff"] }
   );
+
   const [creating, setCreating] = useState(false);
 
   // Logs & plans state
@@ -222,11 +223,13 @@ function AdminPage() {
         fullName: nu.fullName.trim(),
         departmentId: nu.departmentId === "none" ? null : nu.departmentId,
         position: nu.position.trim() || null,
+        phone: nu.phone.trim() || null,
         roles: nu.roles,
       }});
       toast.success(`User created. Share temp password: ${nu.password}`);
       copyCreds();
-      setNu({ email: "", password: "", fullName: "", departmentId: "none", position: "", roles: ["staff"] });
+      setNu({ email: "", password: "", fullName: "", phone: "", departmentId: "none", position: "", roles: ["staff"] });
+
       load();
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to create user");
@@ -566,6 +569,8 @@ function AdminPage() {
                     </div>
                   </div>
                   <div><Label>Position (optional)</Label><Input value={nu.position} onChange={(e) => setNu({ ...nu, position: e.target.value })} /></div>
+                  <div><Label>Phone (for phone sign-in, optional)</Label><Input type="tel" value={nu.phone} onChange={(e) => setNu({ ...nu, phone: e.target.value })} placeholder="e.g. +254712345678" /></div>
+
                   <div>
                     <Label>Department</Label>
                     <Select value={nu.departmentId} onValueChange={(v) => setNu({ ...nu, departmentId: v })}>

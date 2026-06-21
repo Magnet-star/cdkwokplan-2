@@ -21,13 +21,28 @@ function AuthPage() {
     if (!loading && user) navigate({ to: "/dashboard" });
   }, [user, loading, navigate]);
 
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
+    let email = identifier.trim();
+    const looksLikeEmail = email.includes("@");
+    if (!looksLikeEmail) {
+      // Phone sign-in: resolve to the account's email via RPC, then password-auth
+      const { data: foundEmail, error: rpcErr } = await (supabase as any).rpc(
+        "lookup_email_by_phone",
+        { _phone: email },
+      );
+      if (rpcErr || !foundEmail) {
+        setBusy(false);
+        toast.error("No account found with that phone number");
+        return;
+      }
+      email = foundEmail as string;
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) toast.error(error.message);
@@ -44,17 +59,18 @@ function AuthPage() {
         <Card>
           <CardHeader>
             <CardTitle className="font-serif">Secretariat Workspace</CardTitle>
-            <CardDescription>Sign in with the credentials issued by your Super Admin.</CardDescription>
+            <CardDescription>Sign in with your email or phone number and the password issued by your Super Admin.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={signIn} className="space-y-4">
-              <div><Label htmlFor="e1">Email</Label><Input id="e1" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+              <div><Label htmlFor="e1">Email or phone</Label><Input id="e1" type="text" required value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="you@example.com or +254712345678" /></div>
               <div><Label htmlFor="p1">Password</Label><Input id="p1" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></div>
               <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</Button>
               <p className="text-xs text-muted-foreground">
                 Accounts are created by the Super Admin. If you don't have credentials, contact your administrator.
               </p>
             </form>
+
           </CardContent>
         </Card>
       </div>

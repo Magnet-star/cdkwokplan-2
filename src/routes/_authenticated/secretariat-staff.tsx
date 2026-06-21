@@ -34,33 +34,45 @@ function SecretariatStaffPage() {
   useEffect(() => {
     if (!isSuperAdmin) return;
     (async () => {
-      const [{ data: d }, { data: s }] = await Promise.all([
+      const [{ data: d }, { data: s }, { data: rolesRows }, { data: allProfiles }] = await Promise.all([
         supabase.from("departments").select("id,name,hod_id").order("name"),
         (supabase as any).from("department_staff").select("*").order("full_name"),
+        supabase.from("user_roles").select("user_id,role").eq("role", "hod"),
+        supabase.from("profiles").select("id,full_name,email,position,phone,department_id"),
       ]);
       const deptList = (d as Dept[]) ?? [];
       setDepts(deptList);
       setStaff((s as StaffRow[]) ?? []);
-      const hodIds = deptList.map((x) => x.hod_id).filter(Boolean) as string[];
-      if (hodIds.length) {
-        const { data: ps } = await supabase
-          .from("profiles")
-          .select("id,full_name,email,position,phone")
-          .in("id", hodIds);
-        const map: Record<string, Profile> = {};
-        (ps as Profile[] | null)?.forEach((p) => { map[p.id] = p; });
-        setHods(map);
+
+      const profilesById = new Map<string, Profile & { department_id: string | null }>();
+      ((allProfiles as any[]) ?? []).forEach((p) => profilesById.set(p.id, p));
+      const hodUserIds = new Set<string>(((rolesRows as any[]) ?? []).map((r) => r.user_id));
+
+      const map: Record<string, Profile> = {};
+      for (const dept of deptList) {
+        // Prefer the profile explicitly pinned via departments.hod_id when it exists
+        let prof = dept.hod_id ? profilesById.get(dept.hod_id) ?? null : null;
+        // Fallback: any profile carrying the `hod` role whose department_id matches
+        if (!prof) {
+          for (const p of profilesById.values()) {
+            if (p.department_id === dept.id && hodUserIds.has(p.id)) { prof = p; break; }
+          }
+        }
+        if (prof) map[dept.id] = prof;
       }
+      setHods(map);
     })();
   }, [isSuperAdmin]);
+
 
   const grouped = useMemo(() => {
     return depts.map((d) => ({
       dept: d,
-      hod: d.hod_id ? hods[d.hod_id] : null,
+      hod: hods[d.id] ?? null,
       members: staff.filter((s) => s.department_id === d.id),
     }));
   }, [depts, staff, hods]);
+
 
   const totalStaff = staff.length;
 
