@@ -569,6 +569,8 @@ function AdminPage() {
                     </div>
                   </div>
                   <div><Label>Position (optional)</Label><Input value={nu.position} onChange={(e) => setNu({ ...nu, position: e.target.value })} /></div>
+                  <div><Label>Phone (for phone sign-in, optional)</Label><Input type="tel" value={nu.phone} onChange={(e) => setNu({ ...nu, phone: e.target.value })} placeholder="e.g. +254712345678" /></div>
+
                   <div>
                     <Label>Department</Label>
                     <Select value={nu.departmentId} onValueChange={(v) => setNu({ ...nu, departmentId: v })}>
