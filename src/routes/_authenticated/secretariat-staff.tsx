@@ -68,10 +68,11 @@ function SecretariatStaffPage() {
   const grouped = useMemo(() => {
     return depts.map((d) => ({
       dept: d,
-      hod: d.hod_id ? hods[d.hod_id] : null,
+      hod: hods[d.id] ?? null,
       members: staff.filter((s) => s.department_id === d.id),
     }));
   }, [depts, staff, hods]);
+
 
   const totalStaff = staff.length;
 
