@@ -45,8 +45,10 @@ export const adminCreateUser = createServerFn({ method: "POST" })
         full_name: data.fullName,
         department_id: data.departmentId ?? null,
         position: data.position ?? null,
+        phone: data.phone?.trim() ? data.phone.trim() : null,
       })
       .eq("id", newUserId);
+
 
     // Replace default 'staff' role with requested roles
     await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
