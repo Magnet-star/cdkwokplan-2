@@ -54,9 +54,10 @@ function AdminPage() {
   const [newEvent, setNewEvent] = useState({ title: "", event_date: "", department_id: "none", venue: "", notes: "" });
 
   // Create user state
-  const [nu, setNu] = useState<{ email: string; password: string; fullName: string; departmentId: string; position: string; roles: Role[] }>(
-    { email: "", password: "", fullName: "", departmentId: "none", position: "", roles: ["staff"] }
+  const [nu, setNu] = useState<{ email: string; password: string; fullName: string; phone: string; departmentId: string; position: string; roles: Role[] }>(
+    { email: "", password: "", fullName: "", phone: "", departmentId: "none", position: "", roles: ["staff"] }
   );
+
   const [creating, setCreating] = useState(false);
 
   // Logs & plans state
