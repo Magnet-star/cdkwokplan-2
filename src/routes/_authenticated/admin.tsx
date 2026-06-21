@@ -223,11 +223,13 @@ function AdminPage() {
         fullName: nu.fullName.trim(),
         departmentId: nu.departmentId === "none" ? null : nu.departmentId,
         position: nu.position.trim() || null,
+        phone: nu.phone.trim() || null,
         roles: nu.roles,
       }});
       toast.success(`User created. Share temp password: ${nu.password}`);
       copyCreds();
-      setNu({ email: "", password: "", fullName: "", departmentId: "none", position: "", roles: ["staff"] });
+      setNu({ email: "", password: "", fullName: "", phone: "", departmentId: "none", position: "", roles: ["staff"] });
+
       load();
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to create user");
