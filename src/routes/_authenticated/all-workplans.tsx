@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { format, startOfWeek, endOfWeek, parseISO, addDays } from "date-fns";
+import { format, startOfWeek, endOfWeek, parseISO, addDays, isSameDay } from "date-fns";
 import { toast } from "sonner";
-import { Download, ChevronDown, ChevronRight, ClipboardList, Save, Trash2, FileText } from "lucide-react";
+import { Download, ChevronDown, ChevronRight, ClipboardList, Save, Trash2, FileText, ChevronLeft, CalendarDays } from "lucide-react";
 import {
   buildAllDepartmentsWorkPlansPDF,
   downloadAllDepartmentsWorkPlansPDF,
