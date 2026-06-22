@@ -42,8 +42,27 @@ export const Route = createFileRoute("/_authenticated/vehicle-requests")({
 
 function VehicleRequestsRoute() {
   const { isSuperAdmin } = useAuth();
-  if (isSuperAdmin) return <DSWeeklyVehicleRequestsView />;
-  return <VehicleRequestsPage />;
+  const [tab, setTab] = useState<"all" | "mine">("all");
+  if (!isSuperAdmin) return <VehicleRequestsPage />;
+  return (
+    <div className="space-y-4">
+      <div className="inline-flex rounded-md border border-border bg-card p-1">
+        <button
+          onClick={() => setTab("all")}
+          className={`rounded px-3 py-1.5 text-sm font-medium ${tab === "all" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          All departments (consolidated)
+        </button>
+        <button
+          onClick={() => setTab("mine")}
+          className={`rounded px-3 py-1.5 text-sm font-medium ${tab === "mine" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          My department request
+        </button>
+      </div>
+      {tab === "all" ? <DSWeeklyVehicleRequestsView /> : <VehicleRequestsPage />}
+    </div>
+  );
 }
 
 interface VR {
