@@ -47,14 +47,22 @@ function AllWorkPlansPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<SavedRow[]>([]);
 
-  const currentWeekStart = useMemo(
+  const todayWeekStart = useMemo(
     () => format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"),
     [],
   );
+  const [selectedWeekStart, setSelectedWeekStart] = useState<string>(todayWeekStart);
+  const currentWeekStart = selectedWeekStart;
   const currentWeekEnd = useMemo(
-    () => format(endOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"),
-    [],
+    () => format(addDays(parseISO(selectedWeekStart), 6), "yyyy-MM-dd"),
+    [selectedWeekStart],
   );
+  const isCurrentWeek = selectedWeekStart === todayWeekStart;
+
+  const shiftWeek = (days: number) => {
+    const next = addDays(parseISO(selectedWeekStart), days);
+    setSelectedWeekStart(format(next, "yyyy-MM-dd"));
+  };
 
   useEffect(() => {
     (async () => {
