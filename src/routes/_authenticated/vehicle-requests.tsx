@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, endOfWeek, parseISO, addDays } from "date-fns";
 import { toast } from "sonner";
-import { Car, Plus, Download, Trash2, ChevronDown, ChevronRight, FolderOpen } from "lucide-react";
+import { Car, Plus, Download, Trash2, ChevronDown, ChevronRight, ChevronLeft, FolderOpen, CalendarDays } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
@@ -360,11 +360,18 @@ function DSWeeklyVehicleRequestsView() {
     })();
   }, []);
 
-  const currentWeekStart = useMemo(() => weekKey(new Date()), []);
+  const todayWeekStart = useMemo(() => weekKey(new Date()), []);
+  const [selectedWeekStart, setSelectedWeekStart] = useState<string>(todayWeekStart);
+  const currentWeekStart = selectedWeekStart;
   const currentWeekEnd = useMemo(
-    () => format(endOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"),
-    [],
+    () => format(addDays(parseISO(selectedWeekStart), 6), "yyyy-MM-dd"),
+    [selectedWeekStart],
   );
+  const isCurrentWeek = selectedWeekStart === todayWeekStart;
+  const shiftWeek = (days: number) => {
+    const next = addDays(parseISO(selectedWeekStart), days);
+    setSelectedWeekStart(format(next, "yyyy-MM-dd"));
+  };
 
   // Group by week_start_date (fallback compute from date_needed)
   const grouped = useMemo(() => {
@@ -381,7 +388,7 @@ function DSWeeklyVehicleRequestsView() {
   }, [rows]);
 
   const currentWeek = grouped.find((g) => g.weekStart === currentWeekStart);
-  const pastWeeks = grouped.filter((g) => g.weekStart !== currentWeekStart && g.weekStart < currentWeekStart);
+  const pastWeeks = grouped.filter((g) => g.weekStart !== todayWeekStart && g.weekStart < todayWeekStart);
 
   // Group past weeks by year -> month
   const byYearMonth = useMemo(() => {
@@ -426,26 +433,48 @@ function DSWeeklyVehicleRequestsView() {
 
       {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
-      {/* Current week */}
+      {/* Selected week */}
       <Card className="border-l-4 border-l-primary">
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <CardTitle className="font-serif">This week</CardTitle>
+              <CardTitle className="font-serif">
+                {isCurrentWeek ? "This week" : "Selected week"}
+              </CardTitle>
               <CardDescription>
                 {format(parseISO(currentWeekStart), "EEE, MMM d")} – {format(parseISO(currentWeekEnd), "EEE, MMM d, yyyy")}
+                {!isCurrentWeek && <span className="ml-2 text-xs italic">(viewing another week)</span>}
               </CardDescription>
             </div>
-            <Button
-              size="sm"
-              disabled={!currentWeek || currentWeek.items.length === 0}
-              onClick={() =>
-                currentWeek &&
-                setPrepare({ weekStart: currentWeekStart, weekEnd: currentWeekEnd, items: currentWeek.items })
-              }
-            >
-              <Download className="mr-1 h-4 w-4" />Download weekly PDF
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-1">
+                <Button size="sm" variant="ghost" onClick={() => shiftWeek(-7)} title="Previous week">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedWeekStart(todayWeekStart)}
+                  disabled={isCurrentWeek}
+                  title="Jump to current week"
+                >
+                  <CalendarDays className="mr-1 h-4 w-4" /> This week
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => shiftWeek(7)} title="Next week">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <Button
+                size="sm"
+                disabled={!currentWeek || currentWeek.items.length === 0}
+                onClick={() =>
+                  currentWeek &&
+                  setPrepare({ weekStart: currentWeekStart, weekEnd: currentWeekEnd, items: currentWeek.items })
+                }
+              >
+                <Download className="mr-1 h-4 w-4" />Download weekly PDF
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
