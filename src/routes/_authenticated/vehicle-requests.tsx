@@ -433,26 +433,48 @@ function DSWeeklyVehicleRequestsView() {
 
       {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
-      {/* Current week */}
+      {/* Selected week */}
       <Card className="border-l-4 border-l-primary">
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <CardTitle className="font-serif">This week</CardTitle>
+              <CardTitle className="font-serif">
+                {isCurrentWeek ? "This week" : "Selected week"}
+              </CardTitle>
               <CardDescription>
                 {format(parseISO(currentWeekStart), "EEE, MMM d")} – {format(parseISO(currentWeekEnd), "EEE, MMM d, yyyy")}
+                {!isCurrentWeek && <span className="ml-2 text-xs italic">(viewing another week)</span>}
               </CardDescription>
             </div>
-            <Button
-              size="sm"
-              disabled={!currentWeek || currentWeek.items.length === 0}
-              onClick={() =>
-                currentWeek &&
-                setPrepare({ weekStart: currentWeekStart, weekEnd: currentWeekEnd, items: currentWeek.items })
-              }
-            >
-              <Download className="mr-1 h-4 w-4" />Download weekly PDF
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-1">
+                <Button size="sm" variant="ghost" onClick={() => shiftWeek(-7)} title="Previous week">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedWeekStart(todayWeekStart)}
+                  disabled={isCurrentWeek}
+                  title="Jump to current week"
+                >
+                  <CalendarDays className="mr-1 h-4 w-4" /> This week
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => shiftWeek(7)} title="Next week">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <Button
+                size="sm"
+                disabled={!currentWeek || currentWeek.items.length === 0}
+                onClick={() =>
+                  currentWeek &&
+                  setPrepare({ weekStart: currentWeekStart, weekEnd: currentWeekEnd, items: currentWeek.items })
+                }
+              >
+                <Download className="mr-1 h-4 w-4" />Download weekly PDF
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
