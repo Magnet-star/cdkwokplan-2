@@ -360,11 +360,18 @@ function DSWeeklyVehicleRequestsView() {
     })();
   }, []);
 
-  const currentWeekStart = useMemo(() => weekKey(new Date()), []);
+  const todayWeekStart = useMemo(() => weekKey(new Date()), []);
+  const [selectedWeekStart, setSelectedWeekStart] = useState<string>(todayWeekStart);
+  const currentWeekStart = selectedWeekStart;
   const currentWeekEnd = useMemo(
-    () => format(endOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"),
-    [],
+    () => format(addDays(parseISO(selectedWeekStart), 6), "yyyy-MM-dd"),
+    [selectedWeekStart],
   );
+  const isCurrentWeek = selectedWeekStart === todayWeekStart;
+  const shiftWeek = (days: number) => {
+    const next = addDays(parseISO(selectedWeekStart), days);
+    setSelectedWeekStart(format(next, "yyyy-MM-dd"));
+  };
 
   // Group by week_start_date (fallback compute from date_needed)
   const grouped = useMemo(() => {
@@ -381,7 +388,7 @@ function DSWeeklyVehicleRequestsView() {
   }, [rows]);
 
   const currentWeek = grouped.find((g) => g.weekStart === currentWeekStart);
-  const pastWeeks = grouped.filter((g) => g.weekStart !== currentWeekStart && g.weekStart < currentWeekStart);
+  const pastWeeks = grouped.filter((g) => g.weekStart !== todayWeekStart && g.weekStart < todayWeekStart);
 
   // Group past weeks by year -> month
   const byYearMonth = useMemo(() => {
