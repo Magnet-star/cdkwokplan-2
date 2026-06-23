@@ -412,14 +412,13 @@ function DepartmentalReport({ myRequests }: { myRequests: FRRow[] }) {
 /* ===================== Approver / Super-admin panel ===================== */
 
 function ApproverPanel({
-  incomingRequests, loading, isApprover, toPDFData, onChanged, superAdmins,
+  incomingRequests, loading, isApprover, toPDFData, onChanged,
 }: {
   incomingRequests: FRRow[];
   loading: boolean;
   isApprover: boolean;
   toPDFData: (r: FRRow) => FinanceRequestPDFData;
   onChanged: () => void;
-  superAdmins: SuperAdminOption[];
 }) {
   const [period, setPeriod] = useState<Period>("week");
   const [dept, setDept] = useState<string>("all");
