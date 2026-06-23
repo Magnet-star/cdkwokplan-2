@@ -506,6 +506,113 @@ export type Database = {
           },
         ]
       }
+      finance_requests: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          department_name: string | null
+          finance_admin_at: string | null
+          finance_admin_decision: string | null
+          finance_admin_id: string | null
+          finance_admin_name: string | null
+          finance_admin_note: string | null
+          id: string
+          items: Json
+          mpesa_phone: string | null
+          procurator_at: string | null
+          procurator_decision: string | null
+          procurator_id: string | null
+          procurator_name: string | null
+          procurator_note: string | null
+          requester_id: string
+          requester_name: string
+          requester_signature: string
+          selected_super_admin_id: string
+          selected_super_admin_name: string | null
+          status: Database["public"]["Enums"]["finance_request_status"]
+          submitted_at: string
+          total_amount: number
+          updated_at: string
+          vicar_general_at: string | null
+          vicar_general_decision: string | null
+          vicar_general_id: string | null
+          vicar_general_name: string | null
+          vicar_general_note: string | null
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          department_name?: string | null
+          finance_admin_at?: string | null
+          finance_admin_decision?: string | null
+          finance_admin_id?: string | null
+          finance_admin_name?: string | null
+          finance_admin_note?: string | null
+          id?: string
+          items?: Json
+          mpesa_phone?: string | null
+          procurator_at?: string | null
+          procurator_decision?: string | null
+          procurator_id?: string | null
+          procurator_name?: string | null
+          procurator_note?: string | null
+          requester_id: string
+          requester_name: string
+          requester_signature: string
+          selected_super_admin_id: string
+          selected_super_admin_name?: string | null
+          status?: Database["public"]["Enums"]["finance_request_status"]
+          submitted_at?: string
+          total_amount?: number
+          updated_at?: string
+          vicar_general_at?: string | null
+          vicar_general_decision?: string | null
+          vicar_general_id?: string | null
+          vicar_general_name?: string | null
+          vicar_general_note?: string | null
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          department_name?: string | null
+          finance_admin_at?: string | null
+          finance_admin_decision?: string | null
+          finance_admin_id?: string | null
+          finance_admin_name?: string | null
+          finance_admin_note?: string | null
+          id?: string
+          items?: Json
+          mpesa_phone?: string | null
+          procurator_at?: string | null
+          procurator_decision?: string | null
+          procurator_id?: string | null
+          procurator_name?: string | null
+          procurator_note?: string | null
+          requester_id?: string
+          requester_name?: string
+          requester_signature?: string
+          selected_super_admin_id?: string
+          selected_super_admin_name?: string | null
+          status?: Database["public"]["Enums"]["finance_request_status"]
+          submitted_at?: string
+          total_amount?: number
+          updated_at?: string
+          vicar_general_at?: string | null
+          vicar_general_decision?: string | null
+          vicar_general_id?: string | null
+          vicar_general_name?: string | null
+          vicar_general_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_requests_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_requests: {
         Row: {
           applicant_name: string
@@ -1012,6 +1119,11 @@ export type Database = {
         | "finance_admin"
         | "vicar_general"
         | "procurator"
+      finance_request_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "adjustment_requested"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1148,6 +1260,12 @@ export const Constants = {
         "finance_admin",
         "vicar_general",
         "procurator",
+      ],
+      finance_request_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "adjustment_requested",
       ],
     },
   },
