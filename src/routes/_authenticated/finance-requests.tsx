@@ -143,7 +143,7 @@ function FinanceRequestsPage() {
       mpesa_phone: mpesa.trim() || null,
       department_id: profile.department_id,
       department_name: departmentName || null,
-      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0 })),
+      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
       selected_super_admin_id: selectedAdminId,
       selected_super_admin_name: adminName,
