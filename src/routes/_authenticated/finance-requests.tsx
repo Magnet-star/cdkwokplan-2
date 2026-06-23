@@ -548,7 +548,7 @@ function RequestCard({
   onChanged: () => void;
   superAdmins: SuperAdminOption[];
 }) {
-  const { user, profile, roles } = useAuth();
+  const { user, profile, roles, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust" }>(null);
   const [signName, setSignName] = useState("");
@@ -609,6 +609,13 @@ function RequestCard({
     toast.success("Request cancelled"); onChanged();
   };
 
+  const deleteRequest = async () => {
+    if (!confirm("Permanently delete this request? This cannot be undone.")) return;
+    const { error } = await supabase.from("finance_requests").delete().eq("id", r.id);
+    if (error) return toast.error(error.message);
+    toast.success("Request deleted"); onChanged();
+  };
+
   const saveEdit = async () => {
     const cleaned = editItems.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
     if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
@@ -653,6 +660,11 @@ function RequestCard({
                 <Ban className="mr-1 h-3.5 w-3.5" /> Cancel
               </Button>
             </>
+          )}
+          {isSuperAdmin && (
+            <Button size="sm" variant="destructive" onClick={deleteRequest} title="Super admin: delete record">
+              <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+            </Button>
           )}
           <Button size="sm" variant="ghost" onClick={() => setOpen((o) => !o)}>{open ? "Hide" : "Details"}</Button>
         </div>
