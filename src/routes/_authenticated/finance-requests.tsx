@@ -328,15 +328,13 @@ function FinanceRequestsPage() {
                     <Input value={mpesa} onChange={(e) => setMpesa(e.target.value)} placeholder="e.g. 0712 345 678" />
                   </div>
                   <div>
-                    <Label>Send to Super Admin *</Label>
-                    <Select value={selectedAdminId} onValueChange={setSelectedAdminId}>
-                      <SelectTrigger><SelectValue placeholder="Select super admin recipient" /></SelectTrigger>
-                      <SelectContent>
-                        {superAdmins.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Recipients (auto)</Label>
+                    <div className="rounded-md border p-2 text-xs space-y-1">
+                      <div>CDK Finance: <strong>{recipients.finance?.full_name ?? "— not configured —"}</strong></div>
+                      <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
+                      <div>CDK Procurator: <strong>{recipients.procurator?.full_name ?? "— not configured —"}</strong></div>
+                      <p className="text-muted-foreground pt-1">All three will see the request. Only CDK Finance approval is required for it to be marked Approved.</p>
+                    </div>
                   </div>
                 </div>
 
