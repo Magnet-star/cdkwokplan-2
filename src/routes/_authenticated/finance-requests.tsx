@@ -383,6 +383,7 @@ function FinanceRequestsPage() {
           isApprover={isApprover}
           toPDFData={toPDFData}
           onChanged={refresh}
+          cdkOffice={cdkOffice}
         />
       )}
     </div>
