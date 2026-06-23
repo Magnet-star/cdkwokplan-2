@@ -682,12 +682,9 @@ function RequestCard({
     const cleaned = editItems.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
     if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
     setSavingEdit(true);
-    const adminName = superAdmins.find((s) => s.id === editAdminId)?.full_name ?? r.selected_super_admin_name;
     const { error } = await supabase.from("finance_requests").update({
       items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
-      selected_super_admin_id: editAdminId,
-      selected_super_admin_name: adminName,
       mpesa_phone: editMpesa.trim() || null,
     } as never).eq("id", r.id);
     setSavingEdit(false);
