@@ -356,7 +356,7 @@ function FinanceRequestsPage() {
               {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
               {!loading && myRequests.length === 0 && <p className="text-sm text-muted-foreground">No requests yet.</p>}
               <GroupedRequests rows={myRequests}>
-                {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={false} onChanged={refresh} superAdmins={superAdmins} />}
+                {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={false} onChanged={refresh} />}
               </GroupedRequests>
             </CardContent>
           </Card>
@@ -364,14 +364,13 @@ function FinanceRequestsPage() {
       )}
 
       {/* Approver / Super admin incoming view */}
-      {(isApprover || incomingRequests.length > 0) && (!isSuperAdmin || tab === "incoming") && (
+      {canSeeIncoming && tab === "incoming" && (
         <ApproverPanel
           incomingRequests={incomingRequests}
           loading={loading}
           isApprover={isApprover}
           toPDFData={toPDFData}
           onChanged={refresh}
-          superAdmins={superAdmins}
         />
       )}
     </div>
