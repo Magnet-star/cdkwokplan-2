@@ -683,18 +683,19 @@ function RequestCard({
           <div className="rounded-md border">
             <table className="w-full">
               <thead className="bg-muted/50">
-                <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-right w-32">Amount</th></tr>
+                <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-left w-32">Date</th><th className="p-2 text-right w-32">Amount</th></tr>
               </thead>
               <tbody>
                 {(r.items ?? []).map((it, i) => (
                   <tr key={i} className="border-t">
                     <td className="p-2">{i + 1}</td>
                     <td className="p-2">{it.activity}</td>
+                    <td className="p-2">{it.activity_date ? format(new Date(it.activity_date), "PP") : "—"}</td>
                     <td className="p-2 text-right">{fmtKES(Number(it.amount))}</td>
                   </tr>
                 ))}
                 <tr className="border-t bg-muted/40">
-                  <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
+                  <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
                   <td className="p-2 text-right font-bold">{fmtKES(Number(r.total_amount))}</td>
                 </tr>
               </tbody>
