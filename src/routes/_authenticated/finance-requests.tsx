@@ -808,6 +808,7 @@ function RequestCard({
                 const openDialog = (decision: "approve" | "reject" | "adjust") => {
                   setDialog({ decision, role });
                   setSignName(profile?.full_name ?? "");
+                  setAccountUsed(user?.id ?? "");
                   setNote("");
                 };
                 return (
@@ -826,7 +827,7 @@ function RequestCard({
                 );
               })}
               {isSuperAdmin && (
-                <p className="text-[11px] text-muted-foreground">As Super Admin you can sign on behalf of any approver. Date is filled automatically.</p>
+                <p className="text-[11px] text-muted-foreground">You can only sign for the role tied to this account ({profile?.full_name ?? "your account"}). Date is filled automatically.</p>
               )}
             </div>
           )}
