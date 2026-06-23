@@ -621,13 +621,9 @@ function RequestCard({
     if (dialog.decision === "reject") update.status = "rejected";
     else if (dialog.decision === "adjust") update.status = "adjustment_requested";
     else {
-      const after = {
-        finance_admin_decision: r.finance_admin_decision,
-        vicar_general_decision: r.vicar_general_decision,
-        procurator_decision: r.procurator_decision,
-        [`${prefix}_decision`]: "approved",
-      };
-      if (after.finance_admin_decision === "approved" && after.vicar_general_decision === "approved" && after.procurator_decision === "approved") {
+      // Finance Administrator approval alone marks the request as approved.
+      // Vicar General and Procurator can remain pending and sign later.
+      if (prefix === "finance_admin") {
         update.status = "approved";
       }
     }
