@@ -558,7 +558,8 @@ function RequestCard({
 }) {
   const { user, profile, roles, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
-  const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust" }>(null);
+  type ApproverRole = "finance_admin" | "vicar_general" | "procurator";
+  const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust"; role: ApproverRole }>(null);
   const [signName, setSignName] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
@@ -571,17 +572,25 @@ function RequestCard({
   const [savingEdit, setSavingEdit] = useState(false);
   const editTotal = useMemo(() => editItems.reduce((s, i) => s + (Number(i.amount) || 0), 0), [editItems]);
 
-  const approverRole: "finance_admin" | "vicar_general" | "procurator" | null =
+  const ownApproverRole: ApproverRole | null =
     roles.includes("finance_admin") ? "finance_admin"
       : roles.includes("vicar_general") ? "vicar_general"
         : roles.includes("procurator") ? "procurator" : null;
+  // Super admin can act on behalf of all three approval roles.
+  const actableRoles: ApproverRole[] = isSuperAdmin
+    ? ["finance_admin", "vicar_general", "procurator"]
+    : (ownApproverRole ? [ownApproverRole] : []);
+
+  const roleLabel = (role: ApproverRole) =>
+    role === "finance_admin" ? "Finance Administrator"
+      : role === "vicar_general" ? "Vicar General" : "Procurator";
 
   const submitDecision = async () => {
-    if (!user || !approverRole || !dialog) return;
+    if (!user || !dialog) return;
     if (!signName.trim()) return toast.error("Please type your name to sign");
     setSaving(true);
     const nowIso = new Date().toISOString();
-    const prefix = approverRole;
+    const prefix = dialog.role;
     const decisionValue = dialog.decision === "approve" ? "approved" : dialog.decision === "reject" ? "rejected" : "adjustment_requested";
     const update: Record<string, unknown> = {
       [`${prefix}_id`]: user.id,
@@ -714,17 +723,36 @@ function RequestCard({
             <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} />
           </div>
 
-          {canAct && !isMine && approverRole && r.status !== "cancelled" && (
-            <div className="flex flex-wrap gap-2 border-t pt-3">
-              <Button size="sm" onClick={() => { setDialog({ decision: "approve" }); setSignName(profile?.full_name ?? ""); }}>
-                <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => { setDialog({ decision: "reject" }); setSignName(profile?.full_name ?? ""); }}>
-                <XCircle className="mr-1 h-4 w-4" /> Reject
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => { setDialog({ decision: "adjust" }); setSignName(profile?.full_name ?? ""); }}>
-                <RefreshCw className="mr-1 h-4 w-4" /> Ask for budget adjustment
-              </Button>
+          {canAct && !isMine && actableRoles.length > 0 && r.status !== "cancelled" && (
+            <div className="space-y-2 border-t pt-3">
+              {actableRoles.map((role) => {
+                const currentDecision =
+                  role === "finance_admin" ? r.finance_admin_decision
+                    : role === "vicar_general" ? r.vicar_general_decision
+                      : r.procurator_decision;
+                const openDialog = (decision: "approve" | "reject" | "adjust") => {
+                  setDialog({ decision, role });
+                  setSignName(profile?.full_name ?? "");
+                  setNote("");
+                };
+                return (
+                  <div key={role} className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium w-44">{roleLabel(role)}{currentDecision ? ` · ${currentDecision}` : ""}:</span>
+                    <Button size="sm" onClick={() => openDialog("approve")}>
+                      <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => openDialog("reject")}>
+                      <XCircle className="mr-1 h-4 w-4" /> Reject
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => openDialog("adjust")}>
+                      <RefreshCw className="mr-1 h-4 w-4" /> Adjust budget
+                    </Button>
+                  </div>
+                );
+              })}
+              {isSuperAdmin && (
+                <p className="text-[11px] text-muted-foreground">As Super Admin you can sign on behalf of any approver. Date is filled automatically.</p>
+              )}
             </div>
           )}
         </div>
@@ -734,10 +762,11 @@ function RequestCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {dialog?.decision === "approve" ? "Approve request" : dialog?.decision === "reject" ? "Reject request" : "Request budget adjustment"}
+              {dialog?.decision === "approve" ? "Approve" : dialog?.decision === "reject" ? "Reject" : "Request budget adjustment"}
+              {dialog ? ` — ${roleLabel(dialog.role)}` : ""}
             </DialogTitle>
             <DialogDescription>
-              Sign by typing your full name. {dialog?.decision !== "approve" && "Please add a note explaining your decision."}
+              Sign by typing your full name (date is recorded automatically). {dialog?.decision !== "approve" && "Please add a note explaining your decision."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
