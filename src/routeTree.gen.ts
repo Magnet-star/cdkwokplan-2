@@ -17,6 +17,7 @@ import { Route as AuthenticatedVehicleRequestsRouteImport } from './routes/_auth
 import { Route as AuthenticatedSecretariatStaffRouteImport } from './routes/_authenticated/secretariat-staff'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedLeaveRequestsRouteImport } from './routes/_authenticated/leave-requests'
+import { Route as AuthenticatedFinanceRequestsRouteImport } from './routes/_authenticated/finance-requests'
 import { Route as AuthenticatedDriversLogRouteImport } from './routes/_authenticated/drivers-log'
 import { Route as AuthenticatedDioceseRouteImport } from './routes/_authenticated/diocese'
 import { Route as AuthenticatedDepartmentRouteImport } from './routes/_authenticated/department'
@@ -66,6 +67,12 @@ const AuthenticatedLeaveRequestsRoute =
   AuthenticatedLeaveRequestsRouteImport.update({
     id: '/leave-requests',
     path: '/leave-requests',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFinanceRequestsRoute =
+  AuthenticatedFinanceRequestsRouteImport.update({
+    id: '/finance-requests',
+    path: '/finance-requests',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDriversLogRoute = AuthenticatedDriversLogRouteImport.update({
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/department': typeof AuthenticatedDepartmentRoute
   '/diocese': typeof AuthenticatedDioceseRoute
   '/drivers-log': typeof AuthenticatedDriversLogRoute
+  '/finance-requests': typeof AuthenticatedFinanceRequestsRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/secretariat-staff': typeof AuthenticatedSecretariatStaffRoute
@@ -138,6 +146,7 @@ export interface FileRoutesByTo {
   '/department': typeof AuthenticatedDepartmentRoute
   '/diocese': typeof AuthenticatedDioceseRoute
   '/drivers-log': typeof AuthenticatedDriversLogRoute
+  '/finance-requests': typeof AuthenticatedFinanceRequestsRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/secretariat-staff': typeof AuthenticatedSecretariatStaffRoute
@@ -157,6 +166,7 @@ export interface FileRoutesById {
   '/_authenticated/department': typeof AuthenticatedDepartmentRoute
   '/_authenticated/diocese': typeof AuthenticatedDioceseRoute
   '/_authenticated/drivers-log': typeof AuthenticatedDriversLogRoute
+  '/_authenticated/finance-requests': typeof AuthenticatedFinanceRequestsRoute
   '/_authenticated/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/secretariat-staff': typeof AuthenticatedSecretariatStaffRoute
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/department'
     | '/diocese'
     | '/drivers-log'
+    | '/finance-requests'
     | '/leave-requests'
     | '/reports'
     | '/secretariat-staff'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/department'
     | '/diocese'
     | '/drivers-log'
+    | '/finance-requests'
     | '/leave-requests'
     | '/reports'
     | '/secretariat-staff'
@@ -211,6 +223,7 @@ export interface FileRouteTypes {
     | '/_authenticated/department'
     | '/_authenticated/diocese'
     | '/_authenticated/drivers-log'
+    | '/_authenticated/finance-requests'
     | '/_authenticated/leave-requests'
     | '/_authenticated/reports'
     | '/_authenticated/secretariat-staff'
@@ -282,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeaveRequestsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/finance-requests': {
+      id: '/_authenticated/finance-requests'
+      path: '/finance-requests'
+      fullPath: '/finance-requests'
+      preLoaderRoute: typeof AuthenticatedFinanceRequestsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/drivers-log': {
       id: '/_authenticated/drivers-log'
       path: '/drivers-log'
@@ -350,6 +370,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDepartmentRoute: typeof AuthenticatedDepartmentRoute
   AuthenticatedDioceseRoute: typeof AuthenticatedDioceseRoute
   AuthenticatedDriversLogRoute: typeof AuthenticatedDriversLogRoute
+  AuthenticatedFinanceRequestsRoute: typeof AuthenticatedFinanceRequestsRoute
   AuthenticatedLeaveRequestsRoute: typeof AuthenticatedLeaveRequestsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSecretariatStaffRoute: typeof AuthenticatedSecretariatStaffRoute
@@ -366,6 +387,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDepartmentRoute: AuthenticatedDepartmentRoute,
   AuthenticatedDioceseRoute: AuthenticatedDioceseRoute,
   AuthenticatedDriversLogRoute: AuthenticatedDriversLogRoute,
+  AuthenticatedFinanceRequestsRoute: AuthenticatedFinanceRequestsRoute,
   AuthenticatedLeaveRequestsRoute: AuthenticatedLeaveRequestsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSecretariatStaffRoute: AuthenticatedSecretariatStaffRoute,
