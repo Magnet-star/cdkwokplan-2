@@ -37,6 +37,10 @@ interface FRRow {
   total_amount: number;
   selected_super_admin_id: string;
   selected_super_admin_name: string | null;
+  vicar_super_admin_id: string | null;
+  vicar_super_admin_name: string | null;
+  procurator_super_admin_id: string | null;
+  procurator_super_admin_name: string | null;
   status: FRStatus;
   submitted_at: string;
   finance_admin_name: string | null; finance_admin_decision: string | null; finance_admin_note: string | null; finance_admin_at: string | null;
@@ -45,6 +49,12 @@ interface FRRow {
 }
 
 interface SuperAdminOption { id: string; full_name: string; }
+type CdkOffice = "finance" | "vicar" | "procurator";
+interface CdkRecipients {
+  finance: SuperAdminOption | null;
+  vicar: SuperAdminOption | null;
+  procurator: SuperAdminOption | null;
+}
 
 const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "" });
 
@@ -79,18 +89,36 @@ function FinanceRequestsPage() {
 
   const [requests, setRequests] = useState<FRRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [superAdmins, setSuperAdmins] = useState<SuperAdminOption[]>([]);
+  const [recipients, setRecipients] = useState<CdkRecipients>({ finance: null, vicar: null, procurator: null });
   const [departmentName, setDepartmentName] = useState<string>("");
 
   // form state
   const [items, setItems] = useState<ItemRow[]>([emptyItem(), emptyItem(), emptyItem(), emptyItem(), emptyItem()]);
   const [signature, setSignature] = useState("");
   const [mpesa, setMpesa] = useState("");
-  const [selectedAdminId, setSelectedAdminId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
+  // What CDK office is the current user (if super admin) part of?
+  const cdkOffice: CdkOffice | null = useMemo(() => {
+    const n = (departmentName ?? "").toLowerCase();
+    if (/finance/.test(n)) return "finance";
+    if (/vicar/.test(n)) return "vicar";
+    if (/procurator/.test(n)) return "procurator";
+    return null;
+  }, [departmentName]);
+
+  // Only CDK Finance / Vicar General / Procurator super admins see the incoming approval section.
+  const canSeeIncoming = (isSuperAdmin && cdkOffice !== null)
+    || roles.includes("finance_admin")
+    || roles.includes("vicar_general")
+    || roles.includes("procurator");
+
   // tab for super-admin: their own vs incoming
-  const [tab, setTab] = useState<"incoming" | "mine">(isSuperAdmin ? "incoming" : "mine");
+  const [tab, setTab] = useState<"incoming" | "mine">(canSeeIncoming ? "incoming" : "mine");
+  useEffect(() => {
+    if (canSeeIncoming) setTab((t) => t);
+    else setTab("mine");
+  }, [canSeeIncoming]);
 
   const total = useMemo(() => items.reduce((s, i) => s + (Number(i.amount) || 0), 0), [items]);
 
@@ -110,6 +138,7 @@ function FinanceRequestsPage() {
     void (async () => {
       const { data: roleRows } = await supabase.from("user_roles").select("user_id").eq("role", "super_admin");
       const ids = (roleRows ?? []).map((r: { user_id: string }) => r.user_id);
+      const next: CdkRecipients = { finance: null, vicar: null, procurator: null };
       if (ids.length) {
         const { data: profs } = await supabase
           .from("profiles")
@@ -117,22 +146,23 @@ function FinanceRequestsPage() {
           .in("id", ids);
         const profRows = (profs ?? []) as { id: string; full_name: string; department_id: string | null }[];
         const deptIds = Array.from(new Set(profRows.map((p) => p.department_id).filter((x): x is string => !!x)));
-        let financeDeptIds = new Set<string>();
+        let deptMap = new Map<string, string>();
         if (deptIds.length) {
           const { data: depts } = await supabase.from("departments").select("id, name").in("id", deptIds);
-          financeDeptIds = new Set(
-            ((depts ?? []) as { id: string; name: string }[])
-              .filter((d) => /finance/i.test(d.name))
-              .map((d) => d.id),
-          );
+          deptMap = new Map(((depts ?? []) as { id: string; name: string }[]).map((d) => [d.id, d.name]));
         }
-        // Only CDK Finance super admins are valid recipients for finance requests.
-        const filtered = profRows
-          .filter((p) => p.department_id && financeDeptIds.has(p.department_id))
-          .map(({ id, full_name }) => ({ id, full_name }))
-          .sort((a, b) => a.full_name.localeCompare(b.full_name));
-        setSuperAdmins(filtered);
+        const pick = (re: RegExp) => {
+          const p = profRows.find((row) => {
+            const name = (row.department_id && deptMap.get(row.department_id)) || "";
+            return re.test(name);
+          });
+          return p ? { id: p.id, full_name: p.full_name } : null;
+        };
+        next.finance = pick(/finance/i);
+        next.vicar = pick(/vicar/i);
+        next.procurator = pick(/procurator/i);
       }
+      setRecipients(next);
       if (profile?.department_id) {
         const { data: dept } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
         if (dept) setDepartmentName((dept as { name: string }).name);
@@ -152,9 +182,8 @@ function FinanceRequestsPage() {
     const cleaned = items.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
     if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
     if (!signature.trim()) return toast.error("Please type your name to sign");
-    if (!selectedAdminId) return toast.error("Please select a Super Admin recipient");
+    if (!recipients.finance) return toast.error("No CDK Finance super admin is configured. Contact the administrator.");
     setSubmitting(true);
-    const adminName = superAdmins.find((s) => s.id === selectedAdminId)?.full_name ?? null;
     const { error } = await supabase.from("finance_requests").insert({
       requester_id: user.id,
       requester_name: profile.full_name,
@@ -164,14 +193,18 @@ function FinanceRequestsPage() {
       department_name: departmentName || null,
       items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
-      selected_super_admin_id: selectedAdminId,
-      selected_super_admin_name: adminName,
+      selected_super_admin_id: recipients.finance.id,
+      selected_super_admin_name: recipients.finance.full_name,
+      vicar_super_admin_id: recipients.vicar?.id ?? null,
+      vicar_super_admin_name: recipients.vicar?.full_name ?? null,
+      procurator_super_admin_id: recipients.procurator?.id ?? null,
+      procurator_super_admin_name: recipients.procurator?.full_name ?? null,
     });
     setSubmitting(false);
     if (error) return toast.error(error.message);
-    toast.success("Finance request submitted");
+    toast.success("Finance request submitted to CDK Finance, Vicar General and Procurator");
     setItems([emptyItem(), emptyItem(), emptyItem(), emptyItem(), emptyItem()]);
-    setSignature(""); setMpesa(""); setSelectedAdminId("");
+    setSignature(""); setMpesa("");
     void refresh();
   };
 
@@ -179,7 +212,8 @@ function FinanceRequestsPage() {
     id: r.id, requester_name: r.requester_name, requester_signature: r.requester_signature,
     mpesa_phone: r.mpesa_phone, department_name: r.department_name, items: r.items ?? [],
     total_amount: Number(r.total_amount) || 0, submitted_at: r.submitted_at,
-    selected_super_admin_name: r.selected_super_admin_name, status: r.status,
+    selected_super_admin_name: [r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || null,
+    status: r.status,
     finance_admin_name: r.finance_admin_name, finance_admin_decision: r.finance_admin_decision, finance_admin_note: r.finance_admin_note, finance_admin_at: r.finance_admin_at,
     vicar_general_name: r.vicar_general_name, vicar_general_decision: r.vicar_general_decision, vicar_general_note: r.vicar_general_note, vicar_general_at: r.vicar_general_at,
     procurator_name: r.procurator_name, procurator_decision: r.procurator_decision, procurator_note: r.procurator_note, procurator_at: r.procurator_at,
@@ -198,15 +232,17 @@ function FinanceRequestsPage() {
         </div>
       </div>
 
-      {isSuperAdmin && (
+      {(isSuperAdmin || canSeeIncoming) && (
         <div className="flex flex-wrap gap-2">
-          <Button variant={tab === "incoming" ? "default" : "outline"} size="sm" onClick={() => setTab("incoming")}>Incoming for approval</Button>
+          {canSeeIncoming && (
+            <Button variant={tab === "incoming" ? "default" : "outline"} size="sm" onClick={() => setTab("incoming")}>Incoming for approval</Button>
+          )}
           <Button variant={tab === "mine" ? "default" : "outline"} size="sm" onClick={() => setTab("mine")}>My department request</Button>
         </div>
       )}
 
       {/* HOD / Super Admin submitter view */}
-      {isHod && (!isSuperAdmin || tab === "mine") && (
+      {isHod && (!canSeeIncoming || tab === "mine") && (
         <>
           <Card>
             <CardHeader>
@@ -292,15 +328,13 @@ function FinanceRequestsPage() {
                     <Input value={mpesa} onChange={(e) => setMpesa(e.target.value)} placeholder="e.g. 0712 345 678" />
                   </div>
                   <div>
-                    <Label>Send to Super Admin *</Label>
-                    <Select value={selectedAdminId} onValueChange={setSelectedAdminId}>
-                      <SelectTrigger><SelectValue placeholder="Select super admin recipient" /></SelectTrigger>
-                      <SelectContent>
-                        {superAdmins.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Recipients (auto)</Label>
+                    <div className="rounded-md border p-2 text-xs space-y-1">
+                      <div>CDK Finance: <strong>{recipients.finance?.full_name ?? "— not configured —"}</strong></div>
+                      <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
+                      <div>CDK Procurator: <strong>{recipients.procurator?.full_name ?? "— not configured —"}</strong></div>
+                      <p className="text-muted-foreground pt-1">All three will see the request. Only CDK Finance approval is required for it to be marked Approved.</p>
+                    </div>
                   </div>
                 </div>
 
@@ -322,7 +356,7 @@ function FinanceRequestsPage() {
               {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
               {!loading && myRequests.length === 0 && <p className="text-sm text-muted-foreground">No requests yet.</p>}
               <GroupedRequests rows={myRequests}>
-                {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={false} onChanged={refresh} superAdmins={superAdmins} />}
+                {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={false} onChanged={refresh} />}
               </GroupedRequests>
             </CardContent>
           </Card>
@@ -330,14 +364,13 @@ function FinanceRequestsPage() {
       )}
 
       {/* Approver / Super admin incoming view */}
-      {(isApprover || incomingRequests.length > 0) && (!isSuperAdmin || tab === "incoming") && (
+      {canSeeIncoming && tab === "incoming" && (
         <ApproverPanel
           incomingRequests={incomingRequests}
           loading={loading}
           isApprover={isApprover}
           toPDFData={toPDFData}
           onChanged={refresh}
-          superAdmins={superAdmins}
         />
       )}
     </div>
@@ -379,14 +412,13 @@ function DepartmentalReport({ myRequests }: { myRequests: FRRow[] }) {
 /* ===================== Approver / Super-admin panel ===================== */
 
 function ApproverPanel({
-  incomingRequests, loading, isApprover, toPDFData, onChanged, superAdmins,
+  incomingRequests, loading, isApprover, toPDFData, onChanged,
 }: {
   incomingRequests: FRRow[];
   loading: boolean;
   isApprover: boolean;
   toPDFData: (r: FRRow) => FinanceRequestPDFData;
   onChanged: () => void;
-  superAdmins: SuperAdminOption[];
 }) {
   const [period, setPeriod] = useState<Period>("week");
   const [dept, setDept] = useState<string>("all");
@@ -463,7 +495,7 @@ function ApproverPanel({
           {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
           {!loading && filtered.length === 0 && <p className="text-sm text-muted-foreground">Nothing in this range.</p>}
           <GroupedRequests rows={filtered}>
-            {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={isApprover} onChanged={onChanged} superAdmins={superAdmins} />}
+            {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={isApprover} onChanged={onChanged} />}
           </GroupedRequests>
         </CardContent>
       </Card>
@@ -567,13 +599,12 @@ function statusBadge(s: FRStatus) {
 /* ===================== Request card ===================== */
 
 function RequestCard({
-  r, toPDFData, canAct, onChanged, superAdmins,
+  r, toPDFData, canAct, onChanged,
 }: {
   r: FRRow;
   toPDFData: (r: FRRow) => FinanceRequestPDFData;
   canAct: boolean;
   onChanged: () => void;
-  superAdmins: SuperAdminOption[];
 }) {
   const { user, profile, roles, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
@@ -586,7 +617,6 @@ function RequestCard({
   // Edit & cancel
   const [editing, setEditing] = useState(false);
   const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i: ItemRow) => ({ activity: i.activity, amount: String(i.amount), activity_date: i.activity_date ?? "" })));
-  const [editAdminId, setEditAdminId] = useState<string>(r.selected_super_admin_id);
   const [editMpesa, setEditMpesa] = useState<string>(r.mpesa_phone ?? "");
   const [savingEdit, setSavingEdit] = useState(false);
   const editTotal = useMemo(() => editItems.reduce((s, i) => s + (Number(i.amount) || 0), 0), [editItems]);
@@ -652,12 +682,9 @@ function RequestCard({
     const cleaned = editItems.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
     if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
     setSavingEdit(true);
-    const adminName = superAdmins.find((s) => s.id === editAdminId)?.full_name ?? r.selected_super_admin_name;
     const { error } = await supabase.from("finance_requests").update({
       items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
-      selected_super_admin_id: editAdminId,
-      selected_super_admin_name: adminName,
       mpesa_phone: editMpesa.trim() || null,
     } as never).eq("id", r.id);
     setSavingEdit(false);
@@ -676,7 +703,7 @@ function RequestCard({
         <div>
           <p className="font-medium">{r.department_name ?? "—"} — {fmtKES(Number(r.total_amount))}</p>
           <p className="text-xs text-muted-foreground">By {r.requester_name} · {format(new Date(r.submitted_at), "PPp")}</p>
-          <p className="text-xs text-muted-foreground">Sent to: {r.selected_super_admin_name ?? "—"}</p>
+          <p className="text-xs text-muted-foreground">Sent to: {[r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || "—"}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
@@ -854,13 +881,12 @@ function RequestCard({
                 <Input value={editMpesa} onChange={(e) => setEditMpesa(e.target.value)} />
               </div>
               <div>
-                <Label>Send to Super Admin</Label>
-                <Select value={editAdminId} onValueChange={setEditAdminId}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {superAdmins.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label>Recipients (auto)</Label>
+                <div className="rounded-md border p-2 text-xs space-y-1">
+                  <div>CDK Finance: <strong>{r.selected_super_admin_name ?? "—"}</strong></div>
+                  <div>Vicar General: <strong>{r.vicar_super_admin_name ?? "—"}</strong></div>
+                  <div>CDK Procurator: <strong>{r.procurator_super_admin_name ?? "—"}</strong></div>
+                </div>
               </div>
             </div>
           </div>
