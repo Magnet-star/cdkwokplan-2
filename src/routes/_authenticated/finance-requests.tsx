@@ -661,6 +661,11 @@ function RequestCard({
               </Button>
             </>
           )}
+          {isSuperAdmin && (
+            <Button size="sm" variant="destructive" onClick={deleteRequest} title="Super admin: delete record">
+              <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+            </Button>
+          )}
           <Button size="sm" variant="ghost" onClick={() => setOpen((o) => !o)}>{open ? "Hide" : "Details"}</Button>
         </div>
       </div>
