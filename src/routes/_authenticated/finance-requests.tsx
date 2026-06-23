@@ -89,18 +89,36 @@ function FinanceRequestsPage() {
 
   const [requests, setRequests] = useState<FRRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [superAdmins, setSuperAdmins] = useState<SuperAdminOption[]>([]);
+  const [recipients, setRecipients] = useState<CdkRecipients>({ finance: null, vicar: null, procurator: null });
   const [departmentName, setDepartmentName] = useState<string>("");
 
   // form state
   const [items, setItems] = useState<ItemRow[]>([emptyItem(), emptyItem(), emptyItem(), emptyItem(), emptyItem()]);
   const [signature, setSignature] = useState("");
   const [mpesa, setMpesa] = useState("");
-  const [selectedAdminId, setSelectedAdminId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
+  // What CDK office is the current user (if super admin) part of?
+  const cdkOffice: CdkOffice | null = useMemo(() => {
+    const n = (departmentName ?? "").toLowerCase();
+    if (/finance/.test(n)) return "finance";
+    if (/vicar/.test(n)) return "vicar";
+    if (/procurator/.test(n)) return "procurator";
+    return null;
+  }, [departmentName]);
+
+  // Only CDK Finance / Vicar General / Procurator super admins see the incoming approval section.
+  const canSeeIncoming = (isSuperAdmin && cdkOffice !== null)
+    || roles.includes("finance_admin")
+    || roles.includes("vicar_general")
+    || roles.includes("procurator");
+
   // tab for super-admin: their own vs incoming
-  const [tab, setTab] = useState<"incoming" | "mine">(isSuperAdmin ? "incoming" : "mine");
+  const [tab, setTab] = useState<"incoming" | "mine">(canSeeIncoming ? "incoming" : "mine");
+  useEffect(() => {
+    if (canSeeIncoming) setTab((t) => t);
+    else setTab("mine");
+  }, [canSeeIncoming]);
 
   const total = useMemo(() => items.reduce((s, i) => s + (Number(i.amount) || 0), 0), [items]);
 
@@ -120,6 +138,7 @@ function FinanceRequestsPage() {
     void (async () => {
       const { data: roleRows } = await supabase.from("user_roles").select("user_id").eq("role", "super_admin");
       const ids = (roleRows ?? []).map((r: { user_id: string }) => r.user_id);
+      const next: CdkRecipients = { finance: null, vicar: null, procurator: null };
       if (ids.length) {
         const { data: profs } = await supabase
           .from("profiles")
@@ -127,22 +146,23 @@ function FinanceRequestsPage() {
           .in("id", ids);
         const profRows = (profs ?? []) as { id: string; full_name: string; department_id: string | null }[];
         const deptIds = Array.from(new Set(profRows.map((p) => p.department_id).filter((x): x is string => !!x)));
-        let financeDeptIds = new Set<string>();
+        let deptMap = new Map<string, string>();
         if (deptIds.length) {
           const { data: depts } = await supabase.from("departments").select("id, name").in("id", deptIds);
-          financeDeptIds = new Set(
-            ((depts ?? []) as { id: string; name: string }[])
-              .filter((d) => /finance/i.test(d.name))
-              .map((d) => d.id),
-          );
+          deptMap = new Map(((depts ?? []) as { id: string; name: string }[]).map((d) => [d.id, d.name]));
         }
-        // Only CDK Finance super admins are valid recipients for finance requests.
-        const filtered = profRows
-          .filter((p) => p.department_id && financeDeptIds.has(p.department_id))
-          .map(({ id, full_name }) => ({ id, full_name }))
-          .sort((a, b) => a.full_name.localeCompare(b.full_name));
-        setSuperAdmins(filtered);
+        const pick = (re: RegExp) => {
+          const p = profRows.find((row) => {
+            const name = (row.department_id && deptMap.get(row.department_id)) || "";
+            return re.test(name);
+          });
+          return p ? { id: p.id, full_name: p.full_name } : null;
+        };
+        next.finance = pick(/finance/i);
+        next.vicar = pick(/vicar/i);
+        next.procurator = pick(/procurator/i);
       }
+      setRecipients(next);
       if (profile?.department_id) {
         const { data: dept } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
         if (dept) setDepartmentName((dept as { name: string }).name);
@@ -162,9 +182,8 @@ function FinanceRequestsPage() {
     const cleaned = items.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
     if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
     if (!signature.trim()) return toast.error("Please type your name to sign");
-    if (!selectedAdminId) return toast.error("Please select a Super Admin recipient");
+    if (!recipients.finance) return toast.error("No CDK Finance super admin is configured. Contact the administrator.");
     setSubmitting(true);
-    const adminName = superAdmins.find((s) => s.id === selectedAdminId)?.full_name ?? null;
     const { error } = await supabase.from("finance_requests").insert({
       requester_id: user.id,
       requester_name: profile.full_name,
@@ -174,14 +193,18 @@ function FinanceRequestsPage() {
       department_name: departmentName || null,
       items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
-      selected_super_admin_id: selectedAdminId,
-      selected_super_admin_name: adminName,
+      selected_super_admin_id: recipients.finance.id,
+      selected_super_admin_name: recipients.finance.full_name,
+      vicar_super_admin_id: recipients.vicar?.id ?? null,
+      vicar_super_admin_name: recipients.vicar?.full_name ?? null,
+      procurator_super_admin_id: recipients.procurator?.id ?? null,
+      procurator_super_admin_name: recipients.procurator?.full_name ?? null,
     });
     setSubmitting(false);
     if (error) return toast.error(error.message);
-    toast.success("Finance request submitted");
+    toast.success("Finance request submitted to CDK Finance, Vicar General and Procurator");
     setItems([emptyItem(), emptyItem(), emptyItem(), emptyItem(), emptyItem()]);
-    setSignature(""); setMpesa(""); setSelectedAdminId("");
+    setSignature(""); setMpesa("");
     void refresh();
   };
 
@@ -189,7 +212,8 @@ function FinanceRequestsPage() {
     id: r.id, requester_name: r.requester_name, requester_signature: r.requester_signature,
     mpesa_phone: r.mpesa_phone, department_name: r.department_name, items: r.items ?? [],
     total_amount: Number(r.total_amount) || 0, submitted_at: r.submitted_at,
-    selected_super_admin_name: r.selected_super_admin_name, status: r.status,
+    selected_super_admin_name: [r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || null,
+    status: r.status,
     finance_admin_name: r.finance_admin_name, finance_admin_decision: r.finance_admin_decision, finance_admin_note: r.finance_admin_note, finance_admin_at: r.finance_admin_at,
     vicar_general_name: r.vicar_general_name, vicar_general_decision: r.vicar_general_decision, vicar_general_note: r.vicar_general_note, vicar_general_at: r.vicar_general_at,
     procurator_name: r.procurator_name, procurator_decision: r.procurator_decision, procurator_note: r.procurator_note, procurator_at: r.procurator_at,
