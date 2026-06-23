@@ -417,7 +417,7 @@ function RequestCard({
         after.procurator_decision === "approved"
       ) update.status = "approved";
     }
-    const { error } = await supabase.from("finance_requests").update(update).eq("id", r.id);
+    const { error } = await supabase.from("finance_requests").update(update as never).eq("id", r.id);
     setSaving(false);
     if (error) {
       toast.error(error.message);
