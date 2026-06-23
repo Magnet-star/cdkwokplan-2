@@ -664,15 +664,21 @@ function RequestCard({
   const submitDecision = async () => {
     if (!user || !dialog) return;
     if (!signName.trim()) return toast.error("Please type your name to sign");
+    if (!accountUsed) return toast.error("Please select the account you are using");
+    if (accountUsed !== user.id) return toast.error("You can only approve using your own account");
     setSaving(true);
     const nowIso = new Date().toISOString();
     const prefix = dialog.role;
     const decisionValue = dialog.decision === "approve" ? "approved" : dialog.decision === "reject" ? "rejected" : "adjustment_requested";
+    // Stamp the account label so the decision area / PDF clearly shows
+    // which account performed the action (e.g. "CDK FINANCE").
+    const accountLabel = profile?.full_name ?? "current account";
+    const stampedNote = `[Account: ${accountLabel}]${note.trim() ? ` ${note.trim()}` : ""}`;
     const update: Record<string, unknown> = {
       [`${prefix}_id`]: user.id,
       [`${prefix}_name`]: signName.trim(),
       [`${prefix}_decision`]: decisionValue,
-      [`${prefix}_note`]: note.trim() || null,
+      [`${prefix}_note`]: stampedNote,
       [`${prefix}_at`]: nowIso,
     };
     if (dialog.decision === "reject") update.status = "rejected";
@@ -688,7 +694,7 @@ function RequestCard({
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Decision recorded");
-    setDialog(null); setSignName(""); setNote(""); onChanged();
+    setDialog(null); setSignName(""); setAccountUsed(""); setNote(""); onChanged();
   };
 
   const cancelRequest = async () => {
