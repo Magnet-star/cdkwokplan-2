@@ -383,6 +383,7 @@ function FinanceRequestsPage() {
           isApprover={isApprover}
           toPDFData={toPDFData}
           onChanged={refresh}
+          cdkOffice={cdkOffice}
         />
       )}
     </div>
@@ -424,13 +425,14 @@ function DepartmentalReport({ myRequests }: { myRequests: FRRow[] }) {
 /* ===================== Approver / Super-admin panel ===================== */
 
 function ApproverPanel({
-  incomingRequests, loading, isApprover, toPDFData, onChanged,
+  incomingRequests, loading, isApprover, toPDFData, onChanged, cdkOffice,
 }: {
   incomingRequests: FRRow[];
   loading: boolean;
   isApprover: boolean;
   toPDFData: (r: FRRow) => FinanceRequestPDFData;
   onChanged: () => void;
+  cdkOffice: CdkOffice | null;
 }) {
   const [period, setPeriod] = useState<Period>("week");
   const [dept, setDept] = useState<string>("all");
@@ -507,7 +509,7 @@ function ApproverPanel({
           {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
           {!loading && filtered.length === 0 && <p className="text-sm text-muted-foreground">Nothing in this range.</p>}
           <GroupedRequests rows={filtered}>
-            {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={isApprover} onChanged={onChanged} />}
+            {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={isApprover} onChanged={onChanged} cdkOffice={cdkOffice} />}
           </GroupedRequests>
         </CardContent>
       </Card>
@@ -611,18 +613,20 @@ function statusBadge(s: FRStatus) {
 /* ===================== Request card ===================== */
 
 function RequestCard({
-  r, toPDFData, canAct, onChanged,
+  r, toPDFData, canAct, onChanged, cdkOffice,
 }: {
   r: FRRow;
   toPDFData: (r: FRRow) => FinanceRequestPDFData;
   canAct: boolean;
   onChanged: () => void;
+  cdkOffice?: CdkOffice | null;
 }) {
   const { user, profile, roles, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   type ApproverRole = "finance_admin" | "vicar_general" | "procurator";
   const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust"; role: ApproverRole }>(null);
   const [signName, setSignName] = useState("");
+  const [accountUsed, setAccountUsed] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -637,27 +641,44 @@ function RequestCard({
     roles.includes("finance_admin") ? "finance_admin"
       : roles.includes("vicar_general") ? "vicar_general"
         : roles.includes("procurator") ? "procurator" : null;
-  // Super admin can act on behalf of all three approval roles.
+  // A super admin can ONLY act for the role corresponding to their own CDK
+  // office account (CDK Finance → finance_admin, Vicar General → vicar_general,
+  // CDK Procurator → procurator). Other super admins cannot approve here.
+  const superAdminRole: ApproverRole | null =
+    cdkOffice === "finance" ? "finance_admin"
+      : cdkOffice === "vicar" ? "vicar_general"
+        : cdkOffice === "procurator" ? "procurator" : null;
   const actableRoles: ApproverRole[] = isSuperAdmin
-    ? ["finance_admin", "vicar_general", "procurator"]
+    ? (superAdminRole ? [superAdminRole] : [])
     : (ownApproverRole ? [ownApproverRole] : []);
 
   const roleLabel = (role: ApproverRole) =>
     role === "finance_admin" ? "Finance Administrator"
       : role === "vicar_general" ? "Vicar General" : "Procurator";
 
+  // The only account allowed in the "Account used" select is the signed-in
+  // user's own account — this prevents a super admin from approving on
+  // behalf of another office.
+  const myAccountLabel = `Myself — ${profile?.full_name ?? "current account"}`;
+
   const submitDecision = async () => {
     if (!user || !dialog) return;
     if (!signName.trim()) return toast.error("Please type your name to sign");
+    if (!accountUsed) return toast.error("Please select the account you are using");
+    if (accountUsed !== user.id) return toast.error("You can only approve using your own account");
     setSaving(true);
     const nowIso = new Date().toISOString();
     const prefix = dialog.role;
     const decisionValue = dialog.decision === "approve" ? "approved" : dialog.decision === "reject" ? "rejected" : "adjustment_requested";
+    // Stamp the account label so the decision area / PDF clearly shows
+    // which account performed the action (e.g. "CDK FINANCE").
+    const accountLabel = profile?.full_name ?? "current account";
+    const stampedNote = `[Account: ${accountLabel}]${note.trim() ? ` ${note.trim()}` : ""}`;
     const update: Record<string, unknown> = {
       [`${prefix}_id`]: user.id,
       [`${prefix}_name`]: signName.trim(),
       [`${prefix}_decision`]: decisionValue,
-      [`${prefix}_note`]: note.trim() || null,
+      [`${prefix}_note`]: stampedNote,
       [`${prefix}_at`]: nowIso,
     };
     if (dialog.decision === "reject") update.status = "rejected";
@@ -673,7 +694,7 @@ function RequestCard({
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Decision recorded");
-    setDialog(null); setSignName(""); setNote(""); onChanged();
+    setDialog(null); setSignName(""); setAccountUsed(""); setNote(""); onChanged();
   };
 
   const cancelRequest = async () => {
@@ -772,9 +793,9 @@ function RequestCard({
           </div>
 
           <div className="grid gap-3 md:grid-cols-3">
-            <ApprovalBlock title="Finance Administrator" name={r.finance_admin_name} decision={r.finance_admin_decision} at={r.finance_admin_at} note={r.finance_admin_note} />
-            <ApprovalBlock title="Vicar General" name={r.vicar_general_name} decision={r.vicar_general_decision} at={r.vicar_general_at} note={r.vicar_general_note} />
-            <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} />
+            <ApprovalBlock title="Finance Administrator" name={r.finance_admin_name} decision={r.finance_admin_decision} at={r.finance_admin_at} note={r.finance_admin_note} accountLabel="CDK Finance" />
+            <ApprovalBlock title="Vicar General" name={r.vicar_general_name} decision={r.vicar_general_decision} at={r.vicar_general_at} note={r.vicar_general_note} accountLabel="Vicar General" />
+            <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} accountLabel="CDK Procurator" />
           </div>
 
           {canAct && !isMine && actableRoles.length > 0 && r.status !== "cancelled" && (
@@ -787,6 +808,7 @@ function RequestCard({
                 const openDialog = (decision: "approve" | "reject" | "adjust") => {
                   setDialog({ decision, role });
                   setSignName(profile?.full_name ?? "");
+                  setAccountUsed(user?.id ?? "");
                   setNote("");
                 };
                 return (
@@ -805,7 +827,7 @@ function RequestCard({
                 );
               })}
               {isSuperAdmin && (
-                <p className="text-[11px] text-muted-foreground">As Super Admin you can sign on behalf of any approver. Date is filled automatically.</p>
+                <p className="text-[11px] text-muted-foreground">You can only sign for the role tied to this account ({profile?.full_name ?? "your account"}). Date is filled automatically.</p>
               )}
             </div>
           )}
@@ -825,11 +847,21 @@ function RequestCard({
           </DialogHeader>
           <div className="space-y-3">
             <div><Label>Your name (signature) *</Label><Input value={signName} onChange={(e) => setSignName(e.target.value)} /></div>
+            <div>
+              <Label>Account you are using *</Label>
+              <Select value={accountUsed} onValueChange={setAccountUsed}>
+                <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                <SelectContent>
+                  {user && <SelectItem value={user.id}>{myAccountLabel}</SelectItem>}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-[11px] text-muted-foreground">For audit purposes, you can only approve using your own account.</p>
+            </div>
             <div><Label>Note {dialog?.decision !== "approve" && "*"}</Label><Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason / details" /></div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDialog(null)}>Cancel</Button>
-            <Button onClick={submitDecision} disabled={saving || (dialog?.decision !== "approve" && !note.trim())}>
+            <Button onClick={submitDecision} disabled={saving || !signName.trim() || !accountUsed || (dialog?.decision !== "approve" && !note.trim())}>
               {saving ? "Saving…" : "Confirm"}
             </Button>
           </DialogFooter>
@@ -912,12 +944,15 @@ function RequestCard({
   );
 }
 
-function ApprovalBlock({ title, name, decision, at, note }: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null }) {
+function ApprovalBlock({ title, name, decision, at, note, accountLabel }: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null; accountLabel?: string }) {
+  const decisionDisplay = decision
+    ? `${decision.replace("_", " ").toUpperCase()}${accountLabel ? ` [${accountLabel}${name ? `: ${name}` : ""}]` : ""}`
+    : "— pending —";
   return (
     <div className="rounded-md border p-3 text-xs">
       <p className="font-semibold">{title}</p>
       <p className="mt-1">Name: <span className="font-medium">{name ?? "— pending —"}</span></p>
-      <p>Decision: <span className="font-medium">{decision ? decision.replace("_", " ") : "— pending —"}</span></p>
+      <p>Decision: <span className="font-medium">{decisionDisplay}</span></p>
       <p>Date: <span className="font-medium">{at ? format(new Date(at), "PPp") : "—"}</span></p>
       {note && <p className="mt-1 text-muted-foreground">Note: {note}</p>}
     </div>
