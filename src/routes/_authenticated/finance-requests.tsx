@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/finance-requests")({
   component: FinanceRequestsPage,
 });
 
-interface ItemRow { activity: string; amount: string; }
+interface ItemRow { activity: string; amount: string; activity_date: string; }
 type FRStatus = "pending" | "approved" | "rejected" | "adjustment_requested" | "cancelled";
 
 interface FRRow {
@@ -46,7 +46,7 @@ interface FRRow {
 
 interface SuperAdminOption { id: string; full_name: string; }
 
-const emptyItem = (): ItemRow => ({ activity: "", amount: "" });
+const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "" });
 
 type Period = "day" | "week" | "month" | "year" | "all";
 
@@ -143,7 +143,7 @@ function FinanceRequestsPage() {
       mpesa_phone: mpesa.trim() || null,
       department_id: profile.department_id,
       department_name: departmentName || null,
-      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0 })),
+      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
       selected_super_admin_id: selectedAdminId,
       selected_super_admin_name: adminName,
@@ -205,6 +205,7 @@ function FinanceRequestsPage() {
                       <tr>
                         <th className="w-10 p-2 text-left">#</th>
                         <th className="p-2 text-left">Item / Activity</th>
+                        <th className="w-40 p-2 text-left">Activity date</th>
                         <th className="w-32 p-2 text-left">Amount (KES)</th>
                         <th className="w-10 p-2"></th>
                       </tr>
@@ -220,6 +221,13 @@ function FinanceRequestsPage() {
                               onChange={(e) => updateItem(i, "activity", e.target.value)}
                               placeholder="Describe the item or activity"
                               className="min-h-[44px]"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="date"
+                              value={it.activity_date}
+                              onChange={(e) => updateItem(i, "activity_date", e.target.value)}
                             />
                           </td>
                           <td className="p-2">
@@ -240,7 +248,7 @@ function FinanceRequestsPage() {
                         </tr>
                       ))}
                       <tr className="border-t bg-muted/40">
-                        <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
+                        <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
                         <td className="p-2 font-bold">{fmtKES(total)}</td>
                         <td></td>
                       </tr>
@@ -557,7 +565,7 @@ function RequestCard({
 
   // Edit & cancel
   const [editing, setEditing] = useState(false);
-  const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i) => ({ activity: i.activity, amount: String(i.amount) })));
+  const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i: ItemRow) => ({ activity: i.activity, amount: String(i.amount), activity_date: i.activity_date ?? "" })));
   const [editAdminId, setEditAdminId] = useState<string>(r.selected_super_admin_id);
   const [editMpesa, setEditMpesa] = useState<string>(r.mpesa_phone ?? "");
   const [savingEdit, setSavingEdit] = useState(false);
@@ -622,7 +630,7 @@ function RequestCard({
     setSavingEdit(true);
     const adminName = superAdmins.find((s) => s.id === editAdminId)?.full_name ?? r.selected_super_admin_name;
     const { error } = await supabase.from("finance_requests").update({
-      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0 })),
+      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
       selected_super_admin_id: editAdminId,
       selected_super_admin_name: adminName,
@@ -675,18 +683,19 @@ function RequestCard({
           <div className="rounded-md border">
             <table className="w-full">
               <thead className="bg-muted/50">
-                <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-right w-32">Amount</th></tr>
+                <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-left w-32">Date</th><th className="p-2 text-right w-32">Amount</th></tr>
               </thead>
               <tbody>
                 {(r.items ?? []).map((it, i) => (
                   <tr key={i} className="border-t">
                     <td className="p-2">{i + 1}</td>
                     <td className="p-2">{it.activity}</td>
+                    <td className="p-2">{it.activity_date ? format(new Date(it.activity_date), "PP") : "—"}</td>
                     <td className="p-2 text-right">{fmtKES(Number(it.amount))}</td>
                   </tr>
                 ))}
                 <tr className="border-t bg-muted/40">
-                  <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
+                  <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
                   <td className="p-2 text-right font-bold">{fmtKES(Number(r.total_amount))}</td>
                 </tr>
               </tbody>
@@ -757,6 +766,7 @@ function RequestCard({
                   <tr>
                     <th className="w-10 p-2 text-left">#</th>
                     <th className="p-2 text-left">Item / Activity</th>
+                    <th className="w-40 p-2 text-left">Activity date</th>
                     <th className="w-32 p-2 text-left">Amount</th>
                     <th className="w-10 p-2"></th>
                   </tr>
@@ -767,6 +777,9 @@ function RequestCard({
                       <td className="p-2 text-muted-foreground">{i + 1}</td>
                       <td className="p-2">
                         <Textarea rows={2} value={it.activity} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, activity: e.target.value } : x))} className="min-h-[44px]" />
+                      </td>
+                      <td className="p-2">
+                        <Input type="date" value={it.activity_date} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, activity_date: e.target.value } : x))} />
                       </td>
                       <td className="p-2">
                         <Input inputMode="decimal" value={it.amount} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, amount: e.target.value.replace(/[^0-9.]/g, "") } : x))} />
@@ -781,7 +794,7 @@ function RequestCard({
                     </tr>
                   ))}
                   <tr className="border-t bg-muted/40">
-                    <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
+                    <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
                     <td className="p-2 font-bold">{fmtKES(editTotal)}</td>
                     <td></td>
                   </tr>
