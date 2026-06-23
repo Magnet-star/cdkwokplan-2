@@ -613,18 +613,20 @@ function statusBadge(s: FRStatus) {
 /* ===================== Request card ===================== */
 
 function RequestCard({
-  r, toPDFData, canAct, onChanged,
+  r, toPDFData, canAct, onChanged, cdkOffice,
 }: {
   r: FRRow;
   toPDFData: (r: FRRow) => FinanceRequestPDFData;
   canAct: boolean;
   onChanged: () => void;
+  cdkOffice?: CdkOffice | null;
 }) {
   const { user, profile, roles, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   type ApproverRole = "finance_admin" | "vicar_general" | "procurator";
   const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust"; role: ApproverRole }>(null);
   const [signName, setSignName] = useState("");
+  const [accountUsed, setAccountUsed] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -639,14 +641,25 @@ function RequestCard({
     roles.includes("finance_admin") ? "finance_admin"
       : roles.includes("vicar_general") ? "vicar_general"
         : roles.includes("procurator") ? "procurator" : null;
-  // Super admin can act on behalf of all three approval roles.
+  // A super admin can ONLY act for the role corresponding to their own CDK
+  // office account (CDK Finance → finance_admin, Vicar General → vicar_general,
+  // CDK Procurator → procurator). Other super admins cannot approve here.
+  const superAdminRole: ApproverRole | null =
+    cdkOffice === "finance" ? "finance_admin"
+      : cdkOffice === "vicar" ? "vicar_general"
+        : cdkOffice === "procurator" ? "procurator" : null;
   const actableRoles: ApproverRole[] = isSuperAdmin
-    ? ["finance_admin", "vicar_general", "procurator"]
+    ? (superAdminRole ? [superAdminRole] : [])
     : (ownApproverRole ? [ownApproverRole] : []);
 
   const roleLabel = (role: ApproverRole) =>
     role === "finance_admin" ? "Finance Administrator"
       : role === "vicar_general" ? "Vicar General" : "Procurator";
+
+  // The only account allowed in the "Account used" select is the signed-in
+  // user's own account — this prevents a super admin from approving on
+  // behalf of another office.
+  const myAccountLabel = `Myself — ${profile?.full_name ?? "current account"}`;
 
   const submitDecision = async () => {
     if (!user || !dialog) return;
