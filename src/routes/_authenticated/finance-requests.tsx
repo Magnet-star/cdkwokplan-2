@@ -723,17 +723,36 @@ function RequestCard({
             <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} />
           </div>
 
-          {canAct && !isMine && approverRole && r.status !== "cancelled" && (
-            <div className="flex flex-wrap gap-2 border-t pt-3">
-              <Button size="sm" onClick={() => { setDialog({ decision: "approve" }); setSignName(profile?.full_name ?? ""); }}>
-                <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => { setDialog({ decision: "reject" }); setSignName(profile?.full_name ?? ""); }}>
-                <XCircle className="mr-1 h-4 w-4" /> Reject
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => { setDialog({ decision: "adjust" }); setSignName(profile?.full_name ?? ""); }}>
-                <RefreshCw className="mr-1 h-4 w-4" /> Ask for budget adjustment
-              </Button>
+          {canAct && !isMine && actableRoles.length > 0 && r.status !== "cancelled" && (
+            <div className="space-y-2 border-t pt-3">
+              {actableRoles.map((role) => {
+                const currentDecision =
+                  role === "finance_admin" ? r.finance_admin_decision
+                    : role === "vicar_general" ? r.vicar_general_decision
+                      : r.procurator_decision;
+                const openDialog = (decision: "approve" | "reject" | "adjust") => {
+                  setDialog({ decision, role });
+                  setSignName(profile?.full_name ?? "");
+                  setNote("");
+                };
+                return (
+                  <div key={role} className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium w-44">{roleLabel(role)}{currentDecision ? ` · ${currentDecision}` : ""}:</span>
+                    <Button size="sm" onClick={() => openDialog("approve")}>
+                      <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => openDialog("reject")}>
+                      <XCircle className="mr-1 h-4 w-4" /> Reject
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => openDialog("adjust")}>
+                      <RefreshCw className="mr-1 h-4 w-4" /> Adjust budget
+                    </Button>
+                  </div>
+                );
+              })}
+              {isSuperAdmin && (
+                <p className="text-[11px] text-muted-foreground">As Super Admin you can sign on behalf of any approver. Date is filled automatically.</p>
+              )}
             </div>
           )}
         </div>
