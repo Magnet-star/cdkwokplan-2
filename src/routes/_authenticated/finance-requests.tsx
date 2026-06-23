@@ -703,7 +703,7 @@ function RequestCard({
         <div>
           <p className="font-medium">{r.department_name ?? "—"} — {fmtKES(Number(r.total_amount))}</p>
           <p className="text-xs text-muted-foreground">By {r.requester_name} · {format(new Date(r.submitted_at), "PPp")}</p>
-          <p className="text-xs text-muted-foreground">Sent to: {r.selected_super_admin_name ?? "—"}</p>
+          <p className="text-xs text-muted-foreground">Sent to: {[r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || "—"}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
