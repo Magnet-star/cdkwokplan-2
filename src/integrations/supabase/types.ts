@@ -524,6 +524,8 @@ export type Database = {
           procurator_id: string | null
           procurator_name: string | null
           procurator_note: string | null
+          procurator_super_admin_id: string | null
+          procurator_super_admin_name: string | null
           requester_id: string
           requester_name: string
           requester_signature: string
@@ -538,6 +540,8 @@ export type Database = {
           vicar_general_id: string | null
           vicar_general_name: string | null
           vicar_general_note: string | null
+          vicar_super_admin_id: string | null
+          vicar_super_admin_name: string | null
         }
         Insert: {
           created_at?: string
@@ -556,6 +560,8 @@ export type Database = {
           procurator_id?: string | null
           procurator_name?: string | null
           procurator_note?: string | null
+          procurator_super_admin_id?: string | null
+          procurator_super_admin_name?: string | null
           requester_id: string
           requester_name: string
           requester_signature: string
@@ -570,6 +576,8 @@ export type Database = {
           vicar_general_id?: string | null
           vicar_general_name?: string | null
           vicar_general_note?: string | null
+          vicar_super_admin_id?: string | null
+          vicar_super_admin_name?: string | null
         }
         Update: {
           created_at?: string
@@ -588,6 +596,8 @@ export type Database = {
           procurator_id?: string | null
           procurator_name?: string | null
           procurator_note?: string | null
+          procurator_super_admin_id?: string | null
+          procurator_super_admin_name?: string | null
           requester_id?: string
           requester_name?: string
           requester_signature?: string
@@ -602,6 +612,8 @@ export type Database = {
           vicar_general_id?: string | null
           vicar_general_name?: string | null
           vicar_general_note?: string | null
+          vicar_super_admin_id?: string | null
+          vicar_super_admin_name?: string | null
         }
         Relationships: [
           {
