@@ -46,7 +46,7 @@ interface FRRow {
 
 interface SuperAdminOption { id: string; full_name: string; }
 
-const emptyItem = (): ItemRow => ({ activity: "", amount: "" });
+const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "" });
 
 type Period = "day" | "week" | "month" | "year" | "all";
 
