@@ -1003,7 +1003,15 @@ export type Database = {
       lookup_email_by_phone: { Args: { _phone: string }; Returns: string }
     }
     Enums: {
-      app_role: "super_admin" | "hod" | "staff" | "administrator" | "driver"
+      app_role:
+        | "super_admin"
+        | "hod"
+        | "staff"
+        | "administrator"
+        | "driver"
+        | "finance_admin"
+        | "vicar_general"
+        | "procurator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1131,7 +1139,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "hod", "staff", "administrator", "driver"],
+      app_role: [
+        "super_admin",
+        "hod",
+        "staff",
+        "administrator",
+        "driver",
+        "finance_admin",
+        "vicar_general",
+        "procurator",
+      ],
     },
   },
 } as const
