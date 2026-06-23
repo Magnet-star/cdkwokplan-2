@@ -861,7 +861,7 @@ function RequestCard({
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDialog(null)}>Cancel</Button>
-            <Button onClick={submitDecision} disabled={saving || (dialog?.decision !== "approve" && !note.trim())}>
+            <Button onClick={submitDecision} disabled={saving || !signName.trim() || !accountUsed || (dialog?.decision !== "approve" && !note.trim())}>
               {saving ? "Saving…" : "Confirm"}
             </Button>
           </DialogFooter>
