@@ -495,7 +495,7 @@ function ApproverPanel({
           {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
           {!loading && filtered.length === 0 && <p className="text-sm text-muted-foreground">Nothing in this range.</p>}
           <GroupedRequests rows={filtered}>
-            {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={isApprover} onChanged={onChanged} superAdmins={superAdmins} />}
+            {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={isApprover} onChanged={onChanged} />}
           </GroupedRequests>
         </CardContent>
       </Card>
