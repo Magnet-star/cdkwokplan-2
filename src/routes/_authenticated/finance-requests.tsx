@@ -558,7 +558,8 @@ function RequestCard({
 }) {
   const { user, profile, roles, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
-  const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust" }>(null);
+  type ApproverRole = "finance_admin" | "vicar_general" | "procurator";
+  const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust"; role: ApproverRole }>(null);
   const [signName, setSignName] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
@@ -571,17 +572,25 @@ function RequestCard({
   const [savingEdit, setSavingEdit] = useState(false);
   const editTotal = useMemo(() => editItems.reduce((s, i) => s + (Number(i.amount) || 0), 0), [editItems]);
 
-  const approverRole: "finance_admin" | "vicar_general" | "procurator" | null =
+  const ownApproverRole: ApproverRole | null =
     roles.includes("finance_admin") ? "finance_admin"
       : roles.includes("vicar_general") ? "vicar_general"
         : roles.includes("procurator") ? "procurator" : null;
+  // Super admin can act on behalf of all three approval roles.
+  const actableRoles: ApproverRole[] = isSuperAdmin
+    ? ["finance_admin", "vicar_general", "procurator"]
+    : (ownApproverRole ? [ownApproverRole] : []);
+
+  const roleLabel = (role: ApproverRole) =>
+    role === "finance_admin" ? "Finance Administrator"
+      : role === "vicar_general" ? "Vicar General" : "Procurator";
 
   const submitDecision = async () => {
-    if (!user || !approverRole || !dialog) return;
+    if (!user || !dialog) return;
     if (!signName.trim()) return toast.error("Please type your name to sign");
     setSaving(true);
     const nowIso = new Date().toISOString();
-    const prefix = approverRole;
+    const prefix = dialog.role;
     const decisionValue = dialog.decision === "approve" ? "approved" : dialog.decision === "reject" ? "rejected" : "adjustment_requested";
     const update: Record<string, unknown> = {
       [`${prefix}_id`]: user.id,
