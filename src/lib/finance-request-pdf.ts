@@ -5,6 +5,7 @@ import { format, parseISO } from "date-fns";
 export interface FinanceItem {
   activity: string;
   amount: number | string;
+  activity_date?: string | null;
 }
 
 export interface FinanceRequestPDFData {
