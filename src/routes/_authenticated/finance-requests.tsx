@@ -762,10 +762,11 @@ function RequestCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {dialog?.decision === "approve" ? "Approve request" : dialog?.decision === "reject" ? "Reject request" : "Request budget adjustment"}
+              {dialog?.decision === "approve" ? "Approve" : dialog?.decision === "reject" ? "Reject" : "Request budget adjustment"}
+              {dialog ? ` — ${roleLabel(dialog.role)}` : ""}
             </DialogTitle>
             <DialogDescription>
-              Sign by typing your full name. {dialog?.decision !== "approve" && "Please add a note explaining your decision."}
+              Sign by typing your full name (date is recorded automatically). {dialog?.decision !== "approve" && "Please add a note explaining your decision."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
