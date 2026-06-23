@@ -11,15 +11,19 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { Banknote, Plus, Trash2, Download, Send, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
+import {
+  format, startOfDay, startOfWeek, startOfMonth, startOfYear, endOfDay, endOfWeek, endOfMonth, endOfYear, isWithinInterval,
+} from "date-fns";
+import { Banknote, Plus, Trash2, Download, Send, CheckCircle2, XCircle, RefreshCw, Pencil, Ban, ChevronDown, ChevronUp } from "lucide-react";
 import { downloadFinanceRequestPDF, type FinanceRequestPDFData } from "@/lib/finance-request-pdf";
+import { downloadFinanceSummaryPDF } from "@/lib/finance-summary-pdf";
 
 export const Route = createFileRoute("/_authenticated/finance-requests")({
   component: FinanceRequestsPage,
 });
 
 interface ItemRow { activity: string; amount: string; }
+type FRStatus = "pending" | "approved" | "rejected" | "adjustment_requested" | "cancelled";
 
 interface FRRow {
   id: string;
@@ -33,30 +37,42 @@ interface FRRow {
   total_amount: number;
   selected_super_admin_id: string;
   selected_super_admin_name: string | null;
-  status: "pending" | "approved" | "rejected" | "adjustment_requested";
+  status: FRStatus;
   submitted_at: string;
-  finance_admin_name: string | null;
-  finance_admin_decision: string | null;
-  finance_admin_note: string | null;
-  finance_admin_at: string | null;
-  vicar_general_name: string | null;
-  vicar_general_decision: string | null;
-  vicar_general_note: string | null;
-  vicar_general_at: string | null;
-  procurator_name: string | null;
-  procurator_decision: string | null;
-  procurator_note: string | null;
-  procurator_at: string | null;
+  finance_admin_name: string | null; finance_admin_decision: string | null; finance_admin_note: string | null; finance_admin_at: string | null;
+  vicar_general_name: string | null; vicar_general_decision: string | null; vicar_general_note: string | null; vicar_general_at: string | null;
+  procurator_name: string | null; procurator_decision: string | null; procurator_note: string | null; procurator_at: string | null;
 }
 
 interface SuperAdminOption { id: string; full_name: string; }
 
 const emptyItem = (): ItemRow => ({ activity: "", amount: "" });
 
+type Period = "day" | "week" | "month" | "year" | "all";
+
+function rangeFor(period: Period, ref = new Date()) {
+  switch (period) {
+    case "day": return { start: startOfDay(ref), end: endOfDay(ref), label: format(ref, "PP") };
+    case "week": {
+      const s = startOfWeek(ref, { weekStartsOn: 1 });
+      const e = endOfWeek(ref, { weekStartsOn: 1 });
+      return { start: s, end: e, label: `${format(s, "PP")} – ${format(e, "PP")}` };
+    }
+    case "month": return { start: startOfMonth(ref), end: endOfMonth(ref), label: format(ref, "MMMM yyyy") };
+    case "year": return { start: startOfYear(ref), end: endOfYear(ref), label: format(ref, "yyyy") };
+    case "all": return { start: new Date(0), end: new Date(8640000000000000), label: "All time" };
+  }
+}
+
+function fmtKES(n: number) {
+  return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", minimumFractionDigits: 2 }).format(n || 0);
+}
+
 function FinanceRequestsPage() {
-  const { user, profile, roles } = useAuth();
-  const isHod = roles.includes("hod");
+  const { user, profile, roles, isSuperAdmin } = useAuth();
+  const isHod = roles.includes("hod") || isSuperAdmin; // super admin can also submit
   const isApprover =
+    isSuperAdmin ||
     roles.includes("finance_admin") ||
     roles.includes("vicar_general") ||
     roles.includes("procurator");
@@ -73,10 +89,10 @@ function FinanceRequestsPage() {
   const [selectedAdminId, setSelectedAdminId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
-  const total = useMemo(
-    () => items.reduce((s, i) => s + (Number(i.amount) || 0), 0),
-    [items],
-  );
+  // tab for super-admin: their own vs incoming
+  const [tab, setTab] = useState<"incoming" | "mine">(isSuperAdmin ? "incoming" : "mine");
+
+  const total = useMemo(() => items.reduce((s, i) => s + (Number(i.amount) || 0), 0), [items]);
 
   const refresh = async () => {
     setLoading(true);
@@ -84,38 +100,22 @@ function FinanceRequestsPage() {
       .from("finance_requests")
       .select("*")
       .order("submitted_at", { ascending: false });
-    if (error) {
-      toast.error(error.message);
-      setRequests([]);
-    } else {
-      setRequests((data ?? []) as unknown as FRRow[]);
-    }
+    if (error) { toast.error(error.message); setRequests([]); }
+    else setRequests((data ?? []) as unknown as FRRow[]);
     setLoading(false);
   };
 
   useEffect(() => {
     void refresh();
     void (async () => {
-      // load super admins
-      const { data: roleRows } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "super_admin");
+      const { data: roleRows } = await supabase.from("user_roles").select("user_id").eq("role", "super_admin");
       const ids = (roleRows ?? []).map((r: { user_id: string }) => r.user_id);
       if (ids.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", ids);
+        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
         setSuperAdmins(((profs ?? []) as { id: string; full_name: string }[]).sort((a, b) => a.full_name.localeCompare(b.full_name)));
       }
-      // load department name from profile
       if (profile?.department_id) {
-        const { data: dept } = await supabase
-          .from("departments")
-          .select("name")
-          .eq("id", profile.department_id)
-          .maybeSingle();
+        const { data: dept } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
         if (dept) setDepartmentName((dept as { name: string }).name);
       }
     })();
@@ -131,18 +131,9 @@ function FinanceRequestsPage() {
     e.preventDefault();
     if (!user || !profile) return;
     const cleaned = items.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
-    if (cleaned.length === 0) {
-      toast.error("Add at least one item with an amount");
-      return;
-    }
-    if (!signature.trim()) {
-      toast.error("Please type your name to sign");
-      return;
-    }
-    if (!selectedAdminId) {
-      toast.error("Please select a Super Admin recipient");
-      return;
-    }
+    if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
+    if (!signature.trim()) return toast.error("Please type your name to sign");
+    if (!selectedAdminId) return toast.error("Please select a Super Admin recipient");
     setSubmitting(true);
     const adminName = superAdmins.find((s) => s.id === selectedAdminId)?.full_name ?? null;
     const { error } = await supabase.from("finance_requests").insert({
@@ -158,41 +149,21 @@ function FinanceRequestsPage() {
       selected_super_admin_name: adminName,
     });
     setSubmitting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) return toast.error(error.message);
     toast.success("Finance request submitted");
     setItems([emptyItem(), emptyItem(), emptyItem(), emptyItem(), emptyItem()]);
-    setSignature("");
-    setMpesa("");
-    setSelectedAdminId("");
+    setSignature(""); setMpesa(""); setSelectedAdminId("");
     void refresh();
   };
 
   const toPDFData = (r: FRRow): FinanceRequestPDFData => ({
-    id: r.id,
-    requester_name: r.requester_name,
-    requester_signature: r.requester_signature,
-    mpesa_phone: r.mpesa_phone,
-    department_name: r.department_name,
-    items: r.items ?? [],
-    total_amount: Number(r.total_amount) || 0,
-    submitted_at: r.submitted_at,
-    selected_super_admin_name: r.selected_super_admin_name,
-    status: r.status,
-    finance_admin_name: r.finance_admin_name,
-    finance_admin_decision: r.finance_admin_decision,
-    finance_admin_note: r.finance_admin_note,
-    finance_admin_at: r.finance_admin_at,
-    vicar_general_name: r.vicar_general_name,
-    vicar_general_decision: r.vicar_general_decision,
-    vicar_general_note: r.vicar_general_note,
-    vicar_general_at: r.vicar_general_at,
-    procurator_name: r.procurator_name,
-    procurator_decision: r.procurator_decision,
-    procurator_note: r.procurator_note,
-    procurator_at: r.procurator_at,
+    id: r.id, requester_name: r.requester_name, requester_signature: r.requester_signature,
+    mpesa_phone: r.mpesa_phone, department_name: r.department_name, items: r.items ?? [],
+    total_amount: Number(r.total_amount) || 0, submitted_at: r.submitted_at,
+    selected_super_admin_name: r.selected_super_admin_name, status: r.status,
+    finance_admin_name: r.finance_admin_name, finance_admin_decision: r.finance_admin_decision, finance_admin_note: r.finance_admin_note, finance_admin_at: r.finance_admin_at,
+    vicar_general_name: r.vicar_general_name, vicar_general_decision: r.vicar_general_decision, vicar_general_note: r.vicar_general_note, vicar_general_at: r.vicar_general_at,
+    procurator_name: r.procurator_name, procurator_decision: r.procurator_decision, procurator_note: r.procurator_note, procurator_at: r.procurator_at,
   });
 
   const myRequests = requests.filter((r) => r.requester_id === user?.id);
@@ -201,171 +172,381 @@ function FinanceRequestsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#660000] text-white">
-          <Banknote className="h-5 w-5" />
-        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#660000] text-white"><Banknote className="h-5 w-5" /></div>
         <div>
           <h1 className="text-2xl font-bold">Finance Requests</h1>
           <p className="text-sm text-muted-foreground">Submit funding requests and track approvals.</p>
         </div>
       </div>
 
-      {isHod && (
-        <Card>
-          <CardHeader>
-            <CardTitle>New finance request</CardTitle>
-            <CardDescription>
-              Requested by <strong>{profile?.full_name ?? "—"}</strong>
-              {departmentName && <> · Department: <strong>{departmentName}</strong></>}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={submitRequest} className="space-y-5">
-              <div className="overflow-x-auto rounded-md border">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/60">
-                    <tr>
-                      <th className="w-12 p-2 text-left">#</th>
-                      <th className="p-2 text-left">Item / Activity</th>
-                      <th className="w-44 p-2 text-left">Amount (KES)</th>
-                      <th className="w-12 p-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((it, i) => (
-                      <tr key={i} className="border-t">
-                        <td className="p-2 text-muted-foreground">{i + 1}</td>
-                        <td className="p-2">
-                          <Input
-                            value={it.activity}
-                            onChange={(e) => updateItem(i, "activity", e.target.value)}
-                            placeholder="Describe the item or activity"
-                          />
-                        </td>
-                        <td className="p-2">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={it.amount}
-                            onChange={(e) => updateItem(i, "amount", e.target.value)}
-                            placeholder="0.00"
-                          />
-                        </td>
-                        <td className="p-2">
-                          {items.length > 1 && (
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(i)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="border-t bg-muted/40">
-                      <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
-                      <td className="p-2 font-bold">KES {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      <td></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                <Plus className="mr-1 h-4 w-4" /> Add another item
-              </Button>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label>Signed by (type your name) *</Label>
-                  <Input value={signature} onChange={(e) => setSignature(e.target.value)} placeholder="Your full name as signature" required />
-                </div>
-                <div>
-                  <Label>Date & time (auto)</Label>
-                  <Input value={format(new Date(), "PPpp")} readOnly disabled />
-                </div>
-                <div>
-                  <Label>M-Pesa phone (in case funds are sent to you)</Label>
-                  <Input value={mpesa} onChange={(e) => setMpesa(e.target.value)} placeholder="e.g. 0712 345 678" />
-                </div>
-                <div>
-                  <Label>Send to Super Admin *</Label>
-                  <Select value={selectedAdminId} onValueChange={setSelectedAdminId}>
-                    <SelectTrigger><SelectValue placeholder="Select super admin recipient" /></SelectTrigger>
-                    <SelectContent>
-                      {superAdmins.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Button type="submit" disabled={submitting}>
-                <Send className="mr-1 h-4 w-4" /> {submitting ? "Submitting…" : "Submit request"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      {isSuperAdmin && (
+        <div className="flex flex-wrap gap-2">
+          <Button variant={tab === "incoming" ? "default" : "outline"} size="sm" onClick={() => setTab("incoming")}>Incoming for approval</Button>
+          <Button variant={tab === "mine" ? "default" : "outline"} size="sm" onClick={() => setTab("mine")}>My department request</Button>
+        </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>My finance requests</CardTitle>
-          <CardDescription>Requests you have submitted. Track approvals here.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
-          {!loading && myRequests.length === 0 && <p className="text-sm text-muted-foreground">No requests yet.</p>}
-          {myRequests.map((r) => (
-            <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={false} onChanged={refresh} />
-          ))}
-        </CardContent>
-      </Card>
+      {/* HOD / Super Admin submitter view */}
+      {isHod && (!isSuperAdmin || tab === "mine") && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>New finance request</CardTitle>
+              <CardDescription>
+                Requested by <strong>{profile?.full_name ?? "—"}</strong>
+                {departmentName && <> · Department: <strong>{departmentName}</strong></>}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={submitRequest} className="space-y-5">
+                <div className="overflow-x-auto rounded-md border">
+                  <table className="w-full text-sm table-fixed">
+                    <thead className="bg-muted/60">
+                      <tr>
+                        <th className="w-10 p-2 text-left">#</th>
+                        <th className="p-2 text-left">Item / Activity</th>
+                        <th className="w-32 p-2 text-left">Amount (KES)</th>
+                        <th className="w-10 p-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((it, i) => (
+                        <tr key={i} className="border-t align-top">
+                          <td className="p-2 text-muted-foreground">{i + 1}</td>
+                          <td className="p-2">
+                            <Textarea
+                              rows={2}
+                              value={it.activity}
+                              onChange={(e) => updateItem(i, "activity", e.target.value)}
+                              placeholder="Describe the item or activity"
+                              className="min-h-[44px]"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              inputMode="decimal"
+                              value={it.amount}
+                              onChange={(e) => updateItem(i, "amount", e.target.value.replace(/[^0-9.]/g, ""))}
+                              placeholder="0.00"
+                            />
+                          </td>
+                          <td className="p-2">
+                            {items.length > 1 && (
+                              <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(i)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="border-t bg-muted/40">
+                        <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
+                        <td className="p-2 font-bold">{fmtKES(total)}</td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                  <Plus className="mr-1 h-4 w-4" /> Add another item
+                </Button>
 
-      {(isApprover || incomingRequests.length > 0) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {isApprover ? "Requests awaiting your decision" : "Requests sent to you"}
-            </CardTitle>
-            <CardDescription>
-              {isApprover
-                ? "As an approver you can approve, reject, or request a budget adjustment."
-                : "Requests sent to you by HODs."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {incomingRequests.length === 0 && <p className="text-sm text-muted-foreground">Nothing here yet.</p>}
-            {incomingRequests.map((r) => (
-              <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={isApprover} onChanged={refresh} />
-            ))}
-          </CardContent>
-        </Card>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Signed by (type your name) *</Label>
+                    <Input value={signature} onChange={(e) => setSignature(e.target.value)} placeholder="Your full name as signature" required />
+                  </div>
+                  <div>
+                    <Label>Date & time (auto)</Label>
+                    <Input value={format(new Date(), "PPpp")} readOnly disabled />
+                  </div>
+                  <div>
+                    <Label>M-Pesa phone (in case funds are sent to you)</Label>
+                    <Input value={mpesa} onChange={(e) => setMpesa(e.target.value)} placeholder="e.g. 0712 345 678" />
+                  </div>
+                  <div>
+                    <Label>Send to Super Admin *</Label>
+                    <Select value={selectedAdminId} onValueChange={setSelectedAdminId}>
+                      <SelectTrigger><SelectValue placeholder="Select super admin recipient" /></SelectTrigger>
+                      <SelectContent>
+                        {superAdmins.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Button type="submit" disabled={submitting}>
+                  <Send className="mr-1 h-4 w-4" /> {submitting ? "Submitting…" : "Submit request"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <DepartmentalReport myRequests={myRequests} />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>My finance requests</CardTitle>
+              <CardDescription>Edit or cancel while still pending. Cancelled requests stay on record.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+              {!loading && myRequests.length === 0 && <p className="text-sm text-muted-foreground">No requests yet.</p>}
+              <GroupedRequests rows={myRequests}>
+                {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={false} onChanged={refresh} superAdmins={superAdmins} />}
+              </GroupedRequests>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Approver / Super admin incoming view */}
+      {(isApprover || incomingRequests.length > 0) && (!isSuperAdmin || tab === "incoming") && (
+        <ApproverPanel
+          incomingRequests={incomingRequests}
+          loading={loading}
+          isApprover={isApprover}
+          toPDFData={toPDFData}
+          onChanged={refresh}
+          superAdmins={superAdmins}
+        />
       )}
     </div>
   );
 }
 
-function statusBadge(s: FRRow["status"]) {
-  const map: Record<FRRow["status"], { label: string; cls: string }> = {
+/* ===================== Departmental Report ===================== */
+
+function DepartmentalReport({ myRequests }: { myRequests: FRRow[] }) {
+  const [period, setPeriod] = useState<Period>("week");
+  const range = useMemo(() => rangeFor(period), [period]);
+  const filtered = useMemo(
+    () => myRequests.filter((r) => isWithinInterval(new Date(r.submitted_at), { start: range.start, end: range.end })),
+    [myRequests, range],
+  );
+  const requested = filtered.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+  const approved = filtered.filter((r) => r.status === "approved").reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+        <div>
+          <CardTitle className="text-lg">Departmental finance report</CardTitle>
+          <CardDescription>{range.label}</CardDescription>
+        </div>
+        <PeriodSelect value={period} onChange={setPeriod} />
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Stat label="Requests submitted" value={String(filtered.length)} />
+          <Stat label="Total requested" value={fmtKES(requested)} />
+          <Stat label="Total approved" value={fmtKES(approved)} accent />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ===================== Approver / Super-admin panel ===================== */
+
+function ApproverPanel({
+  incomingRequests, loading, isApprover, toPDFData, onChanged, superAdmins,
+}: {
+  incomingRequests: FRRow[];
+  loading: boolean;
+  isApprover: boolean;
+  toPDFData: (r: FRRow) => FinanceRequestPDFData;
+  onChanged: () => void;
+  superAdmins: SuperAdminOption[];
+}) {
+  const [period, setPeriod] = useState<Period>("week");
+  const [dept, setDept] = useState<string>("all");
+
+  const range = useMemo(() => rangeFor(period), [period]);
+
+  const departments = useMemo(() => {
+    const set = new Set<string>();
+    incomingRequests.forEach((r) => { if (r.department_name) set.add(r.department_name); });
+    return Array.from(set).sort();
+  }, [incomingRequests]);
+
+  const filtered = useMemo(() => incomingRequests.filter((r) => {
+    const inPeriod = isWithinInterval(new Date(r.submitted_at), { start: range.start, end: range.end });
+    const inDept = dept === "all" || r.department_name === dept;
+    return inPeriod && inDept;
+  }), [incomingRequests, range, dept]);
+
+  const totalRequested = filtered.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+  const totalApproved = filtered.filter((r) => r.status === "approved").reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+
+  const downloadSummary = () => {
+    downloadFinanceSummaryPDF({
+      title: `Finance Requests Report (${period === "all" ? "All time" : period})`,
+      periodLabel: range.label,
+      departmentLabel: dept === "all" ? "All departments" : dept,
+      rows: filtered.map((r) => ({
+        submitted_at: r.submitted_at,
+        department_name: r.department_name,
+        requester_name: r.requester_name,
+        total_amount: Number(r.total_amount) || 0,
+        status: r.status,
+      })),
+    });
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle>Finance overview</CardTitle>
+            <CardDescription>{range.label}{dept !== "all" ? ` · ${dept}` : " · all departments"}</CardDescription>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <PeriodSelect value={period} onChange={setPeriod} includeAll />
+            <Select value={dept} onValueChange={setDept}>
+              <SelectTrigger className="w-[200px]"><SelectValue placeholder="Department" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All departments</SelectItem>
+                {departments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={downloadSummary}>
+              <Download className="mr-1 h-4 w-4" /> Download PDF
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Stat label="Requests submitted" value={String(filtered.length)} />
+            <Stat label="Amount requested (KES)" value={fmtKES(totalRequested)} />
+            <Stat label="Amount approved (KES)" value={fmtKES(totalApproved)} accent />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{isApprover ? "Requests awaiting your decision" : "Requests sent to you"}</CardTitle>
+          <CardDescription>Grouped by day, week, month and year for easy review.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {!loading && filtered.length === 0 && <p className="text-sm text-muted-foreground">Nothing in this range.</p>}
+          <GroupedRequests rows={filtered}>
+            {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={isApprover} onChanged={onChanged} superAdmins={superAdmins} />}
+          </GroupedRequests>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+/* ===================== Grouped list (clamped) ===================== */
+
+function GroupedRequests({ rows, children }: { rows: FRRow[]; children: (r: FRRow) => React.ReactNode }) {
+  // Group by year → month → week → day. Render collapsibles.
+  const tree = useMemo(() => {
+    const root: Record<string, Record<string, Record<string, Record<string, FRRow[]>>>> = {};
+    rows.forEach((r) => {
+      const d = new Date(r.submitted_at);
+      const y = format(d, "yyyy");
+      const m = format(d, "MMMM yyyy");
+      const w = `Week of ${format(startOfWeek(d, { weekStartsOn: 1 }), "MMM d")}`;
+      const day = format(d, "EEE, MMM d");
+      (((((root[y] ??= {})[m] ??= {})[w] ??= {})[day] ??= [])).push(r);
+    });
+    return root;
+  }, [rows]);
+
+  const years = Object.keys(tree).sort((a, b) => Number(b) - Number(a));
+  if (years.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      {years.map((y) => (
+        <Collapsible key={y} label={y} defaultOpen>
+          {Object.keys(tree[y]).map((m) => (
+            <Collapsible key={m} label={m} defaultOpen>
+              {Object.keys(tree[y][m]).map((w) => (
+                <Collapsible key={w} label={w} defaultOpen>
+                  {Object.keys(tree[y][m][w]).map((day) => (
+                    <Collapsible key={day} label={day} defaultOpen>
+                      <div className="space-y-3">{tree[y][m][w][day].map(children)}</div>
+                    </Collapsible>
+                  ))}
+                </Collapsible>
+              ))}
+            </Collapsible>
+          ))}
+        </Collapsible>
+      ))}
+    </div>
+  );
+}
+
+function Collapsible({ label, children, defaultOpen = false }: { label: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-md border">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium hover:bg-muted/40">
+        <span>{label}</span>
+        {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </button>
+      {open && <div className="space-y-2 border-t p-2">{children}</div>}
+    </div>
+  );
+}
+
+/* ===================== Bits ===================== */
+
+function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className={`rounded-md border p-3 ${accent ? "bg-emerald-50 border-emerald-200" : "bg-muted/30"}`}>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-lg font-bold">{value}</p>
+    </div>
+  );
+}
+
+function PeriodSelect({ value, onChange, includeAll = false }: { value: Period; onChange: (p: Period) => void; includeAll?: boolean }) {
+  return (
+    <Select value={value} onValueChange={(v) => onChange(v as Period)}>
+      <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="day">Daily</SelectItem>
+        <SelectItem value="week">Weekly</SelectItem>
+        <SelectItem value="month">Monthly</SelectItem>
+        <SelectItem value="year">Yearly</SelectItem>
+        {includeAll && <SelectItem value="all">All time</SelectItem>}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function statusBadge(s: FRStatus) {
+  const map: Record<FRStatus, { label: string; cls: string }> = {
     pending: { label: "Pending", cls: "bg-amber-100 text-amber-900 border-amber-300" },
     approved: { label: "Approved", cls: "bg-emerald-100 text-emerald-900 border-emerald-300" },
     rejected: { label: "Rejected", cls: "bg-red-100 text-red-900 border-red-300" },
     adjustment_requested: { label: "Adjustment requested", cls: "bg-blue-100 text-blue-900 border-blue-300" },
+    cancelled: { label: "Cancelled", cls: "bg-zinc-200 text-zinc-700 border-zinc-300" },
   };
-  const m = map[s];
+  const m = map[s] ?? map.pending;
   return <Badge variant="outline" className={m.cls}>{m.label}</Badge>;
 }
 
+/* ===================== Request card ===================== */
+
 function RequestCard({
-  r,
-  toPDFData,
-  canAct,
-  onChanged,
+  r, toPDFData, canAct, onChanged, superAdmins,
 }: {
   r: FRRow;
   toPDFData: (r: FRRow) => FinanceRequestPDFData;
   canAct: boolean;
   onChanged: () => void;
+  superAdmins: SuperAdminOption[];
 }) {
   const { user, profile, roles } = useAuth();
   const [open, setOpen] = useState(false);
@@ -374,22 +555,22 @@ function RequestCard({
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // determine which approver column to use, based on the acting user's roles
+  // Edit & cancel
+  const [editing, setEditing] = useState(false);
+  const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i) => ({ activity: i.activity, amount: String(i.amount) })));
+  const [editAdminId, setEditAdminId] = useState<string>(r.selected_super_admin_id);
+  const [editMpesa, setEditMpesa] = useState<string>(r.mpesa_phone ?? "");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const editTotal = useMemo(() => editItems.reduce((s, i) => s + (Number(i.amount) || 0), 0), [editItems]);
+
   const approverRole: "finance_admin" | "vicar_general" | "procurator" | null =
-    roles.includes("finance_admin")
-      ? "finance_admin"
-      : roles.includes("vicar_general")
-        ? "vicar_general"
-        : roles.includes("procurator")
-          ? "procurator"
-          : null;
+    roles.includes("finance_admin") ? "finance_admin"
+      : roles.includes("vicar_general") ? "vicar_general"
+        : roles.includes("procurator") ? "procurator" : null;
 
   const submitDecision = async () => {
     if (!user || !approverRole || !dialog) return;
-    if (!signName.trim()) {
-      toast.error("Please type your name to sign");
-      return;
-    }
+    if (!signName.trim()) return toast.error("Please type your name to sign");
     setSaving(true);
     const nowIso = new Date().toISOString();
     const prefix = approverRole;
@@ -401,7 +582,6 @@ function RequestCard({
       [`${prefix}_note`]: note.trim() || null,
       [`${prefix}_at`]: nowIso,
     };
-    // overall status: rejected/adjustment short-circuit; approved if all 3 present approve
     if (dialog.decision === "reject") update.status = "rejected";
     else if (dialog.decision === "adjust") update.status = "adjustment_requested";
     else {
@@ -411,45 +591,70 @@ function RequestCard({
         procurator_decision: r.procurator_decision,
         [`${prefix}_decision`]: "approved",
       };
-      if (
-        after.finance_admin_decision === "approved" &&
-        after.vicar_general_decision === "approved" &&
-        after.procurator_decision === "approved"
-      ) update.status = "approved";
+      if (after.finance_admin_decision === "approved" && after.vicar_general_decision === "approved" && after.procurator_decision === "approved") {
+        update.status = "approved";
+      }
     }
     const { error } = await supabase.from("finance_requests").update(update as never).eq("id", r.id);
     setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) return toast.error(error.message);
     toast.success("Decision recorded");
-    setDialog(null);
-    setSignName("");
-    setNote("");
+    setDialog(null); setSignName(""); setNote(""); onChanged();
+  };
+
+  const cancelRequest = async () => {
+    if (!confirm("Cancel this request? It will remain on record as cancelled.")) return;
+    const { error } = await supabase.from("finance_requests").update({ status: "cancelled" } as never).eq("id", r.id);
+    if (error) return toast.error(error.message);
+    toast.success("Request cancelled"); onChanged();
+  };
+
+  const saveEdit = async () => {
+    const cleaned = editItems.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
+    if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
+    setSavingEdit(true);
+    const adminName = superAdmins.find((s) => s.id === editAdminId)?.full_name ?? r.selected_super_admin_name;
+    const { error } = await supabase.from("finance_requests").update({
+      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0 })),
+      total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
+      selected_super_admin_id: editAdminId,
+      selected_super_admin_name: adminName,
+      mpesa_phone: editMpesa.trim() || null,
+    } as never).eq("id", r.id);
+    setSavingEdit(false);
+    if (error) return toast.error(error.message);
+    toast.success("Request updated");
+    setEditing(false);
     onChanged();
   };
 
   const isMine = r.requester_id === user?.id;
+  const canEditOrCancel = isMine && (r.status === "pending" || r.status === "adjustment_requested");
 
   return (
     <div className="rounded-lg border p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-medium">{r.department_name ?? "—"} — KES {Number(r.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-          <p className="text-xs text-muted-foreground">
-            By {r.requester_name} · {format(new Date(r.submitted_at), "PPp")}
-          </p>
+          <p className="font-medium">{r.department_name ?? "—"} — {fmtKES(Number(r.total_amount))}</p>
+          <p className="text-xs text-muted-foreground">By {r.requester_name} · {format(new Date(r.submitted_at), "PPp")}</p>
           <p className="text-xs text-muted-foreground">Sent to: {r.selected_super_admin_name ?? "—"}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
           <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
             <Download className="mr-1 h-3.5 w-3.5" /> PDF
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setOpen((o) => !o)}>
-            {open ? "Hide" : "Details"}
-          </Button>
+          {canEditOrCancel && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
+              </Button>
+              <Button size="sm" variant="destructive" onClick={cancelRequest}>
+                <Ban className="mr-1 h-3.5 w-3.5" /> Cancel
+              </Button>
+            </>
+          )}
+          <Button size="sm" variant="ghost" onClick={() => setOpen((o) => !o)}>{open ? "Hide" : "Details"}</Button>
         </div>
       </div>
 
@@ -458,19 +663,19 @@ function RequestCard({
           <div className="rounded-md border">
             <table className="w-full">
               <thead className="bg-muted/50">
-                <tr><th className="p-2 text-left">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-right">Amount</th></tr>
+                <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-right w-32">Amount</th></tr>
               </thead>
               <tbody>
                 {(r.items ?? []).map((it, i) => (
                   <tr key={i} className="border-t">
                     <td className="p-2">{i + 1}</td>
                     <td className="p-2">{it.activity}</td>
-                    <td className="p-2 text-right">KES {Number(it.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="p-2 text-right">{fmtKES(Number(it.amount))}</td>
                   </tr>
                 ))}
                 <tr className="border-t bg-muted/40">
                   <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
-                  <td className="p-2 text-right font-bold">KES {Number(r.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td className="p-2 text-right font-bold">{fmtKES(Number(r.total_amount))}</td>
                 </tr>
               </tbody>
             </table>
@@ -488,7 +693,7 @@ function RequestCard({
             <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} />
           </div>
 
-          {canAct && !isMine && approverRole && (
+          {canAct && !isMine && approverRole && r.status !== "cancelled" && (
             <div className="flex flex-wrap gap-2 border-t pt-3">
               <Button size="sm" onClick={() => { setDialog({ decision: "approve" }); setSignName(profile?.full_name ?? ""); }}>
                 <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
@@ -515,14 +720,8 @@ function RequestCard({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <div>
-              <Label>Your name (signature) *</Label>
-              <Input value={signName} onChange={(e) => setSignName(e.target.value)} />
-            </div>
-            <div>
-              <Label>Note {dialog?.decision !== "approve" && "*"}</Label>
-              <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason / details" />
-            </div>
+            <div><Label>Your name (signature) *</Label><Input value={signName} onChange={(e) => setSignName(e.target.value)} /></div>
+            <div><Label>Note {dialog?.decision !== "approve" && "*"}</Label><Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason / details" /></div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDialog(null)}>Cancel</Button>
@@ -532,13 +731,81 @@ function RequestCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit finance request</DialogTitle>
+            <DialogDescription>Update items and recipient. Approvers will see the latest version.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="overflow-x-auto rounded-md border">
+              <table className="w-full text-sm table-fixed">
+                <thead className="bg-muted/60">
+                  <tr>
+                    <th className="w-10 p-2 text-left">#</th>
+                    <th className="p-2 text-left">Item / Activity</th>
+                    <th className="w-32 p-2 text-left">Amount</th>
+                    <th className="w-10 p-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {editItems.map((it, i) => (
+                    <tr key={i} className="border-t align-top">
+                      <td className="p-2 text-muted-foreground">{i + 1}</td>
+                      <td className="p-2">
+                        <Textarea rows={2} value={it.activity} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, activity: e.target.value } : x))} className="min-h-[44px]" />
+                      </td>
+                      <td className="p-2">
+                        <Input inputMode="decimal" value={it.amount} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, amount: e.target.value.replace(/[^0-9.]/g, "") } : x))} />
+                      </td>
+                      <td className="p-2">
+                        {editItems.length > 1 && (
+                          <Button type="button" variant="ghost" size="icon" onClick={() => setEditItems((p) => p.filter((_, idx) => idx !== i))}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t bg-muted/40">
+                    <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
+                    <td className="p-2 font-bold">{fmtKES(editTotal)}</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => setEditItems((p) => [...p, emptyItem()])}>
+              <Plus className="mr-1 h-4 w-4" /> Add item
+            </Button>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <Label>M-Pesa phone</Label>
+                <Input value={editMpesa} onChange={(e) => setEditMpesa(e.target.value)} />
+              </div>
+              <div>
+                <Label>Send to Super Admin</Label>
+                <Select value={editAdminId} onValueChange={setEditAdminId}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {superAdmins.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
+            <Button onClick={saveEdit} disabled={savingEdit}>{savingEdit ? "Saving…" : "Save changes"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function ApprovalBlock({
-  title, name, decision, at, note,
-}: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null }) {
+function ApprovalBlock({ title, name, decision, at, note }: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null }) {
   return (
     <div className="rounded-md border p-3 text-xs">
       <p className="font-semibold">{title}</p>
