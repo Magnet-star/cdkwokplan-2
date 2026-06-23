@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver";
+type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator";
 
 function AdminPage() {
   const { isSuperAdmin, isAdministrator, user } = useAuth();
