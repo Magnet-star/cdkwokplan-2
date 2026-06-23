@@ -847,6 +847,16 @@ function RequestCard({
           </DialogHeader>
           <div className="space-y-3">
             <div><Label>Your name (signature) *</Label><Input value={signName} onChange={(e) => setSignName(e.target.value)} /></div>
+            <div>
+              <Label>Account you are using *</Label>
+              <Select value={accountUsed} onValueChange={setAccountUsed}>
+                <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                <SelectContent>
+                  {user && <SelectItem value={user.id}>{myAccountLabel}</SelectItem>}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-[11px] text-muted-foreground">For audit purposes, you can only approve using your own account.</p>
+            </div>
             <div><Label>Note {dialog?.decision !== "approve" && "*"}</Label><Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason / details" /></div>
           </div>
           <DialogFooter>
