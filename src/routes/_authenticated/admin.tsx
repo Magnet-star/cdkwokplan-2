@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver";
+type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator";
 
 function AdminPage() {
   const { isSuperAdmin, isAdministrator, user } = useAuth();
@@ -584,7 +584,7 @@ function AdminPage() {
                   <div>
                     <Label>Roles</Label>
                     <div className="flex flex-wrap gap-3 pt-2">
-                      {(["staff","driver","hod","administrator","super_admin"] as Role[]).map((r) => (
+                      {(["staff","driver","hod","administrator","super_admin","finance_admin","vicar_general","procurator"] as Role[]).map((r) => (
                         <label key={r} className="flex items-center gap-2 text-sm">
                           <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
                           {r.replace("_", " ")}
@@ -650,7 +650,7 @@ function AdminPage() {
                         </Select>
                       </div>
                       <div className="flex flex-wrap items-end gap-2">
-                        {(["super_admin","administrator","hod","staff","driver"] as Role[]).map((r) => (
+                        {(["super_admin","administrator","hod","staff","driver","finance_admin","vicar_general","procurator"] as Role[]).map((r) => (
                           <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
                             {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
                             {r.replace("_", " ")}

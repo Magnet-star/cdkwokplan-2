@@ -10,7 +10,7 @@ const CreateUserSchema = z.object({
   departmentId: z.string().uuid().nullable().optional(),
   position: z.string().trim().max(120).optional().nullable(),
   phone: z.string().trim().max(40).optional().nullable(),
-  roles: z.array(z.enum(["super_admin", "administrator", "hod", "staff", "driver"])).min(1).max(5),
+  roles: z.array(z.enum(["super_admin", "administrator", "hod", "staff", "driver", "finance_admin", "vicar_general", "procurator"])).min(1).max(8),
 });
 
 
