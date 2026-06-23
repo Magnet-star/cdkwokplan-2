@@ -232,15 +232,17 @@ function FinanceRequestsPage() {
         </div>
       </div>
 
-      {isSuperAdmin && (
+      {(isSuperAdmin || canSeeIncoming) && (
         <div className="flex flex-wrap gap-2">
-          <Button variant={tab === "incoming" ? "default" : "outline"} size="sm" onClick={() => setTab("incoming")}>Incoming for approval</Button>
+          {canSeeIncoming && (
+            <Button variant={tab === "incoming" ? "default" : "outline"} size="sm" onClick={() => setTab("incoming")}>Incoming for approval</Button>
+          )}
           <Button variant={tab === "mine" ? "default" : "outline"} size="sm" onClick={() => setTab("mine")}>My department request</Button>
         </div>
       )}
 
       {/* HOD / Super Admin submitter view */}
-      {isHod && (!isSuperAdmin || tab === "mine") && (
+      {isHod && (!canSeeIncoming || tab === "mine") && (
         <>
           <Card>
             <CardHeader>
