@@ -557,7 +557,7 @@ function RequestCard({
 
   // Edit & cancel
   const [editing, setEditing] = useState(false);
-  const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i) => ({ activity: i.activity, amount: String(i.amount) })));
+  const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i: ItemRow) => ({ activity: i.activity, amount: String(i.amount), activity_date: i.activity_date ?? "" })));
   const [editAdminId, setEditAdminId] = useState<string>(r.selected_super_admin_id);
   const [editMpesa, setEditMpesa] = useState<string>(r.mpesa_phone ?? "");
   const [savingEdit, setSavingEdit] = useState(false);
