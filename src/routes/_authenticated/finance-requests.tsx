@@ -599,13 +599,12 @@ function statusBadge(s: FRStatus) {
 /* ===================== Request card ===================== */
 
 function RequestCard({
-  r, toPDFData, canAct, onChanged, superAdmins,
+  r, toPDFData, canAct, onChanged,
 }: {
   r: FRRow;
   toPDFData: (r: FRRow) => FinanceRequestPDFData;
   canAct: boolean;
   onChanged: () => void;
-  superAdmins: SuperAdminOption[];
 }) {
   const { user, profile, roles, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
@@ -618,7 +617,6 @@ function RequestCard({
   // Edit & cancel
   const [editing, setEditing] = useState(false);
   const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i: ItemRow) => ({ activity: i.activity, amount: String(i.amount), activity_date: i.activity_date ?? "" })));
-  const [editAdminId, setEditAdminId] = useState<string>(r.selected_super_admin_id);
   const [editMpesa, setEditMpesa] = useState<string>(r.mpesa_phone ?? "");
   const [savingEdit, setSavingEdit] = useState(false);
   const editTotal = useMemo(() => editItems.reduce((s, i) => s + (Number(i.amount) || 0), 0), [editItems]);
