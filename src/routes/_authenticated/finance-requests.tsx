@@ -766,6 +766,7 @@ function RequestCard({
                   <tr>
                     <th className="w-10 p-2 text-left">#</th>
                     <th className="p-2 text-left">Item / Activity</th>
+                    <th className="w-40 p-2 text-left">Activity date</th>
                     <th className="w-32 p-2 text-left">Amount</th>
                     <th className="w-10 p-2"></th>
                   </tr>
@@ -776,6 +777,9 @@ function RequestCard({
                       <td className="p-2 text-muted-foreground">{i + 1}</td>
                       <td className="p-2">
                         <Textarea rows={2} value={it.activity} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, activity: e.target.value } : x))} className="min-h-[44px]" />
+                      </td>
+                      <td className="p-2">
+                        <Input type="date" value={it.activity_date} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, activity_date: e.target.value } : x))} />
                       </td>
                       <td className="p-2">
                         <Input inputMode="decimal" value={it.amount} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, amount: e.target.value.replace(/[^0-9.]/g, "") } : x))} />
@@ -790,7 +794,7 @@ function RequestCard({
                     </tr>
                   ))}
                   <tr className="border-t bg-muted/40">
-                    <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
+                    <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
                     <td className="p-2 font-bold">{fmtKES(editTotal)}</td>
                     <td></td>
                   </tr>
