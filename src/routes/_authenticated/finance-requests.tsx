@@ -548,7 +548,7 @@ function RequestCard({
   onChanged: () => void;
   superAdmins: SuperAdminOption[];
 }) {
-  const { user, profile, roles } = useAuth();
+  const { user, profile, roles, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust" }>(null);
   const [signName, setSignName] = useState("");
