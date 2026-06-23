@@ -1,0 +1,1 @@
+CREATE POLICY "Super admin can update finance requests" ON public.finance_requests FOR UPDATE USING (public.has_role(auth.uid(), 'super_admin')) WITH CHECK (public.has_role(auth.uid(), 'super_admin'));
