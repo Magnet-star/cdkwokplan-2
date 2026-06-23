@@ -609,6 +609,13 @@ function RequestCard({
     toast.success("Request cancelled"); onChanged();
   };
 
+  const deleteRequest = async () => {
+    if (!confirm("Permanently delete this request? This cannot be undone.")) return;
+    const { error } = await supabase.from("finance_requests").delete().eq("id", r.id);
+    if (error) return toast.error(error.message);
+    toast.success("Request deleted"); onChanged();
+  };
+
   const saveEdit = async () => {
     const cleaned = editItems.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
     if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
