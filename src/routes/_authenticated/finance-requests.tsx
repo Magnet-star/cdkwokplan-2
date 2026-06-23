@@ -881,13 +881,12 @@ function RequestCard({
                 <Input value={editMpesa} onChange={(e) => setEditMpesa(e.target.value)} />
               </div>
               <div>
-                <Label>Send to Super Admin</Label>
-                <Select value={editAdminId} onValueChange={setEditAdminId}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {superAdmins.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label>Recipients (auto)</Label>
+                <div className="rounded-md border p-2 text-xs space-y-1">
+                  <div>CDK Finance: <strong>{r.selected_super_admin_name ?? "—"}</strong></div>
+                  <div>Vicar General: <strong>{r.vicar_super_admin_name ?? "—"}</strong></div>
+                  <div>CDK Procurator: <strong>{r.procurator_super_admin_name ?? "—"}</strong></div>
+                </div>
               </div>
             </div>
           </div>
