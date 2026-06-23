@@ -152,15 +152,27 @@ function FinanceRequestsPage() {
           deptMap = new Map(((depts ?? []) as { id: string; name: string }[]).map((d) => [d.id, d.name]));
         }
         const pick = (re: RegExp) => {
-          const p = profRows.find((row) => {
+          const p = profRows.find((row) => re.test(row.full_name || ""))
+            ?? profRows.find((row) => {
+              const name = (row.department_id && deptMap.get(row.department_id)) || "";
+              return re.test(name);
+            });
+          return p ? { id: p.id, full_name: p.full_name } : null;
+        };
+        // Match by account name first (e.g. "CDK FINANCE", "VICAR GENERAL", "CDK PROCURATOR"),
+        // then fall back to department name. Procurator is picked before finance so that
+        // "CDK PROCURATOR" isn't mis-matched to the Finance department by the /finance/ regex.
+        next.procurator = pick(/procurator/i);
+        next.vicar = pick(/vicar/i);
+        const financePool = profRows.filter((row) => row.id !== next.procurator?.id && row.id !== next.vicar?.id);
+        const findFinance = (re: RegExp) =>
+          financePool.find((row) => re.test(row.full_name || ""))
+          ?? financePool.find((row) => {
             const name = (row.department_id && deptMap.get(row.department_id)) || "";
             return re.test(name);
           });
-          return p ? { id: p.id, full_name: p.full_name } : null;
-        };
-        next.finance = pick(/finance/i);
-        next.vicar = pick(/vicar/i);
-        next.procurator = pick(/procurator/i);
+        const fin = findFinance(/finance/i);
+        next.finance = fin ? { id: fin.id, full_name: fin.full_name } : null;
       }
       setRecipients(next);
       if (profile?.department_id) {
