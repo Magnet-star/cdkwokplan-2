@@ -584,7 +584,7 @@ function AdminPage() {
                   <div>
                     <Label>Roles</Label>
                     <div className="flex flex-wrap gap-3 pt-2">
-                      {(["staff","driver","hod","administrator","super_admin"] as Role[]).map((r) => (
+                      {(["staff","driver","hod","administrator","super_admin","finance_admin","vicar_general","procurator"] as Role[]).map((r) => (
                         <label key={r} className="flex items-center gap-2 text-sm">
                           <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
                           {r.replace("_", " ")}
