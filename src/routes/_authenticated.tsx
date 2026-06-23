@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tansta
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck, CalendarDays, Eye, ChevronDown, ChevronRight, UsersRound, Lock, BookOpen } from "lucide-react";
+import { Church, LayoutDashboard, ClipboardList, Car, BookText, FileBarChart, Users, LogOut, Building2, Truck, CalendarDays, Eye, ChevronDown, ChevronRight, UsersRound, Lock, BookOpen, Banknote } from "lucide-react";
 import { cn } from "@/lib/utils";
 import dioceseLogo from "@/assets/diocese-logo.jpg";
 import { OfficeAttendanceButton } from "@/components/OfficeAttendanceButton";
