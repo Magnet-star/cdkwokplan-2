@@ -205,6 +205,7 @@ function FinanceRequestsPage() {
                       <tr>
                         <th className="w-10 p-2 text-left">#</th>
                         <th className="p-2 text-left">Item / Activity</th>
+                        <th className="w-40 p-2 text-left">Activity date</th>
                         <th className="w-32 p-2 text-left">Amount (KES)</th>
                         <th className="w-10 p-2"></th>
                       </tr>
@@ -220,6 +221,13 @@ function FinanceRequestsPage() {
                               onChange={(e) => updateItem(i, "activity", e.target.value)}
                               placeholder="Describe the item or activity"
                               className="min-h-[44px]"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="date"
+                              value={it.activity_date}
+                              onChange={(e) => updateItem(i, "activity_date", e.target.value)}
                             />
                           </td>
                           <td className="p-2">
@@ -240,7 +248,7 @@ function FinanceRequestsPage() {
                         </tr>
                       ))}
                       <tr className="border-t bg-muted/40">
-                        <td colSpan={2} className="p-2 text-right font-bold">TOTAL</td>
+                        <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
                         <td className="p-2 font-bold">{fmtKES(total)}</td>
                         <td></td>
                       </tr>
