@@ -944,12 +944,15 @@ function RequestCard({
   );
 }
 
-function ApprovalBlock({ title, name, decision, at, note }: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null }) {
+function ApprovalBlock({ title, name, decision, at, note, accountLabel }: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null; accountLabel?: string }) {
+  const decisionDisplay = decision
+    ? `${decision.replace("_", " ").toUpperCase()}${accountLabel ? ` [${accountLabel}${name ? `: ${name}` : ""}]` : ""}`
+    : "— pending —";
   return (
     <div className="rounded-md border p-3 text-xs">
       <p className="font-semibold">{title}</p>
       <p className="mt-1">Name: <span className="font-medium">{name ?? "— pending —"}</span></p>
-      <p>Decision: <span className="font-medium">{decision ? decision.replace("_", " ") : "— pending —"}</span></p>
+      <p>Decision: <span className="font-medium">{decisionDisplay}</span></p>
       <p>Date: <span className="font-medium">{at ? format(new Date(at), "PPp") : "—"}</span></p>
       {note && <p className="mt-1 text-muted-foreground">Note: {note}</p>}
     </div>
