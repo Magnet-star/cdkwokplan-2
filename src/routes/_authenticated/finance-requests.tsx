@@ -111,8 +111,27 @@ function FinanceRequestsPage() {
       const { data: roleRows } = await supabase.from("user_roles").select("user_id").eq("role", "super_admin");
       const ids = (roleRows ?? []).map((r: { user_id: string }) => r.user_id);
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
-        setSuperAdmins(((profs ?? []) as { id: string; full_name: string }[]).sort((a, b) => a.full_name.localeCompare(b.full_name)));
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name, department_id")
+          .in("id", ids);
+        const profRows = (profs ?? []) as { id: string; full_name: string; department_id: string | null }[];
+        const deptIds = Array.from(new Set(profRows.map((p) => p.department_id).filter((x): x is string => !!x)));
+        let financeDeptIds = new Set<string>();
+        if (deptIds.length) {
+          const { data: depts } = await supabase.from("departments").select("id, name").in("id", deptIds);
+          financeDeptIds = new Set(
+            ((depts ?? []) as { id: string; name: string }[])
+              .filter((d) => /finance/i.test(d.name))
+              .map((d) => d.id),
+          );
+        }
+        // Only CDK Finance super admins are valid recipients for finance requests.
+        const filtered = profRows
+          .filter((p) => p.department_id && financeDeptIds.has(p.department_id))
+          .map(({ id, full_name }) => ({ id, full_name }))
+          .sort((a, b) => a.full_name.localeCompare(b.full_name));
+        setSuperAdmins(filtered);
       }
       if (profile?.department_id) {
         const { data: dept } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
@@ -602,13 +621,9 @@ function RequestCard({
     if (dialog.decision === "reject") update.status = "rejected";
     else if (dialog.decision === "adjust") update.status = "adjustment_requested";
     else {
-      const after = {
-        finance_admin_decision: r.finance_admin_decision,
-        vicar_general_decision: r.vicar_general_decision,
-        procurator_decision: r.procurator_decision,
-        [`${prefix}_decision`]: "approved",
-      };
-      if (after.finance_admin_decision === "approved" && after.vicar_general_decision === "approved" && after.procurator_decision === "approved") {
+      // Finance Administrator approval alone marks the request as approved.
+      // Vicar General and Procurator can remain pending and sign later.
+      if (prefix === "finance_admin") {
         update.status = "approved";
       }
     }
