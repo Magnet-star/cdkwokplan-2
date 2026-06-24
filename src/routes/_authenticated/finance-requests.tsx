@@ -211,7 +211,7 @@ function FinanceRequestsPage() {
   };
 
   const toPDFData = (r: FRRow): FinanceRequestPDFData => ({
-    id: r.id, requester_name: r.requester_name, requester_signature: r.requester_signature,
+    id: r.id, serial_number: r.serial_number, requester_name: r.requester_name, requester_signature: r.requester_signature,
     mpesa_phone: r.mpesa_phone, department_name: r.department_name, items: r.items ?? [],
     total_amount: Number(r.total_amount) || 0, submitted_at: r.submitted_at,
     selected_super_admin_name: [r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || null,
