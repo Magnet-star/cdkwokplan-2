@@ -27,6 +27,7 @@ type FRStatus = "pending" | "approved" | "rejected" | "adjustment_requested" | "
 
 interface FRRow {
   id: string;
+  serial_number: string | null;
   requester_id: string;
   requester_name: string;
   requester_signature: string;
@@ -210,7 +211,7 @@ function FinanceRequestsPage() {
   };
 
   const toPDFData = (r: FRRow): FinanceRequestPDFData => ({
-    id: r.id, requester_name: r.requester_name, requester_signature: r.requester_signature,
+    id: r.id, serial_number: r.serial_number, requester_name: r.requester_name, requester_signature: r.requester_signature,
     mpesa_phone: r.mpesa_phone, department_name: r.department_name, items: r.items ?? [],
     total_amount: Number(r.total_amount) || 0, submitted_at: r.submitted_at,
     selected_super_admin_name: [r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || null,
@@ -779,7 +780,12 @@ function RequestCard({
     <div className="rounded-lg border p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-medium">{r.department_name ?? "—"} — {fmtKES(Number(r.total_amount))}</p>
+          <p className="font-medium">
+            {r.serial_number && (
+              <span className="mr-2 rounded bg-primary/10 px-1.5 py-0.5 font-mono text-xs text-primary">{r.serial_number}</span>
+            )}
+            {r.department_name ?? "—"} — {fmtKES(Number(r.total_amount))}
+          </p>
           <p className="text-xs text-muted-foreground">By {r.requester_name} · {format(new Date(r.submitted_at), "PPp")}</p>
           <p className="text-xs text-muted-foreground">Sent to: {[r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || "—"}</p>
           {(financeApproved || vicarApproved || procuratorApproved) && (

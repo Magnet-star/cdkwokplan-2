@@ -531,6 +531,7 @@ export type Database = {
           requester_signature: string
           selected_super_admin_id: string
           selected_super_admin_name: string | null
+          serial_number: string | null
           status: Database["public"]["Enums"]["finance_request_status"]
           submitted_at: string
           total_amount: number
@@ -567,6 +568,7 @@ export type Database = {
           requester_signature: string
           selected_super_admin_id: string
           selected_super_admin_name?: string | null
+          serial_number?: string | null
           status?: Database["public"]["Enums"]["finance_request_status"]
           submitted_at?: string
           total_amount?: number
@@ -603,6 +605,7 @@ export type Database = {
           requester_signature?: string
           selected_super_admin_id?: string
           selected_super_admin_name?: string | null
+          serial_number?: string | null
           status?: Database["public"]["Enums"]["finance_request_status"]
           submitted_at?: string
           total_amount?: number
@@ -1116,6 +1119,7 @@ export type Database = {
       }
     }
     Functions: {
+      finance_request_prefix: { Args: { _dept_name: string }; Returns: string }
       get_clergy_phone: { Args: { _id: string }; Returns: string }
       get_super_admin_recipients: {
         Args: never
