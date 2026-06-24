@@ -788,7 +788,7 @@ function RequestCard({
               </div>
             ))}
             <div className="flex items-center justify-between rounded-md border bg-muted/40 p-3 text-sm">
-              <span className="font-bold">TOTAL</span>
+              <span className="font-bold">Tot</span>
               <span className="font-bold">{fmtKES(Number(r.total_amount))}</span>
             </div>
           </div>
