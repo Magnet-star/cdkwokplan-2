@@ -21,6 +21,7 @@ interface AuthState {
   loading: boolean;
   rolesLoaded: boolean;
   isSuperAdmin: boolean;
+  isProtectedSuperAdmin: boolean;
   isAdministrator: boolean;
   isHod: boolean;
   isDriver: boolean;
