@@ -1111,6 +1111,14 @@ export type Database = {
     }
     Functions: {
       get_clergy_phone: { Args: { _id: string }; Returns: string }
+      get_super_admin_recipients: {
+        Args: never
+        Returns: {
+          department_name: string
+          full_name: string
+          id: string
+        }[]
+      }
       get_user_department: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
