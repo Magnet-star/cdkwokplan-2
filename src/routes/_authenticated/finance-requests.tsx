@@ -745,12 +745,10 @@ function RequestCard({
     toast.success("Request cancelled"); onChanged();
   };
 
-  const deleteRequest = async () => {
-    if (!confirm("Permanently delete this request? This cannot be undone.")) return;
-    const { error } = await supabase.from("finance_requests").delete().eq("id", r.id);
-    if (error) return toast.error(error.message);
-    toast.success("Request deleted"); onChanged();
-  };
+  // Note: deletion is intentionally not supported. Cancelled, rejected and
+  // approved requests must remain on record for both the requester and the
+  // approving offices for audit purposes.
+
 
   const saveEdit = async () => {
     const cleaned = editItems.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
