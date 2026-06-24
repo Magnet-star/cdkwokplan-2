@@ -323,7 +323,14 @@ function VehicleRequestsPage() {
                             <p className="font-medium">{format(parseISO(r.date_needed), "EEE, MMM d")}{r.time_from ? ` · ${r.time_from}–${r.time_to ?? ""}` : ""} — {r.destination}</p>
                             <p className="text-xs text-muted-foreground">{r.purpose} · Passengers: {r.passengers ?? 1}</p>
                           </div>
-                          <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                            {r.status === "pending" && (
+                              <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
