@@ -228,9 +228,12 @@ function LeaveRequestsPage() {
                       {deptName && ` • ${deptName}`}
                     </CardDescription>
                   </div>
-                  {statusBadge(l.status)}
-                </div>
-              </CardHeader>
+                  <div className="flex flex-col items-end gap-1">
+                    {statusBadge(l.status)}
+                    {l.status === "approved" && l.approved_by && (
+                      <span className="text-[10px] text-muted-foreground">by {approverNames[l.approved_by] ?? "—"}</span>
+                    )}
+                  </div>
               <CardContent className="space-y-2 text-sm">
                 <p><span className="font-medium">Contact while away:</span> {l.contact_while_away}</p>
                 {l.reason && <p><span className="font-medium">Reason:</span> {l.reason}</p>}
