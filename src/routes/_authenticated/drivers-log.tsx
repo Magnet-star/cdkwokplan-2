@@ -44,7 +44,7 @@ interface Profile { id: string; full_name: string }
 interface Vehicle { id: string; registration: string; make_model: string | null; active: boolean }
 
 function DriversLogPage() {
-  const { user, isDriver, isHod, isSuperAdmin, canViewAll, profile, rolesLoaded } = useAuth();
+  const { user, isDriver, isHod, isSuperAdmin, isProtectedSuperAdmin, canViewAll, profile, rolesLoaded } = useAuth();
   const [depts, setDepts] = useState<Dept[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Record<string, Profile>>({});
