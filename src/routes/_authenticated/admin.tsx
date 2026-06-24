@@ -1062,7 +1062,7 @@ function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, c
       patch.approved_by = null;
       patch.approved_at = null;
     }
-    const { data, error } = await supabase.from("work_plans").update(patch).eq("id", plan.id).select();
+    const { data, error } = await (supabase.from("work_plans") as any).update(patch).eq("id", plan.id).select();
     if (error) { toast.error(error.message); return; }
     if (!data || data.length === 0) { toast.error("No permission to update this plan"); return; }
     setStatus(s);
