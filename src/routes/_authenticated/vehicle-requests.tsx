@@ -339,7 +339,12 @@ function VehicleRequestsPage() {
                             <p className="text-xs text-muted-foreground">{r.purpose} · Passengers: {r.passengers ?? 1}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                              {r.status === "approved" && r.approved_by && (
+                                <span className="text-[10px] text-muted-foreground">by {approverNames[r.approved_by] ?? "—"}</span>
+                              )}
+                            </div>
                             {r.status === "pending" && (
                               <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>
                                 <Pencil className="h-4 w-4" />
