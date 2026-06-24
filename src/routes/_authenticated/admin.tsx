@@ -170,7 +170,9 @@ function AdminPage() {
 
   const decideVehicle = async (id: string, status: "approved" | "rejected", notes?: string) => {
     await supabase.from("vehicle_requests").update({
-      status, approver_notes: notes ?? null, approved_at: new Date().toISOString(),
+      status, approver_notes: notes ?? null,
+      approved_at: new Date().toISOString(),
+      approved_by: status === "approved" ? user?.id ?? null : null,
     }).eq("id", id);
     toast.success(`Vehicle request ${status}`);
     load();
@@ -179,7 +181,9 @@ function AdminPage() {
   const decideVehicleBulk = async (ids: string[], status: "approved" | "rejected", notes?: string) => {
     if (ids.length === 0) return;
     const { error } = await supabase.from("vehicle_requests").update({
-      status, approver_notes: notes ?? null, approved_at: new Date().toISOString(),
+      status, approver_notes: notes ?? null,
+      approved_at: new Date().toISOString(),
+      approved_by: status === "approved" ? user?.id ?? null : null,
     }).in("id", ids);
     if (error) toast.error(error.message);
     else { toast.success(`${ids.length} request${ids.length > 1 ? "s" : ""} ${status}`); load(); }
@@ -998,6 +1002,7 @@ function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; set
 }
 
 function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, canEdit = true }: { plan: any; userName: (id: string) => string; users?: any[]; depts?: any[]; onChanged?: () => void; canEdit?: boolean }) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[] | null>(null);
   const [editing, setEditing] = useState(false);
@@ -1049,7 +1054,15 @@ function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, c
   };
 
   const setPlanStatus = async (s: string) => {
-    const { data, error } = await supabase.from("work_plans").update({ status: s }).eq("id", plan.id).select();
+    const patch: Record<string, any> = { status: s };
+    if (s === "approved") {
+      patch.approved_by = user?.id ?? null;
+      patch.approved_at = new Date().toISOString();
+    } else {
+      patch.approved_by = null;
+      patch.approved_at = null;
+    }
+    const { data, error } = await (supabase.from("work_plans") as any).update(patch).eq("id", plan.id).select();
     if (error) { toast.error(error.message); return; }
     if (!data || data.length === 0) { toast.error("No permission to update this plan"); return; }
     setStatus(s);

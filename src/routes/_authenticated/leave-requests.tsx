@@ -32,6 +32,7 @@ interface LR {
   status: "pending" | "approved" | "rejected";
   approver_notes: string | null;
   approved_at: string | null;
+  approved_by: string | null;
   created_at: string;
 }
 
@@ -44,6 +45,7 @@ function LeaveRequestsPage() {
   const [profiles, setProfiles] = useState<Record<string, ProfileLite>>({});
   const [depts, setDepts] = useState<Record<string, DeptLite>>({});
   const [showForm, setShowForm] = useState(false);
+  const [approverNames, setApproverNames] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
     from_date: format(new Date(), "yyyy-MM-dd"),
@@ -75,6 +77,14 @@ function LeaveRequestsPage() {
       setProfiles(pmap);
       setDepts(dmap);
     }
+
+    const approverIds = Array.from(new Set(rows.map((r) => r.approved_by).filter(Boolean) as string[]));
+    if (approverIds.length > 0) {
+      const { data: aps } = await supabase.from("profiles").select("id,full_name").in("id", approverIds);
+      const m: Record<string, string> = {};
+      (aps ?? []).forEach((p: any) => { m[p.id] = p.full_name; });
+      setApproverNames(m);
+    } else setApproverNames({});
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, isSuperAdmin]);
 
@@ -218,7 +228,12 @@ function LeaveRequestsPage() {
                       {deptName && ` • ${deptName}`}
                     </CardDescription>
                   </div>
-                  {statusBadge(l.status)}
+                  <div className="flex flex-col items-end gap-1">
+                    {statusBadge(l.status)}
+                    {l.status === "approved" && l.approved_by && (
+                      <span className="text-[10px] text-muted-foreground">by {approverNames[l.approved_by] ?? "—"}</span>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">

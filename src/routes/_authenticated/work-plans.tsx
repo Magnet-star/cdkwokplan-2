@@ -36,6 +36,8 @@ interface Plan {
   signature: string | null;
   submitted_at: string | null;
   week_start_date: string;
+  approved_by?: string | null;
+  approved_at?: string | null;
 }
 
 function WorkPlansPage() {
@@ -46,6 +48,7 @@ function WorkPlansPage() {
   const [signature, setSignature] = useState("");
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState<Plan[]>([]);
+  const [approverName, setApproverName] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const weekStartStr = useMemo(() => format(weekStart, "yyyy-MM-dd"), [weekStart]);
@@ -81,9 +84,15 @@ function WorkPlansPage() {
     }
 
     const { data: hist } = await supabase
-      .from("work_plans").select("id,status,signature,submitted_at,week_start_date")
+      .from("work_plans").select("id,status,signature,submitted_at,week_start_date,approved_by,approved_at")
       .eq("user_id", user.id).order("week_start_date", { ascending: false }).limit(8);
     setHistory((hist as Plan[]) ?? []);
+
+    const currentApprover = (p as any)?.approved_by ?? null;
+    if (currentApprover) {
+      const { data: ap } = await supabase.from("profiles").select("full_name").eq("id", currentApprover).maybeSingle();
+      setApproverName((ap as any)?.full_name ?? null);
+    } else setApproverName(null);
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, weekStartStr]);
@@ -205,7 +214,12 @@ function WorkPlansPage() {
 
       {submitted && !isEditing && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
-          <span>Submitted on {plan?.submitted_at ? format(parseISO(plan.submitted_at), "PPp") : ""} — signed by {plan?.signature}.</span>
+          <span>
+            Submitted on {plan?.submitted_at ? format(parseISO(plan.submitted_at), "PPp") : ""} — signed by {plan?.signature}.
+            {plan?.status === "approved" && (
+              <span className="ml-2 font-semibold">Approved{approverName ? ` by ${approverName}` : ""}.</span>
+            )}
+          </span>
           <Button size="sm" variant="outline" onClick={handleDownload}><Download className="mr-1 h-3.5 w-3.5" /> Download PDF</Button>
         </div>
       )}

@@ -77,6 +77,7 @@ interface VR {
   status: "pending" | "approved" | "rejected";
   approver_notes: string | null;
   approved_at: string | null;
+  approved_by: string | null;
   created_at: string;
 }
 
@@ -85,6 +86,7 @@ function VehicleRequestsPage() {
   const [list, setList] = useState<VR[]>([]);
   const [deptName, setDeptName] = useState<string | null>(null);
   const [hodName, setHodName] = useState<string | null>(null);
+  const [approverNames, setApproverNames] = useState<Record<string, string>>({});
   const [showForm, setShowForm] = useState(false);
   const [trips, setTrips] = useState<TripRow[]>([emptyTrip()]);
   const [busy, setBusy] = useState(false);
@@ -147,7 +149,15 @@ function VehicleRequestsPage() {
   const load = async () => {
     if (!user) return;
     const { data } = await supabase.from("vehicle_requests").select("*").eq("user_id", user.id).order("date_needed", { ascending: false });
-    setList((data as VR[]) ?? []);
+    const rows = (data as VR[]) ?? [];
+    setList(rows);
+    const approverIds = Array.from(new Set(rows.map((r) => r.approved_by).filter(Boolean) as string[]));
+    if (approverIds.length > 0) {
+      const { data: aps } = await supabase.from("profiles").select("id,full_name").in("id", approverIds);
+      const m: Record<string, string> = {};
+      (aps ?? []).forEach((p: any) => { m[p.id] = p.full_name; });
+      setApproverNames(m);
+    } else setApproverNames({});
     if (profile?.department_id) {
       const { data: dept } = await supabase.from("departments").select("name,hod_id").eq("id", profile.department_id).maybeSingle();
       setDeptName(dept?.name ?? null);
@@ -281,7 +291,12 @@ function VehicleRequestsPage() {
                         <p className="font-serif text-lg">{r.destination}</p>
                         <p className="text-sm text-muted-foreground">{format(parseISO(r.date_needed), "EEEE, MMM d, yyyy")}{r.time_from ? ` · ${r.time_from}–${r.time_to ?? ""}` : ""}</p>
                       </div>
-                      <StatusBadge s={r.status} />
+                      <div className="flex flex-col items-end gap-1">
+                        <StatusBadge s={r.status} />
+                        {r.status === "approved" && r.approved_by && (
+                          <span className="text-[10px] text-muted-foreground">by {approverNames[r.approved_by] ?? "—"}</span>
+                        )}
+                      </div>
                     </div>
                     <p className="mt-2 text-sm">{r.purpose}</p>
                     <p className="mt-1 text-xs text-muted-foreground">Passengers: {r.passengers ?? 1}</p>
@@ -324,7 +339,12 @@ function VehicleRequestsPage() {
                             <p className="text-xs text-muted-foreground">{r.purpose} · Passengers: {r.passengers ?? 1}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                              {r.status === "approved" && r.approved_by && (
+                                <span className="text-[10px] text-muted-foreground">by {approverNames[r.approved_by] ?? "—"}</span>
+                              )}
+                            </div>
                             {r.status === "pending" && (
                               <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>
                                 <Pencil className="h-4 w-4" />

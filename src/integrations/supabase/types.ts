@@ -1019,6 +1019,8 @@ export type Database = {
       }
       work_plans: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           department_id: string | null
           id: string
@@ -1030,6 +1032,8 @@ export type Database = {
           week_start_date: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           department_id?: string | null
           id?: string
@@ -1041,6 +1045,8 @@ export type Database = {
           week_start_date: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           department_id?: string | null
           id?: string
