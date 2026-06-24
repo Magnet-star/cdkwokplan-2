@@ -291,7 +291,12 @@ function VehicleRequestsPage() {
                         <p className="font-serif text-lg">{r.destination}</p>
                         <p className="text-sm text-muted-foreground">{format(parseISO(r.date_needed), "EEEE, MMM d, yyyy")}{r.time_from ? ` · ${r.time_from}–${r.time_to ?? ""}` : ""}</p>
                       </div>
-                      <StatusBadge s={r.status} />
+                      <div className="flex flex-col items-end gap-1">
+                        <StatusBadge s={r.status} />
+                        {r.status === "approved" && r.approved_by && (
+                          <span className="text-[10px] text-muted-foreground">by {approverNames[r.approved_by] ?? "—"}</span>
+                        )}
+                      </div>
                     </div>
                     <p className="mt-2 text-sm">{r.purpose}</p>
                     <p className="mt-1 text-xs text-muted-foreground">Passengers: {r.passengers ?? 1}</p>
