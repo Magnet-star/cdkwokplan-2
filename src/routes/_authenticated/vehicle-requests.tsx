@@ -288,7 +288,12 @@ function VehicleRequestsPage() {
                     {r.approver_notes && (
                       <p className="mt-2 rounded-md bg-muted px-3 py-2 text-xs"><strong>Secretary's note:</strong> {r.approver_notes}</p>
                     )}
-                    <div className="mt-3 flex justify-end">
+                    <div className="mt-3 flex justify-end gap-2">
+                      {r.status === "pending" && (
+                        <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
+                          <Pencil className="mr-1 h-4 w-4" />Edit
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(r, meta)}>
                         <Download className="mr-1 h-4 w-4" />Download PDF
                       </Button>
