@@ -77,6 +77,14 @@ function LeaveRequestsPage() {
       setProfiles(pmap);
       setDepts(dmap);
     }
+
+    const approverIds = Array.from(new Set(rows.map((r) => r.approved_by).filter(Boolean) as string[]));
+    if (approverIds.length > 0) {
+      const { data: aps } = await supabase.from("profiles").select("id,full_name").in("id", approverIds);
+      const m: Record<string, string> = {};
+      (aps ?? []).forEach((p: any) => { m[p.id] = p.full_name; });
+      setApproverNames(m);
+    } else setApproverNames({});
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, isSuperAdmin]);
 
