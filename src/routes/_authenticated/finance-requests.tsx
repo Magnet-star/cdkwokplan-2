@@ -100,12 +100,21 @@ function FinanceRequestsPage() {
 
   // What CDK office is the current user (if super admin) part of?
   const cdkOffice: CdkOffice | null = useMemo(() => {
+    // Resolve based on the signed-in account name FIRST (e.g. "CDK PROCURATOR",
+    // "VICAR GENERAL", "CDK FINANCE") because departments can be shared
+    // (e.g. the Procurator account sits under the Finance department), which
+    // would otherwise misroute approvals to the Finance Administrator slot.
+    const name = (profile?.full_name ?? "").toLowerCase();
+    if (/procurator/.test(name)) return "procurator";
+    if (/vicar/.test(name)) return "vicar";
+    if (/cdk\s*finance|finance\s*admin/.test(name)) return "finance";
+    // Fall back to department name, again checking the more-specific offices first.
     const n = (departmentName ?? "").toLowerCase();
-    if (/finance/.test(n)) return "finance";
-    if (/vicar/.test(n)) return "vicar";
     if (/procurator/.test(n)) return "procurator";
+    if (/vicar/.test(n)) return "vicar";
+    if (/finance/.test(n)) return "finance";
     return null;
-  }, [departmentName]);
+  }, [profile?.full_name, departmentName]);
 
   // Only CDK Finance / Vicar General / Procurator super admins see the incoming approval section.
   const canSeeIncoming = (isSuperAdmin && cdkOffice !== null)
