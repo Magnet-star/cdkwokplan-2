@@ -36,6 +36,8 @@ interface Plan {
   signature: string | null;
   submitted_at: string | null;
   week_start_date: string;
+  approved_by?: string | null;
+  approved_at?: string | null;
 }
 
 function WorkPlansPage() {
