@@ -170,7 +170,9 @@ function AdminPage() {
 
   const decideVehicle = async (id: string, status: "approved" | "rejected", notes?: string) => {
     await supabase.from("vehicle_requests").update({
-      status, approver_notes: notes ?? null, approved_at: new Date().toISOString(),
+      status, approver_notes: notes ?? null,
+      approved_at: new Date().toISOString(),
+      approved_by: status === "approved" ? user?.id ?? null : null,
     }).eq("id", id);
     toast.success(`Vehicle request ${status}`);
     load();
@@ -179,7 +181,9 @@ function AdminPage() {
   const decideVehicleBulk = async (ids: string[], status: "approved" | "rejected", notes?: string) => {
     if (ids.length === 0) return;
     const { error } = await supabase.from("vehicle_requests").update({
-      status, approver_notes: notes ?? null, approved_at: new Date().toISOString(),
+      status, approver_notes: notes ?? null,
+      approved_at: new Date().toISOString(),
+      approved_by: status === "approved" ? user?.id ?? null : null,
     }).in("id", ids);
     if (error) toast.error(error.message);
     else { toast.success(`${ids.length} request${ids.length > 1 ? "s" : ""} ${status}`); load(); }
