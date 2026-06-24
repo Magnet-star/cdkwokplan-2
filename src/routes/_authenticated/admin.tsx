@@ -1054,7 +1054,15 @@ function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, c
   };
 
   const setPlanStatus = async (s: string) => {
-    const { data, error } = await supabase.from("work_plans").update({ status: s }).eq("id", plan.id).select();
+    const patch: Record<string, any> = { status: s };
+    if (s === "approved") {
+      patch.approved_by = user?.id ?? null;
+      patch.approved_at = new Date().toISOString();
+    } else {
+      patch.approved_by = null;
+      patch.approved_at = null;
+    }
+    const { data, error } = await supabase.from("work_plans").update(patch).eq("id", plan.id).select();
     if (error) { toast.error(error.message); return; }
     if (!data || data.length === 0) { toast.error("No permission to update this plan"); return; }
     setStatus(s);
