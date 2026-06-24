@@ -149,7 +149,15 @@ function VehicleRequestsPage() {
   const load = async () => {
     if (!user) return;
     const { data } = await supabase.from("vehicle_requests").select("*").eq("user_id", user.id).order("date_needed", { ascending: false });
-    setList((data as VR[]) ?? []);
+    const rows = (data as VR[]) ?? [];
+    setList(rows);
+    const approverIds = Array.from(new Set(rows.map((r) => r.approved_by).filter(Boolean) as string[]));
+    if (approverIds.length > 0) {
+      const { data: aps } = await supabase.from("profiles").select("id,full_name").in("id", approverIds);
+      const m: Record<string, string> = {};
+      (aps ?? []).forEach((p: any) => { m[p.id] = p.full_name; });
+      setApproverNames(m);
+    } else setApproverNames({});
     if (profile?.department_id) {
       const { data: dept } = await supabase.from("departments").select("name,hod_id").eq("id", profile.department_id).maybeSingle();
       setDeptName(dept?.name ?? null);
