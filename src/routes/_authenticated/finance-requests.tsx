@@ -746,9 +746,14 @@ function RequestCard({
     toast.success("Request cancelled"); onChanged();
   };
 
-  // Note: deletion is intentionally not supported. Cancelled, rejected and
-  // approved requests must remain on record for both the requester and the
-  // approving offices for audit purposes.
+  // Temporary: super admins can delete finance requests while the system is
+  // being tested. Remove this once testing is complete to preserve records.
+  const deleteRequest = async () => {
+    if (!confirm(`Permanently delete this finance request (${r.serial_number ?? r.id})? This cannot be undone.`)) return;
+    const { error } = await supabase.from("finance_requests").delete().eq("id", r.id);
+    if (error) return toast.error(error.message);
+    toast.success("Request deleted"); onChanged();
+  };
 
 
   const saveEdit = async () => {
@@ -810,6 +815,11 @@ function RequestCard({
                 <Ban className="mr-1 h-3.5 w-3.5" /> Cancel
               </Button>
             </>
+          )}
+          {isSuperAdmin && (
+            <Button size="sm" variant="destructive" onClick={deleteRequest}>
+              <Ban className="mr-1 h-3.5 w-3.5" /> Delete
+            </Button>
           )}
           <Button size="sm" variant="ghost" onClick={() => setOpen((o) => !o)}>{open ? "Hide" : "Details"}</Button>
         </div>
