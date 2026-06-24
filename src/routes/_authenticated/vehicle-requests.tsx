@@ -354,6 +354,32 @@ function VehicleRequestsPage() {
           });
         })()}
       </div>
+
+      <Dialog open={!!editing} onOpenChange={(o) => { if (!o) { setEditing(null); setEditForm(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit vehicle request</DialogTitle>
+            <DialogDescription>You can edit a request while it is still pending. Once approved, edits are locked.</DialogDescription>
+          </DialogHeader>
+          {editForm && (
+            <div className="grid gap-3 md:grid-cols-2">
+              <div><Label>Date</Label><Input type="date" value={editForm.date_needed} onChange={(e) => setEditForm({ ...editForm, date_needed: e.target.value })} /></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>From (time)</Label><Input type="time" value={editForm.time_from} onChange={(e) => setEditForm({ ...editForm, time_from: e.target.value })} /></div>
+                <div><Label>To (time)</Label><Input type="time" value={editForm.time_to} onChange={(e) => setEditForm({ ...editForm, time_to: e.target.value })} /></div>
+              </div>
+              <div><Label>Start point</Label><Input value={editForm.start_point} onChange={(e) => setEditForm({ ...editForm, start_point: e.target.value })} /></div>
+              <div><Label>Destination</Label><Input value={editForm.destination} onChange={(e) => setEditForm({ ...editForm, destination: e.target.value })} /></div>
+              <div><Label>Passengers</Label><Input type="number" min={1} value={editForm.passengers} onChange={(e) => setEditForm({ ...editForm, passengers: Number(e.target.value) })} /></div>
+              <div className="md:col-span-2"><Label>Purpose</Label><Textarea rows={3} value={editForm.purpose} onChange={(e) => setEditForm({ ...editForm, purpose: e.target.value })} /></div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditing(null); setEditForm(null); }}>Cancel</Button>
+            <Button onClick={saveEdit} disabled={editBusy}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
