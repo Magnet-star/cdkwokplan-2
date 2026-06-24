@@ -1147,7 +1147,7 @@ function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, c
                   {it.needs_money && <Input type="number" className="w-32" value={it.money_amount ?? ""} onChange={(e) => updateItem(it.id, { money_amount: e.target.value })} placeholder="KES" />}
                   <div className="ml-auto flex gap-2">
                     <Button size="sm" onClick={() => saveItem(it)}>Save</Button>
-                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteItem(it.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    {isProtectedSuperAdmin && <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteItem(it.id)}><Trash2 className="h-3.5 w-3.5" /></Button>}
                   </div>
                 </div>
               </div>
