@@ -829,7 +829,6 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
               {canEdit && <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>}
               {canEdit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
               <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
-              {canEdit && <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>}
             </div>
           </>
         ) : (
@@ -868,11 +867,6 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
                   <p className="text-sm">{v.destination}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{v.purpose} · Passengers: {v.passengers ?? 1}</p>
                 </div>
-                {canEdit && (
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(v.id)} title="Delete day"><Trash2 className="h-3.5 w-3.5" /></Button>
-                  </div>
-                )}
               </div>
             </div>
           ))}
@@ -975,7 +969,7 @@ function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide
             {canEdit && v.status !== "approved" && <Button size="sm" onClick={() => onDecide(v.id, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark approved</Button>}
             {canEdit && v.status !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecide(v.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark rejected</Button>}
             <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
-            {canEdit && <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(v.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Delete</Button>}
+            
           </div>
         )}
       </CardContent>
