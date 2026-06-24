@@ -21,6 +21,7 @@ interface AuthState {
   loading: boolean;
   rolesLoaded: boolean;
   isSuperAdmin: boolean;
+  isProtectedSuperAdmin: boolean;
   isAdministrator: boolean;
   isHod: boolean;
   isDriver: boolean;
@@ -108,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     rolesLoaded,
     isSuperAdmin: roles.includes("super_admin"),
+    isProtectedSuperAdmin: user?.id === "788b3a81-1631-4b53-a08d-35ce5d605f4e" && roles.includes("super_admin"),
     isAdministrator: roles.includes("administrator"),
     isHod: roles.includes("hod"),
     isDriver: roles.includes("driver"),

@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 function ReportsPage() {
-  const { user, profile, isSuperAdmin, isHod } = useAuth();
+  const { user, profile, isSuperAdmin, isProtectedSuperAdmin, isHod } = useAuth();
   const now = new Date();
   const [period, setPeriod] = useState<"monthly" | "weekly">("monthly");
   const [year, setYear] = useState(now.getFullYear());
@@ -309,7 +309,7 @@ function ReportsPage() {
               {uploadedReports.map((r) => {
                 const uploader = userById(r.user_id);
                 const dept = deptById(r.department_id);
-                const canDelete = isSuperAdmin || r.user_id === user?.id;
+                const canDelete = isProtectedSuperAdmin || r.user_id === user?.id;
                 return (
                   <div key={r.id} className="flex flex-wrap items-start justify-between gap-3 rounded-md border border-border p-3 text-sm">
                     <div className="min-w-0 flex-1">

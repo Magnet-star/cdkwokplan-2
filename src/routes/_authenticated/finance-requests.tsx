@@ -663,7 +663,7 @@ function RequestCard({
   onChanged: () => void;
   cdkOffice?: CdkOffice | null;
 }) {
-  const { user, profile, roles, isSuperAdmin } = useAuth();
+  const { user, profile, roles, isSuperAdmin, isProtectedSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   type ApproverRole = "finance_admin" | "vicar_general" | "procurator";
   const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust"; role: ApproverRole }>(null);
@@ -816,7 +816,7 @@ function RequestCard({
               </Button>
             </>
           )}
-          {isSuperAdmin && (
+          {isProtectedSuperAdmin && (
             <Button size="sm" variant="destructive" onClick={deleteRequest}>
               <Ban className="mr-1 h-3.5 w-3.5" /> Delete
             </Button>

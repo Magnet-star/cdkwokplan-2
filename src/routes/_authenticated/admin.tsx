@@ -32,8 +32,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
 type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator";
 
 function AdminPage() {
-  const { isSuperAdmin, isAdministrator, user } = useAuth();
+  const { isSuperAdmin, isProtectedSuperAdmin, isAdministrator, user } = useAuth();
   const canEdit = isSuperAdmin;
+  const canDeleteSubmitted = isProtectedSuperAdmin;
   const canAccess = isSuperAdmin || isAdministrator;
   const search = useSearch({ from: "/_authenticated/admin" }) as { tab?: string };
   const navigate = useNavigate();
@@ -736,7 +737,7 @@ function AdminPage() {
                       {l.achievements && <p className="text-xs text-muted-foreground"><span className="font-medium">Achievements:</span> {l.achievements}</p>}
                       {l.challenges && <p className="text-xs text-muted-foreground"><span className="font-medium">Challenges:</span> {l.challenges}</p>}
                     </div>
-                    {canEdit && <Button size="sm" variant="destructive" onClick={() => deleteLog(l.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>}
+                    {canDeleteSubmitted && <Button size="sm" variant="destructive" onClick={() => deleteLog(l.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>}
                   </div>
                 )}
               />
@@ -774,7 +775,7 @@ function AdminPage() {
                         )}
                       </div>
                     </div>
-                    {canEdit && <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>}
+                    {canDeleteSubmitted && <Button size="sm" variant="destructive" onClick={() => deletePlan(p.id)}><Trash2 className="mr-1 h-3.5 w-3.5" />Delete</Button>}
                   </div>
                 )}
               />
@@ -996,7 +997,7 @@ function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; set
 }
 
 function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, canEdit = true }: { plan: any; userName: (id: string) => string; users?: any[]; depts?: any[]; onChanged?: () => void; canEdit?: boolean }) {
-  const { user } = useAuth();
+  const { user, isProtectedSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[] | null>(null);
   const [editing, setEditing] = useState(false);
@@ -1146,7 +1147,7 @@ function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, c
                   {it.needs_money && <Input type="number" className="w-32" value={it.money_amount ?? ""} onChange={(e) => updateItem(it.id, { money_amount: e.target.value })} placeholder="KES" />}
                   <div className="ml-auto flex gap-2">
                     <Button size="sm" onClick={() => saveItem(it)}>Save</Button>
-                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteItem(it.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    {isProtectedSuperAdmin && <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteItem(it.id)}><Trash2 className="h-3.5 w-3.5" /></Button>}
                   </div>
                 </div>
               </div>
