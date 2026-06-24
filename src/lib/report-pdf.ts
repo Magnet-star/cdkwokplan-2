@@ -230,6 +230,12 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   }
   y = (doc as any).lastAutoTable.finalY + 10;
 
+  // Departmental approved trips (from drivers log)
+  if (deptTrips.length > 0) {
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(40, 30, 30);
+    doc.text("Departmental Trips (Drivers Log — Approved)", 14, y);
+
     const distanceOf = (t: any) => t.closing_km != null ? Number(t.closing_km) - Number(t.starting_km) : 0;
     autoTable(doc, {
       startY: y + 4,
