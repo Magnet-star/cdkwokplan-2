@@ -45,6 +45,7 @@ function LeaveRequestsPage() {
   const [profiles, setProfiles] = useState<Record<string, ProfileLite>>({});
   const [depts, setDepts] = useState<Record<string, DeptLite>>({});
   const [showForm, setShowForm] = useState(false);
+  const [approverNames, setApproverNames] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
     from_date: format(new Date(), "yyyy-MM-dd"),
