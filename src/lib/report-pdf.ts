@@ -125,14 +125,27 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   const totalActivities = items?.length ?? 0;
   const totalVehicles = vehicles?.length ?? 0;
   const approvedVehicles = (vehicles ?? []).filter((v: any) => v.status === "approved").length;
+  const rejectedVehicles = (vehicles ?? []).filter((v: any) => v.status === "rejected").length;
+  const pendingVehicles = totalVehicles - approvedVehicles - rejectedVehicles;
   const totalMoney = (items ?? []).reduce((s: number, i: any) => s + (Number(i.money_amount) || 0), 0);
-  doc.text(`Planned activities: ${totalActivities}`, 14, y); y += 5;
-  doc.text(`Vehicle requests: ${totalVehicles} (${approvedVehicles} approved)`, 14, y); y += 5;
-  doc.text(`Estimated funds requested: KES ${totalMoney.toLocaleString()}`, 14, y); y += 5;
+
+  const finReqs = financeRequests ?? [];
+  const finTotal = finReqs.reduce((s: number, r: any) => s + Number(r.total_amount ?? 0), 0);
+  const finApproved = finReqs.filter((r: any) => r.status === "approved");
+  const finApprovedAmt = finApproved.reduce((s: number, r: any) => s + Number(r.total_amount ?? 0), 0);
+  const finRejected = finReqs.filter((r: any) => r.status === "rejected");
+  const finRejectedAmt = finRejected.reduce((s: number, r: any) => s + Number(r.total_amount ?? 0), 0);
+  const finPending = finReqs.filter((r: any) => r.status !== "approved" && r.status !== "rejected" && r.status !== "cancelled");
+  const finPendingAmt = finPending.reduce((s: number, r: any) => s + Number(r.total_amount ?? 0), 0);
+
+  doc.text(`Planned activities: ${totalActivities}  ·  Estimated funds in plan: KES ${totalMoney.toLocaleString()}`, 14, y); y += 5;
+  doc.text(`Vehicle requests: ${totalVehicles}  (approved ${approvedVehicles}, rejected ${rejectedVehicles}, pending ${pendingVehicles})`, 14, y); y += 5;
+  doc.text(`Finance requests: ${finReqs.length}  ·  Total requested: KES ${finTotal.toLocaleString()}`, 14, y); y += 5;
+  doc.text(`  Approved: KES ${finApprovedAmt.toLocaleString()}  ·  Pending: KES ${finPendingAmt.toLocaleString()}  ·  Rejected: KES ${finRejectedAmt.toLocaleString()}`, 14, y); y += 5;
   doc.text(`Days logged: ${logs?.length ?? 0}`, 14, y); y += 8;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-  doc.text("Activities", 14, y); y += 2;
+  doc.text("Work Plan Activities", 14, y); y += 2;
   autoTable(doc, {
     startY: y + 2,
     head: [["Date", "Activity", "Location", "Vehicle", "Money (KES)"]],
@@ -143,7 +156,9 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
       i.needs_vehicle ? "Yes" : "No",
       i.money_amount ? Number(i.money_amount).toLocaleString() : "",
     ]),
+    foot: totalActivities ? [["", "", "", "Total", totalMoney.toLocaleString()]] : undefined,
     headStyles: { fillColor: [89, 25, 32], textColor: 255 },
+    footStyles: { fillColor: [240, 230, 215], textColor: 40, fontStyle: "bold" },
     styles: { fontSize: 9, cellPadding: 2 },
   });
 
@@ -160,19 +175,60 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
       v.purpose,
       v.status,
     ]),
+    foot: totalVehicles ? [[
+      `Total: ${totalVehicles}`,
+      `Approved: ${approvedVehicles}`,
+      `Pending: ${pendingVehicles}`,
+      `Rejected: ${rejectedVehicles}`,
+    ]] : undefined,
     headStyles: { fillColor: [89, 25, 32], textColor: 255 },
+    footStyles: { fillColor: [240, 230, 215], textColor: 40, fontStyle: "bold" },
     styles: { fontSize: 9, cellPadding: 2 },
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
 
-
-  // Departmental approved trips (from drivers log)
-  if (deptTrips.length > 0) {
-    y = (doc as any).lastAutoTable?.finalY ? Math.max(y, (doc as any).lastAutoTable.finalY) + 10 : y + 6;
-    if (y > 240) { doc.addPage(); y = 20; }
-    doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(40, 30, 30);
-    doc.text("Departmental Trips (Drivers Log — Approved)", 14, y);
+  // Finance Requests
+  if (y > 240) { doc.addPage(); y = 20; }
+  doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(40, 30, 30);
+  doc.text("Finance Requests", 14, y);
+  if (finReqs.length === 0) {
+    autoTable(doc, {
+      startY: y + 4,
+      head: [["Serial", "Submitted", "Items", "Status", "Amount (KES)"]],
+      body: [["—", "—", "No finance requests in this period", "—", "—"]],
+      headStyles: { fillColor: [89, 25, 32], textColor: 255 },
+      styles: { fontSize: 9, cellPadding: 2 },
+    });
+  } else {
+    autoTable(doc, {
+      startY: y + 4,
+      head: [["Serial", "Submitted", "Items", "Status", "Amount (KES)"]],
+      body: finReqs.map((r: any) => {
+        const itemCount = Array.isArray(r.items) ? r.items.length : 0;
+        const firstItem = Array.isArray(r.items) && r.items[0] ? String(r.items[0].activity ?? "") : "";
+        const summary = itemCount > 1 ? `${firstItem} (+${itemCount - 1} more)` : firstItem || "—";
+        return [
+          r.serial_number ?? "—",
+          format(parseISO(r.submitted_at), "MMM d"),
+          summary,
+          r.status,
+          Number(r.total_amount ?? 0).toLocaleString(),
+        ];
+      }),
+      foot: [[
+        `${finReqs.length} request${finReqs.length === 1 ? "" : "s"}`,
+        "",
+        `Approved: KES ${finApprovedAmt.toLocaleString()}  |  Pending: KES ${finPendingAmt.toLocaleString()}  |  Rejected: KES ${finRejectedAmt.toLocaleString()}`,
+        "Total",
+        finTotal.toLocaleString(),
+      ]],
+      headStyles: { fillColor: [89, 25, 32], textColor: 255 },
+      footStyles: { fillColor: [240, 230, 215], textColor: 40, fontStyle: "bold" },
+      styles: { fontSize: 9, cellPadding: 2 },
+    });
+  }
+  y = (doc as any).lastAutoTable.finalY + 10;
 
     const distanceOf = (t: any) => t.closing_km != null ? Number(t.closing_km) - Number(t.starting_km) : 0;
     autoTable(doc, {
