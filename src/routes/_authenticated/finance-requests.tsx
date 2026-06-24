@@ -27,6 +27,7 @@ type FRStatus = "pending" | "approved" | "rejected" | "adjustment_requested" | "
 
 interface FRRow {
   id: string;
+  serial_number: string | null;
   requester_id: string;
   requester_name: string;
   requester_signature: string;
