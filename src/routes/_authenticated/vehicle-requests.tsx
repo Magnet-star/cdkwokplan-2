@@ -86,6 +86,7 @@ function VehicleRequestsPage() {
   const [list, setList] = useState<VR[]>([]);
   const [deptName, setDeptName] = useState<string | null>(null);
   const [hodName, setHodName] = useState<string | null>(null);
+  const [approverNames, setApproverNames] = useState<Record<string, string>>({});
   const [showForm, setShowForm] = useState(false);
   const [trips, setTrips] = useState<TripRow[]>([emptyTrip()]);
   const [busy, setBusy] = useState(false);
