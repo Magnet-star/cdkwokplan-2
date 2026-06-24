@@ -145,44 +145,24 @@ function FinanceRequestsPage() {
   useEffect(() => {
     void refresh();
     void (async () => {
-      const { data: roleRows } = await supabase.from("user_roles").select("user_id").eq("role", "super_admin");
-      const ids = (roleRows ?? []).map((r: { user_id: string }) => r.user_id);
       const next: CdkRecipients = { finance: null, vicar: null, procurator: null };
-      if (ids.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id, full_name, department_id")
-          .in("id", ids);
-        const profRows = (profs ?? []) as { id: string; full_name: string; department_id: string | null }[];
-        const deptIds = Array.from(new Set(profRows.map((p) => p.department_id).filter((x): x is string => !!x)));
-        let deptMap = new Map<string, string>();
-        if (deptIds.length) {
-          const { data: depts } = await supabase.from("departments").select("id, name").in("id", deptIds);
-          deptMap = new Map(((depts ?? []) as { id: string; name: string }[]).map((d) => [d.id, d.name]));
-        }
-        const pick = (re: RegExp) => {
-          const p = profRows.find((row) => re.test(row.full_name || ""))
-            ?? profRows.find((row) => {
-              const name = (row.department_id && deptMap.get(row.department_id)) || "";
-              return re.test(name);
-            });
-          return p ? { id: p.id, full_name: p.full_name } : null;
-        };
-        // Match by account name first (e.g. "CDK FINANCE", "VICAR GENERAL", "CDK PROCURATOR"),
-        // then fall back to department name. Procurator is picked before finance so that
-        // "CDK PROCURATOR" isn't mis-matched to the Finance department by the /finance/ regex.
-        next.procurator = pick(/procurator/i);
-        next.vicar = pick(/vicar/i);
-        const financePool = profRows.filter((row) => row.id !== next.procurator?.id && row.id !== next.vicar?.id);
-        const findFinance = (re: RegExp) =>
-          financePool.find((row) => re.test(row.full_name || ""))
-          ?? financePool.find((row) => {
-            const name = (row.department_id && deptMap.get(row.department_id)) || "";
-            return re.test(name);
-          });
-        const fin = findFinance(/finance/i);
-        next.finance = fin ? { id: fin.id, full_name: fin.full_name } : null;
-      }
+      const { data: rpcRows, error: rpcErr } = await supabase.rpc("get_super_admin_recipients");
+      if (rpcErr) console.warn("get_super_admin_recipients failed", rpcErr);
+      const profRows = ((rpcRows ?? []) as { id: string; full_name: string; department_name: string | null }[]);
+      const pick = (re: RegExp) => {
+        const p = profRows.find((row) => re.test(row.full_name || ""))
+          ?? profRows.find((row) => re.test(row.department_name || ""));
+        return p ? { id: p.id, full_name: p.full_name } : null;
+      };
+      // Match by account name first (e.g. "CDK FINANCE", "VICAR GENERAL", "CDK PROCURATOR"),
+      // then fall back to department name. Procurator is picked before finance so that
+      // "CDK PROCURATOR" isn't mis-matched to the Finance department by the /finance/ regex.
+      next.procurator = pick(/procurator/i);
+      next.vicar = pick(/vicar/i);
+      const financePool = profRows.filter((row) => row.id !== next.procurator?.id && row.id !== next.vicar?.id);
+      const fin = financePool.find((row) => /finance/i.test(row.full_name || ""))
+        ?? financePool.find((row) => /finance/i.test(row.department_name || ""));
+      next.finance = fin ? { id: fin.id, full_name: fin.full_name } : null;
       setRecipients(next);
       if (profile?.department_id) {
         const { data: dept } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
