@@ -88,6 +88,56 @@ function VehicleRequestsPage() {
   const [showForm, setShowForm] = useState(false);
   const [trips, setTrips] = useState<TripRow[]>([emptyTrip()]);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<VR | null>(null);
+  const [editForm, setEditForm] = useState<TripRow | null>(null);
+  const [editBusy, setEditBusy] = useState(false);
+
+  const openEdit = (r: VR) => {
+    const cleaned = (r.destination || "").replace(/\u2192/g, "->");
+    const parts = cleaned.split(/\s*->\s*/);
+    const start = parts.length >= 2 ? parts[0].trim() : "";
+    const dest = parts.length >= 2 ? parts.slice(1).join(" -> ").trim() : cleaned.trim();
+    setEditing(r);
+    setEditForm({
+      date_needed: r.date_needed,
+      time_from: r.time_from ?? "09:00",
+      time_to: r.time_to ?? "17:00",
+      start_point: start,
+      destination: dest,
+      passengers: r.passengers ?? 1,
+      purpose: r.purpose ?? "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editing || !editForm) return;
+    if (!editForm.date_needed || !editForm.destination.trim()) {
+      toast.error("Date and destination are required");
+      return;
+    }
+    setEditBusy(true);
+    const { error } = await supabase
+      .from("vehicle_requests")
+      .update({
+        week_start_date: format(startOfWeek(parseISO(editForm.date_needed), { weekStartsOn: 1 }), "yyyy-MM-dd"),
+        date_needed: editForm.date_needed,
+        time_from: editForm.time_from || null,
+        time_to: editForm.time_to || null,
+        destination: editForm.start_point.trim()
+          ? `${editForm.start_point.trim()} → ${editForm.destination.trim()}`
+          : editForm.destination.trim(),
+        purpose: editForm.purpose,
+        passengers: editForm.passengers,
+      })
+      .eq("id", editing.id)
+      .eq("status", "pending");
+    setEditBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Request updated");
+    setEditing(null);
+    setEditForm(null);
+    load();
+  };
 
   const updateTrip = (i: number, patch: Partial<TripRow>) =>
     setTrips((arr) => arr.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
