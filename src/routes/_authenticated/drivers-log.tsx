@@ -496,7 +496,7 @@ function DriversLogPage() {
                         </Button>
                       </>
                     )}
-                    {isSuperAdmin && (
+                    {isProtectedSuperAdmin && (
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteLog(l.id)}>
                         <Trash2 className="mr-1 h-4 w-4" /> Delete log
                       </Button>
