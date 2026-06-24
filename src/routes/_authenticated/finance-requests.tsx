@@ -773,16 +773,37 @@ function RequestCard({
 
       {open && (
         <div className="mt-3 space-y-3 text-sm">
-          <div className="rounded-md border">
+          {/* Mobile: stacked cards so long activity text wraps and is fully readable */}
+          <div className="space-y-2 sm:hidden">
+            {(r.items ?? []).map((it, i) => (
+              <div key={i} className="rounded-md border p-3 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="font-bold">#{i + 1}</div>
+                  <div className="text-right font-bold">{fmtKES(Number(it.amount))}</div>
+                </div>
+                <div className="mt-1 break-words whitespace-pre-wrap">{it.activity}</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Date: <strong className="text-foreground">{it.activity_date ? format(new Date(it.activity_date), "PP") : "—"}</strong>
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center justify-between rounded-md border bg-muted/40 p-3 text-sm">
+              <span className="font-bold">TOTAL</span>
+              <span className="font-bold">{fmtKES(Number(r.total_amount))}</span>
+            </div>
+          </div>
+
+          {/* Desktop/tablet: original table, now horizontally scrollable as a safety net */}
+          <div className="hidden overflow-x-auto rounded-md border sm:block">
             <table className="w-full">
               <thead className="bg-muted/50">
                 <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-left w-32">Date</th><th className="p-2 text-right w-32">Amount</th></tr>
               </thead>
               <tbody>
                 {(r.items ?? []).map((it, i) => (
-                  <tr key={i} className="border-t">
+                  <tr key={i} className="border-t align-top">
                     <td className="p-2">{i + 1}</td>
-                    <td className="p-2">{it.activity}</td>
+                    <td className="p-2 break-words">{it.activity}</td>
                     <td className="p-2">{it.activity_date ? format(new Date(it.activity_date), "PP") : "—"}</td>
                     <td className="p-2 text-right">{fmtKES(Number(it.amount))}</td>
                   </tr>
