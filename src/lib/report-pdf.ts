@@ -54,6 +54,15 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
     .from("daily_logs").select("*").eq("user_id", target.userId)
     .gte("log_date", startStr).lte("log_date", endStr).order("log_date");
 
+  // Finance requests submitted by this user within the period
+  const { data: financeRequests } = await supabase
+    .from("finance_requests")
+    .select("*")
+    .eq("requester_id", target.userId)
+    .gte("submitted_at", start.toISOString())
+    .lte("submitted_at", end.toISOString())
+    .order("submitted_at");
+
   // Approved driver-log trips for the target's department (if known) — these are trips the
   // department actually made and the HOD approved. They are summarised separately so reports
   // include destinations, fuel litres, money, driver, vehicle and conditions per trip.
