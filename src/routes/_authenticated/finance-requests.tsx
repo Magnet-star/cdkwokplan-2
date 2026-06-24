@@ -551,8 +551,10 @@ function ApproverPanel({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <Stat label="Requests submitted" value={String(filtered.length)} />
+            <Stat label="Pending requests" value={String(pendingCount)} />
+            <Stat label="Approved requests" value={String(approvedCount)} accent />
             <Stat label="Amount requested (KES)" value={fmtKES(totalRequested)} />
             <Stat label="Amount approved (KES)" value={fmtKES(totalApproved)} accent />
           </div>
