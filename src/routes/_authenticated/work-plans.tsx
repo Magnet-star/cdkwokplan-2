@@ -84,9 +84,15 @@ function WorkPlansPage() {
     }
 
     const { data: hist } = await supabase
-      .from("work_plans").select("id,status,signature,submitted_at,week_start_date")
+      .from("work_plans").select("id,status,signature,submitted_at,week_start_date,approved_by,approved_at")
       .eq("user_id", user.id).order("week_start_date", { ascending: false }).limit(8);
     setHistory((hist as Plan[]) ?? []);
+
+    const currentApprover = (p as any)?.approved_by ?? null;
+    if (currentApprover) {
+      const { data: ap } = await supabase.from("profiles").select("full_name").eq("id", currentApprover).maybeSingle();
+      setApproverName((ap as any)?.full_name ?? null);
+    } else setApproverName(null);
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, weekStartStr]);
