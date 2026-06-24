@@ -816,7 +816,7 @@ function RequestCard({
               </Button>
             </>
           )}
-          {isSuperAdmin && (
+          {isProtectedSuperAdmin && (
             <Button size="sm" variant="destructive" onClick={deleteRequest}>
               <Ban className="mr-1 h-3.5 w-3.5" /> Delete
             </Button>
