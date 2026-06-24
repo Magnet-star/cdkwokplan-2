@@ -997,7 +997,7 @@ function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; set
 }
 
 function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, canEdit = true }: { plan: any; userName: (id: string) => string; users?: any[]; depts?: any[]; onChanged?: () => void; canEdit?: boolean }) {
-  const { user } = useAuth();
+  const { user, isProtectedSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[] | null>(null);
   const [editing, setEditing] = useState(false);
