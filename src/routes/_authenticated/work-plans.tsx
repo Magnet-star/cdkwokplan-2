@@ -214,7 +214,12 @@ function WorkPlansPage() {
 
       {submitted && !isEditing && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
-          <span>Submitted on {plan?.submitted_at ? format(parseISO(plan.submitted_at), "PPp") : ""} — signed by {plan?.signature}.</span>
+          <span>
+            Submitted on {plan?.submitted_at ? format(parseISO(plan.submitted_at), "PPp") : ""} — signed by {plan?.signature}.
+            {plan?.status === "approved" && (
+              <span className="ml-2 font-semibold">Approved{approverName ? ` by ${approverName}` : ""}.</span>
+            )}
+          </span>
           <Button size="sm" variant="outline" onClick={handleDownload}><Download className="mr-1 h-3.5 w-3.5" /> Download PDF</Button>
         </div>
       )}
