@@ -868,7 +868,7 @@ function RequestCard({
             <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} accountLabel="CDK Procurator" />
           </div>
 
-          {canAct && !isMine && actableRoles.length > 0 && r.status !== "cancelled" && (
+          {canAct && !isMine && actableRoles.length > 0 && r.status !== "cancelled" && r.status !== "rejected" && (
             <div className="space-y-2 border-t pt-3">
               {actableRoles.map((role) => {
                 const currentDecision =
