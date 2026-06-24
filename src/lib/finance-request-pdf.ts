@@ -10,6 +10,7 @@ export interface FinanceItem {
 
 export interface FinanceRequestPDFData {
   id: string;
+  serial_number?: string | null;
   requester_name: string;
   requester_signature: string;
   mpesa_phone: string | null;
