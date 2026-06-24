@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, endOfWeek, parseISO, addDays } from "date-fns";
 import { toast } from "sonner";
-import { Car, Plus, Download, Trash2, ChevronDown, ChevronRight, ChevronLeft, FolderOpen, CalendarDays } from "lucide-react";
+import { Car, Plus, Download, Trash2, ChevronDown, ChevronRight, ChevronLeft, FolderOpen, CalendarDays, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
