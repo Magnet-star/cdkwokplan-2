@@ -275,7 +275,55 @@ function FinanceRequestsPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={submitRequest} className="space-y-5">
-                <div className="overflow-x-auto rounded-md border">
+                {/* Mobile: stacked editor so each field has its own clear area */}
+                <div className="space-y-3 sm:hidden">
+                  {items.map((it, i) => (
+                    <div key={i} className="rounded-md border p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-muted-foreground">Item #{i + 1}</span>
+                        {items.length > 1 && (
+                          <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(i)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Item / Activity</Label>
+                        <Textarea
+                          rows={2}
+                          value={it.activity}
+                          onChange={(e) => updateItem(i, "activity", e.target.value)}
+                          placeholder="Describe the item or activity"
+                          className="min-h-[60px]"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Activity date</Label>
+                        <Input
+                          type="date"
+                          value={it.activity_date}
+                          onChange={(e) => updateItem(i, "activity_date", e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Amount (KES)</Label>
+                        <Input
+                          inputMode="decimal"
+                          value={it.amount}
+                          onChange={(e) => updateItem(i, "amount", e.target.value.replace(/[^0-9.]/g, ""))}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between rounded-md border bg-muted/40 p-3">
+                    <span className="font-bold">Tot</span>
+                    <span className="font-bold">{fmtKES(total)}</span>
+                  </div>
+                </div>
+
+                {/* Desktop/tablet: table layout */}
+                <div className="hidden overflow-x-auto rounded-md border sm:block">
                   <table className="w-full text-sm table-fixed">
                     <thead className="bg-muted/60">
                       <tr>
