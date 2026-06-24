@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, endOfWeek, parseISO, addDays } from "date-fns";
 import { toast } from "sonner";
-import { Car, Plus, Download, Trash2, ChevronDown, ChevronRight, ChevronLeft, FolderOpen, CalendarDays } from "lucide-react";
+import { Car, Plus, Download, Trash2, ChevronDown, ChevronRight, ChevronLeft, FolderOpen, CalendarDays, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
@@ -88,6 +88,56 @@ function VehicleRequestsPage() {
   const [showForm, setShowForm] = useState(false);
   const [trips, setTrips] = useState<TripRow[]>([emptyTrip()]);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<VR | null>(null);
+  const [editForm, setEditForm] = useState<TripRow | null>(null);
+  const [editBusy, setEditBusy] = useState(false);
+
+  const openEdit = (r: VR) => {
+    const cleaned = (r.destination || "").replace(/\u2192/g, "->");
+    const parts = cleaned.split(/\s*->\s*/);
+    const start = parts.length >= 2 ? parts[0].trim() : "";
+    const dest = parts.length >= 2 ? parts.slice(1).join(" -> ").trim() : cleaned.trim();
+    setEditing(r);
+    setEditForm({
+      date_needed: r.date_needed,
+      time_from: r.time_from ?? "09:00",
+      time_to: r.time_to ?? "17:00",
+      start_point: start,
+      destination: dest,
+      passengers: r.passengers ?? 1,
+      purpose: r.purpose ?? "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editing || !editForm) return;
+    if (!editForm.date_needed || !editForm.destination.trim()) {
+      toast.error("Date and destination are required");
+      return;
+    }
+    setEditBusy(true);
+    const { error } = await supabase
+      .from("vehicle_requests")
+      .update({
+        week_start_date: format(startOfWeek(parseISO(editForm.date_needed), { weekStartsOn: 1 }), "yyyy-MM-dd"),
+        date_needed: editForm.date_needed,
+        time_from: editForm.time_from || null,
+        time_to: editForm.time_to || null,
+        destination: editForm.start_point.trim()
+          ? `${editForm.start_point.trim()} → ${editForm.destination.trim()}`
+          : editForm.destination.trim(),
+        purpose: editForm.purpose,
+        passengers: editForm.passengers,
+      })
+      .eq("id", editing.id)
+      .eq("status", "pending");
+    setEditBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Request updated");
+    setEditing(null);
+    setEditForm(null);
+    load();
+  };
 
   const updateTrip = (i: number, patch: Partial<TripRow>) =>
     setTrips((arr) => arr.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
@@ -238,7 +288,12 @@ function VehicleRequestsPage() {
                     {r.approver_notes && (
                       <p className="mt-2 rounded-md bg-muted px-3 py-2 text-xs"><strong>Secretary's note:</strong> {r.approver_notes}</p>
                     )}
-                    <div className="mt-3 flex justify-end">
+                    <div className="mt-3 flex justify-end gap-2">
+                      {r.status === "pending" && (
+                        <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
+                          <Pencil className="mr-1 h-4 w-4" />Edit
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(r, meta)}>
                         <Download className="mr-1 h-4 w-4" />Download PDF
                       </Button>
@@ -268,7 +323,14 @@ function VehicleRequestsPage() {
                             <p className="font-medium">{format(parseISO(r.date_needed), "EEE, MMM d")}{r.time_from ? ` · ${r.time_from}–${r.time_to ?? ""}` : ""} — {r.destination}</p>
                             <p className="text-xs text-muted-foreground">{r.purpose} · Passengers: {r.passengers ?? 1}</p>
                           </div>
-                          <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                            {r.status === "pending" && (
+                              <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -292,6 +354,32 @@ function VehicleRequestsPage() {
           });
         })()}
       </div>
+
+      <Dialog open={!!editing} onOpenChange={(o) => { if (!o) { setEditing(null); setEditForm(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit vehicle request</DialogTitle>
+            <DialogDescription>You can edit a request while it is still pending. Once approved, edits are locked.</DialogDescription>
+          </DialogHeader>
+          {editForm && (
+            <div className="grid gap-3 md:grid-cols-2">
+              <div><Label>Date</Label><Input type="date" value={editForm.date_needed} onChange={(e) => setEditForm({ ...editForm, date_needed: e.target.value })} /></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>From (time)</Label><Input type="time" value={editForm.time_from} onChange={(e) => setEditForm({ ...editForm, time_from: e.target.value })} /></div>
+                <div><Label>To (time)</Label><Input type="time" value={editForm.time_to} onChange={(e) => setEditForm({ ...editForm, time_to: e.target.value })} /></div>
+              </div>
+              <div><Label>Start point</Label><Input value={editForm.start_point} onChange={(e) => setEditForm({ ...editForm, start_point: e.target.value })} /></div>
+              <div><Label>Destination</Label><Input value={editForm.destination} onChange={(e) => setEditForm({ ...editForm, destination: e.target.value })} /></div>
+              <div><Label>Passengers</Label><Input type="number" min={1} value={editForm.passengers} onChange={(e) => setEditForm({ ...editForm, passengers: Number(e.target.value) })} /></div>
+              <div className="md:col-span-2"><Label>Purpose</Label><Textarea rows={3} value={editForm.purpose} onChange={(e) => setEditForm({ ...editForm, purpose: e.target.value })} /></div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditing(null); setEditForm(null); }}>Cancel</Button>
+            <Button onClick={saveEdit} disabled={editBusy}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
