@@ -234,6 +234,8 @@ function LeaveRequestsPage() {
                       <span className="text-[10px] text-muted-foreground">by {approverNames[l.approved_by] ?? "—"}</span>
                     )}
                   </div>
+                </div>
+              </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <p><span className="font-medium">Contact while away:</span> {l.contact_while_away}</p>
                 {l.reason && <p><span className="font-medium">Reason:</span> {l.reason}</p>}
