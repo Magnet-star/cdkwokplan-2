@@ -48,6 +48,7 @@ function WorkPlansPage() {
   const [signature, setSignature] = useState("");
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState<Plan[]>([]);
+  const [approverName, setApproverName] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const weekStartStr = useMemo(() => format(weekStart, "yyyy-MM-dd"), [weekStart]);
