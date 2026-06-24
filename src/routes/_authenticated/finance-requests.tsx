@@ -746,9 +746,14 @@ function RequestCard({
     toast.success("Request cancelled"); onChanged();
   };
 
-  // Note: deletion is intentionally not supported. Cancelled, rejected and
-  // approved requests must remain on record for both the requester and the
-  // approving offices for audit purposes.
+  // Temporary: super admins can delete finance requests while the system is
+  // being tested. Remove this once testing is complete to preserve records.
+  const deleteRequest = async () => {
+    if (!confirm(`Permanently delete this finance request (${r.serial_number ?? r.id})? This cannot be undone.`)) return;
+    const { error } = await supabase.from("finance_requests").delete().eq("id", r.id);
+    if (error) return toast.error(error.message);
+    toast.success("Request deleted"); onChanged();
+  };
 
 
   const saveEdit = async () => {
