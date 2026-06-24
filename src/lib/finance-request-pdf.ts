@@ -69,6 +69,7 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     y += Math.max(6, lines.length * 5 + 1);
   };
 
+  if (data.serial_number) row("Serial No.:", data.serial_number);
   row("Requested by:", data.requester_name);
   row("Department:", data.department_name ?? "—");
   row("Date submitted:", format(parseISO(data.submitted_at), "PPpp"));
