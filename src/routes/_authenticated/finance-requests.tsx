@@ -510,7 +510,7 @@ function ApproverPanel({
 
   const totalRequested = filtered.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
   const totalApproved = filtered.filter((r) => r.status === "approved").reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
-  const pendingCount = filtered.filter((r) => r.status === "submitted" || r.status === "in_review").length;
+  const pendingCount = filtered.filter((r) => r.status === "pending" || r.status === "adjustment_requested").length;
   const approvedCount = filtered.filter((r) => r.status === "approved").length;
 
   const downloadSummary = () => {
