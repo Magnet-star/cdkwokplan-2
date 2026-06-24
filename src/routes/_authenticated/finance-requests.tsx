@@ -769,7 +769,13 @@ function RequestCard({
   };
 
   const isMine = r.requester_id === user?.id;
+  // Once a request is approved, rejected, or cancelled it is locked: the
+  // requester can no longer edit, cancel, or delete it. Edit/cancel only work
+  // while the request is still pending (or in adjustment_requested).
   const canEditOrCancel = isMine && (r.status === "pending" || r.status === "adjustment_requested");
+  const financeApproved = r.finance_admin_decision === "approved";
+  const vicarApproved = r.vicar_general_decision === "approved";
+  const procuratorApproved = r.procurator_decision === "approved";
 
   return (
     <div className="rounded-lg border p-4">
@@ -778,6 +784,13 @@ function RequestCard({
           <p className="font-medium">{r.department_name ?? "—"} — {fmtKES(Number(r.total_amount))}</p>
           <p className="text-xs text-muted-foreground">By {r.requester_name} · {format(new Date(r.submitted_at), "PPp")}</p>
           <p className="text-xs text-muted-foreground">Sent to: {[r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || "—"}</p>
+          {(financeApproved || vicarApproved || procuratorApproved) && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {financeApproved && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]">✓ CDK Finance</Badge>}
+              {vicarApproved && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]">✓ Vicar General</Badge>}
+              {procuratorApproved && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]">✓ CDK Procurator</Badge>}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
@@ -793,11 +806,6 @@ function RequestCard({
                 <Ban className="mr-1 h-3.5 w-3.5" /> Cancel
               </Button>
             </>
-          )}
-          {isSuperAdmin && (
-            <Button size="sm" variant="destructive" onClick={deleteRequest} title="Super admin: delete record">
-              <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
-            </Button>
           )}
           <Button size="sm" variant="ghost" onClick={() => setOpen((o) => !o)}>{open ? "Hide" : "Details"}</Button>
         </div>
