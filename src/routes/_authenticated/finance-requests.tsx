@@ -780,7 +780,12 @@ function RequestCard({
     <div className="rounded-lg border p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-medium">{r.department_name ?? "—"} — {fmtKES(Number(r.total_amount))}</p>
+          <p className="font-medium">
+            {r.serial_number && (
+              <span className="mr-2 rounded bg-primary/10 px-1.5 py-0.5 font-mono text-xs text-primary">{r.serial_number}</span>
+            )}
+            {r.department_name ?? "—"} — {fmtKES(Number(r.total_amount))}
+          </p>
           <p className="text-xs text-muted-foreground">By {r.requester_name} · {format(new Date(r.submitted_at), "PPp")}</p>
           <p className="text-xs text-muted-foreground">Sent to: {[r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || "—"}</p>
           {(financeApproved || vicarApproved || procuratorApproved) && (
