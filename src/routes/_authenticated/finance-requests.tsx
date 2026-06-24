@@ -510,6 +510,8 @@ function ApproverPanel({
 
   const totalRequested = filtered.reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
   const totalApproved = filtered.filter((r) => r.status === "approved").reduce((s, r) => s + (Number(r.total_amount) || 0), 0);
+  const pendingCount = filtered.filter((r) => r.status === "pending" || r.status === "adjustment_requested").length;
+  const approvedCount = filtered.filter((r) => r.status === "approved").length;
 
   const downloadSummary = () => {
     downloadFinanceSummaryPDF({
@@ -549,8 +551,10 @@ function ApproverPanel({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <Stat label="Requests submitted" value={String(filtered.length)} />
+            <Stat label="Pending requests" value={String(pendingCount)} />
+            <Stat label="Approved requests" value={String(approvedCount)} accent />
             <Stat label="Amount requested (KES)" value={fmtKES(totalRequested)} />
             <Stat label="Amount approved (KES)" value={fmtKES(totalApproved)} accent />
           </div>
