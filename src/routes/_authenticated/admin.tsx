@@ -32,8 +32,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
 type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator";
 
 function AdminPage() {
-  const { isSuperAdmin, isAdministrator, user } = useAuth();
+  const { isSuperAdmin, isProtectedSuperAdmin, isAdministrator, user } = useAuth();
   const canEdit = isSuperAdmin;
+  const canDeleteSubmitted = isProtectedSuperAdmin;
   const canAccess = isSuperAdmin || isAdministrator;
   const search = useSearch({ from: "/_authenticated/admin" }) as { tab?: string };
   const navigate = useNavigate();
