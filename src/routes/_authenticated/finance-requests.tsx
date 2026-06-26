@@ -682,9 +682,9 @@ function ApprovalTracker({ r }: { r: FRRow }) {
   ];
   const allApproved = stages.every((s) => s.decision === "approved");
   return (
-    <div className="mt-2 rounded-md border bg-muted/30 p-2">
+    <div className="mt-2">
       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Approval tracker</p>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-0.5">
         {stages.map((s) => {
           const approved = s.decision === "approved";
           const rejected = s.decision === "rejected";
@@ -692,28 +692,26 @@ function ApprovalTracker({ r }: { r: FRRow }) {
           const approvedWord = s.isAuthorize ? "AUTHORIZED" : "APPROVED";
           const status = approved ? approvedWord : rejected ? "REJECTED" : adjusted ? "ADJUSTMENT REQUESTED" : "PENDING";
           const cls = approved
-            ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+            ? "text-emerald-700"
             : rejected
-              ? "bg-red-100 text-red-900 border-red-300"
+              ? "text-red-700"
               : adjusted
-                ? "bg-blue-100 text-blue-900 border-blue-300"
-                : "bg-amber-100 text-amber-900 border-amber-300";
+                ? "text-blue-700"
+                : "text-amber-700";
           return (
-            <div key={s.key} className="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="font-medium">{s.label}</span>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className={cls + " text-[10px]"}>{status}</Badge>
-                {approved && s.name && (
-                  <span className="text-[10px] text-muted-foreground">by {s.name}{s.at ? ` · ${format(new Date(s.at), "EEE, MMM d, yyyy 'at' h:mm:ss a")}` : ""}</span>
-                )}
-              </div>
+            <div key={s.key} className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-medium min-w-[140px]">{s.label}:</span>
+              <span className={`font-semibold ${cls}`}>{status}</span>
+              {approved && s.name && (
+                <span className="text-[10px] text-muted-foreground">— by {s.name}{s.at ? `, ${format(new Date(s.at), "MMM d, yyyy h:mm a")}` : ""}</span>
+              )}
             </div>
           );
         })}
       </div>
       {allApproved && (
-        <p className="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-center text-xs font-semibold text-emerald-900">
-          YOUR REQUEST HAS BEEN APPROVED &amp; AUTHORIZED — NOW AWAITING ACCOUNTS OFFICE VERDICT
+        <p className="mt-2 text-xs font-semibold text-emerald-800">
+          ✓ YOUR REQUEST HAS BEEN APPROVED &amp; AUTHORIZED — NOW AWAITING ACCOUNTS OFFICE VERDICT
         </p>
       )}
       <DisbursementNotice r={r} />
@@ -724,20 +722,17 @@ function ApprovalTracker({ r }: { r: FRRow }) {
 function DisbursementNotice({ r }: { r: FRRow }) {
   if (!r.accounts_disbursement_status) return null;
   const isAvailable = r.accounts_disbursement_status === "funds_available";
-  const cls = isAvailable
-    ? "border-emerald-300 bg-emerald-50 text-emerald-900"
-    : "border-red-300 bg-red-50 text-red-900";
   const message = isAvailable
     ? "FUNDS AVAILABLE — DISBURSEMENT UNDERWAY"
     : "FUNDS NOT AVAILABLE FOR NOW — SEE FINANCE ADMINISTRATOR FOR GUIDANCE";
   return (
-    <div className={`mt-2 rounded-md border p-2 ${cls}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-wide opacity-80">Disbursement process</p>
-      <p className="mt-1 text-xs font-bold">{message}</p>
+    <div className={`mt-2 border-l-2 pl-2 ${isAvailable ? "border-emerald-500" : "border-red-500"}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Disbursement process</p>
+      <p className={`text-xs font-bold ${isAvailable ? "text-emerald-800" : "text-red-800"}`}>{message}</p>
       {r.accounts_disbursement_name && (
-        <p className="mt-1 text-[10px] opacity-80">
+        <p className="text-[10px] text-muted-foreground">
           by {r.accounts_disbursement_name}
-          {r.accounts_disbursement_at ? ` · ${format(new Date(r.accounts_disbursement_at), "EEE, MMM d, yyyy 'at' h:mm:ss a")}` : ""}
+          {r.accounts_disbursement_at ? `, ${format(new Date(r.accounts_disbursement_at), "MMM d, yyyy h:mm a")}` : ""}
         </p>
       )}
     </div>
@@ -976,27 +971,27 @@ function RequestCard({
       {open && (
         <div className="mt-3 space-y-3 text-sm">
           {/* Mobile: stacked cards so long activity text wraps and is fully readable */}
-          <div className="space-y-2 sm:hidden">
+          <div className="space-y-1 sm:hidden">
             {(r.items ?? []).map((it, i) => (
-              <div key={i} className="rounded-md border p-3 text-sm">
+              <div key={i} className="text-sm py-1.5 border-b border-dashed last:border-0">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="font-bold">#{i + 1}</div>
+                  <div className="font-medium">#{i + 1}</div>
                   <div className="text-right font-bold">{fmtKES(Number(it.amount))}</div>
                 </div>
-                <div className="mt-1 break-words whitespace-pre-wrap">{it.activity}</div>
-                <div className="mt-1 text-xs text-muted-foreground">
+                <div className="break-words whitespace-pre-wrap">{it.activity}</div>
+                <div className="text-xs text-muted-foreground">
                   Date: <strong className="text-foreground">{it.activity_date ? format(new Date(it.activity_date), "PP") : "—"}</strong>
                 </div>
               </div>
             ))}
-            <div className="flex items-center justify-between rounded-md border bg-muted/40 p-3 text-sm">
-              <span className="font-bold">Tot</span>
+            <div className="flex items-center justify-between pt-2 text-sm">
+              <span className="font-bold">TOTAL</span>
               <span className="font-bold">{fmtKES(Number(r.total_amount))}</span>
             </div>
           </div>
 
           {/* Desktop/tablet: original table, now horizontally scrollable as a safety net */}
-          <div className="hidden overflow-x-auto rounded-md border sm:block">
+          <div className="hidden overflow-x-auto sm:block">
             <table className="w-full">
               <thead className="bg-muted/50">
                 <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-left w-32">Date</th><th className="p-2 text-right w-32">Amount</th></tr>
@@ -1184,12 +1179,12 @@ function ApprovalBlock({ title, name, decision, at, note, accountLabel, approved
     ? `${displayWord}${accountLabel ? ` [${accountLabel}${name ? `: ${name}` : ""}]` : ""}`
     : "— pending —";
   return (
-    <div className="rounded-md border p-3 text-xs">
-      <p className="font-semibold">{title}</p>
-      <p className="mt-1">Name: <span className="font-medium">{name ?? "— pending —"}</span></p>
+    <div className="text-xs">
+      <p className="font-semibold text-primary">{title}</p>
+      <p>Name: <span className="font-medium">{name ?? "— pending —"}</span></p>
       <p>Decision: <span className="font-medium">{decisionDisplay}</span></p>
       <p>Date: <span className="font-medium">{at ? format(new Date(at), "PPp") : "—"}</span></p>
-      {note && <p className="mt-1 text-muted-foreground">Note: {note}</p>}
+      {note && <p className="text-muted-foreground">Note: {note}</p>}
     </div>
   );
 }
