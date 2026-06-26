@@ -750,7 +750,7 @@ function ApprovalTracker({ r }: { r: FRRow }) {
       </div>
       {allApproved && (
         <p className="mt-2 text-xs font-semibold text-emerald-800">
-          ✓ YOUR REQUEST HAS BEEN APPROVED &amp; AUTHORIZED — NOW AWAITING ACCOUNTS OFFICE VERDICT
+          ✓ YOUR REQUEST HAS BEEN APPROVED &amp; AUTHORIZED
         </p>
       )}
       <DisbursementNotice r={r} />
