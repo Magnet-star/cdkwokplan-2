@@ -1135,6 +1135,14 @@ export type Database = {
     }
     Functions: {
       finance_request_prefix: { Args: { _dept_name: string }; Returns: string }
+      get_accounts_recipients: {
+        Args: never
+        Returns: {
+          department_name: string
+          full_name: string
+          id: string
+        }[]
+      }
       get_clergy_phone: { Args: { _id: string }; Returns: string }
       get_storage_db_usage: { Args: never; Returns: Json }
       get_super_admin_recipients: {
