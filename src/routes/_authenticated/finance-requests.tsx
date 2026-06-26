@@ -660,16 +660,7 @@ function ActiveAndCompleted({ rows, children }: { rows: FRRow[]; children: (r: F
       )}
       {completed.length > 0 && (
         <Collapsible label={`Completed requests (folded) — ${completed.length}`} defaultOpen={false}>
-          <div className="space-y-3">
-            {completed.map((r) => (
-              <div key={r.id} className="space-y-1">
-                <div className="text-xs font-mono text-muted-foreground">
-                  {(r.submitted_at || "").slice(0, 10)}
-                </div>
-                {children(r)}
-              </div>
-            ))}
-          </div>
+          <CompletedGrouped rows={completed}>{children}</CompletedGrouped>
         </Collapsible>
       )}
     </div>
@@ -685,6 +676,81 @@ function Collapsible({ label, children, defaultOpen = false }: { label: string; 
         {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
       {open && <div className="space-y-2 border-t p-2">{children}</div>}
+    </div>
+  );
+}
+
+function bestDate(r: FRRow): Date {
+  const s = (r as any).accounts_disbursement_at || (r as any).submitted_at || (r as any).created_at;
+  const d = s ? new Date(s) : new Date();
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+
+function CompletedGrouped({ rows, children }: { rows: FRRow[]; children: (r: FRRow) => React.ReactNode }) {
+  const years = useMemo(() => {
+    const byYear = new Map<number, FRRow[]>();
+    rows.forEach((r) => {
+      const y = bestDate(r).getFullYear();
+      if (!byYear.has(y)) byYear.set(y, []);
+      byYear.get(y)!.push(r);
+    });
+    return Array.from(byYear.entries()).sort((a, b) => b[0] - a[0]);
+  }, [rows]);
+
+  return (
+    <div className="space-y-2">
+      {years.map(([year, yearRows]) => {
+        const byMonth = new Map<number, FRRow[]>();
+        yearRows.forEach((r) => {
+          const m = bestDate(r).getMonth();
+          if (!byMonth.has(m)) byMonth.set(m, []);
+          byMonth.get(m)!.push(r);
+        });
+        const months = Array.from(byMonth.entries()).sort((a, b) => b[0] - a[0]);
+        return (
+          <Collapsible key={year} label={`${year} — ${yearRows.length}`} defaultOpen={false}>
+            <div className="space-y-2">
+              {months.map(([m, mRows]) => {
+                const byWeek = new Map<string, FRRow[]>();
+                mRows.forEach((r) => {
+                  const ws = startOfWeek(bestDate(r), { weekStartsOn: 1 });
+                  const key = format(ws, "yyyy-MM-dd");
+                  if (!byWeek.has(key)) byWeek.set(key, []);
+                  byWeek.get(key)!.push(r);
+                });
+                const weeks = Array.from(byWeek.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+                const monthLabel = format(new Date(year, m, 1), "MMMM yyyy");
+                return (
+                  <Collapsible key={m} label={`${monthLabel} — ${mRows.length}`} defaultOpen={false}>
+                    <div className="space-y-2">
+                      {weeks.map(([wkKey, wRows]) => {
+                        const ws = new Date(wkKey);
+                        const we = endOfWeek(ws, { weekStartsOn: 1 });
+                        const wkLabel = `Week of ${format(ws, "MMM d")}–${format(we, "MMM d, yyyy")}`;
+                        const sorted = [...wRows].sort((x, y) => bestDate(y).getTime() - bestDate(x).getTime());
+                        return (
+                          <Collapsible key={wkKey} label={`${wkLabel} — ${wRows.length}`} defaultOpen={false}>
+                            <div className="space-y-3">
+                              {sorted.map((r) => (
+                                <div key={r.id} className="space-y-1">
+                                  <div className="text-xs font-mono text-muted-foreground">
+                                    {format(bestDate(r), "yyyy-MM-dd")}
+                                  </div>
+                                  {children(r)}
+                                </div>
+                              ))}
+                            </div>
+                          </Collapsible>
+                        );
+                      })}
+                    </div>
+                  </Collapsible>
+                );
+              })}
+            </div>
+          </Collapsible>
+        );
+      })}
     </div>
   );
 }
