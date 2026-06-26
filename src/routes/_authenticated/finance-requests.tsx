@@ -964,7 +964,9 @@ function RequestCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {dialog?.decision === "approve" ? "Approve" : dialog?.decision === "reject" ? "Reject" : "Request budget adjustment"}
+              {dialog?.decision === "approve"
+                ? (dialog.role === "finance_admin" ? "Approve" : "Authorize")
+                : dialog?.decision === "reject" ? "Reject" : "Request budget adjustment"}
               {dialog ? ` — ${roleLabel(dialog.role)}` : ""}
             </DialogTitle>
             <DialogDescription>
