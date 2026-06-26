@@ -645,15 +645,10 @@ function DriversLogPage() {
                 {archivedLogs.length > 0 && (
                   <div className="space-y-2">
                     <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Completed trips archive</h3>
-                    <TimeGroupedList
-                      items={archivedLogs}
-                      getDate={(l) => l.log_date ? parseISO(l.log_date) : null}
-                      keyOf={(l) => l.id}
-                      renderItem={renderLog}
-                      groupLabel="Trips"
-                    />
+                    <WeeklyArchiveGroups logs={archivedLogs} renderLog={renderLog} />
                   </div>
                 )}
+
               </div>
             );
           })()}
