@@ -41,9 +41,9 @@ export const Route = createFileRoute("/_authenticated/vehicle-requests")({
 });
 
 function VehicleRequestsRoute() {
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, isAdministrator } = useAuth();
   const [tab, setTab] = useState<"all" | "mine">("all");
-  if (!isSuperAdmin) return <VehicleRequestsPage />;
+  if (!isSuperAdmin && !isAdministrator) return <VehicleRequestsPage />;
   return (
     <div className="space-y-4">
       <div className="inline-flex rounded-md border border-border bg-card p-1">
