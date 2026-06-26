@@ -1179,12 +1179,12 @@ function ApprovalBlock({ title, name, decision, at, note, accountLabel, approved
     ? `${displayWord}${accountLabel ? ` [${accountLabel}${name ? `: ${name}` : ""}]` : ""}`
     : "— pending —";
   return (
-    <div className="rounded-md border p-3 text-xs">
-      <p className="font-semibold">{title}</p>
-      <p className="mt-1">Name: <span className="font-medium">{name ?? "— pending —"}</span></p>
+    <div className="text-xs">
+      <p className="font-semibold text-primary">{title}</p>
+      <p>Name: <span className="font-medium">{name ?? "— pending —"}</span></p>
       <p>Decision: <span className="font-medium">{decisionDisplay}</span></p>
       <p>Date: <span className="font-medium">{at ? format(new Date(at), "PPp") : "—"}</span></p>
-      {note && <p className="mt-1 text-muted-foreground">Note: {note}</p>}
+      {note && <p className="text-muted-foreground">Note: {note}</p>}
     </div>
   );
 }
