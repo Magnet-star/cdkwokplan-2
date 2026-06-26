@@ -654,10 +654,10 @@ function statusBadge(s: FRStatus) {
 
 function ApprovalTracker({ r }: { r: FRRow }) {
   if (r.status === "cancelled" || r.status === "rejected") return null;
-  const stages: { key: string; label: string; decision: string | null; name: string | null; at: string | null }[] = [
-    { key: "fin", label: "Finance Administrator", decision: r.finance_admin_decision, name: r.finance_admin_name, at: r.finance_admin_at },
-    { key: "vg", label: "Vicar General", decision: r.vicar_general_decision, name: r.vicar_general_name, at: r.vicar_general_at },
-    { key: "proc", label: "Procurator", decision: r.procurator_decision, name: r.procurator_name, at: r.procurator_at },
+  const stages: { key: string; label: string; decision: string | null; name: string | null; at: string | null; isAuthorize: boolean }[] = [
+    { key: "fin", label: "Finance Administrator", decision: r.finance_admin_decision, name: r.finance_admin_name, at: r.finance_admin_at, isAuthorize: false },
+    { key: "vg", label: "Vicar General", decision: r.vicar_general_decision, name: r.vicar_general_name, at: r.vicar_general_at, isAuthorize: true },
+    { key: "proc", label: "Procurator", decision: r.procurator_decision, name: r.procurator_name, at: r.procurator_at, isAuthorize: true },
   ];
   const allApproved = stages.every((s) => s.decision === "approved");
   return (
@@ -668,7 +668,8 @@ function ApprovalTracker({ r }: { r: FRRow }) {
           const approved = s.decision === "approved";
           const rejected = s.decision === "rejected";
           const adjusted = s.decision === "adjustment_requested";
-          const status = approved ? "APPROVED" : rejected ? "REJECTED" : adjusted ? "ADJUSTMENT REQUESTED" : "PENDING";
+          const approvedWord = s.isAuthorize ? "AUTHORIZED" : "APPROVED";
+          const status = approved ? approvedWord : rejected ? "REJECTED" : adjusted ? "ADJUSTMENT REQUESTED" : "PENDING";
           const cls = approved
             ? "bg-emerald-100 text-emerald-900 border-emerald-300"
             : rejected
@@ -691,7 +692,7 @@ function ApprovalTracker({ r }: { r: FRRow }) {
       </div>
       {allApproved && (
         <p className="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-center text-xs font-semibold text-emerald-900">
-          YOUR REQUEST HAS BEEN APPROVED — NOW AWAITING ACCOUNTS OFFICE VERDICT
+          YOUR REQUEST HAS BEEN APPROVED &amp; AUTHORIZED — NOW AWAITING ACCOUNTS OFFICE VERDICT
         </p>
       )}
     </div>
@@ -919,8 +920,8 @@ function RequestCard({
 
           <div className="grid gap-3 md:grid-cols-3">
             <ApprovalBlock title="Finance Administrator" name={r.finance_admin_name} decision={r.finance_admin_decision} at={r.finance_admin_at} note={r.finance_admin_note} accountLabel="CDK Finance" />
-            <ApprovalBlock title="Vicar General" name={r.vicar_general_name} decision={r.vicar_general_decision} at={r.vicar_general_at} note={r.vicar_general_note} accountLabel="Vicar General" />
-            <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} accountLabel="CDK Procurator" />
+            <ApprovalBlock title="Vicar General" name={r.vicar_general_name} decision={r.vicar_general_decision} at={r.vicar_general_at} note={r.vicar_general_note} accountLabel="Vicar General" approvedWord="AUTHORIZED" />
+            <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} accountLabel="CDK Procurator" approvedWord="AUTHORIZED" />
           </div>
 
           {canAct && !isMine && actableRoles.length > 0 && r.status !== "cancelled" && r.status !== "rejected" && (
@@ -940,7 +941,7 @@ function RequestCard({
                   <div key={role} className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-medium w-44">{roleLabel(role)}{currentDecision ? ` · ${currentDecision}` : ""}:</span>
                     <Button size="sm" onClick={() => openDialog("approve")}>
-                      <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
+                      <CheckCircle2 className="mr-1 h-4 w-4" /> {role === "finance_admin" ? "Approve" : "Authorize"}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => openDialog("reject")}>
                       <XCircle className="mr-1 h-4 w-4" /> Reject
@@ -963,7 +964,9 @@ function RequestCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {dialog?.decision === "approve" ? "Approve" : dialog?.decision === "reject" ? "Reject" : "Request budget adjustment"}
+              {dialog?.decision === "approve"
+                ? (dialog.role === "finance_admin" ? "Approve" : "Authorize")
+                : dialog?.decision === "reject" ? "Reject" : "Request budget adjustment"}
               {dialog ? ` — ${roleLabel(dialog.role)}` : ""}
             </DialogTitle>
             <DialogDescription>
@@ -1069,9 +1072,10 @@ function RequestCard({
   );
 }
 
-function ApprovalBlock({ title, name, decision, at, note, accountLabel }: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null; accountLabel?: string }) {
-  const decisionDisplay = decision
-    ? `${decision.replace("_", " ").toUpperCase()}${accountLabel ? ` [${accountLabel}${name ? `: ${name}` : ""}]` : ""}`
+function ApprovalBlock({ title, name, decision, at, note, accountLabel, approvedWord }: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null; accountLabel?: string; approvedWord?: string }) {
+  const displayWord = decision === "approved" && approvedWord ? approvedWord : decision ? decision.replace("_", " ").toUpperCase() : null;
+  const decisionDisplay = displayWord
+    ? `${displayWord}${accountLabel ? ` [${accountLabel}${name ? `: ${name}` : ""}]` : ""}`
     : "— pending —";
   return (
     <div className="rounded-md border p-3 text-xs">

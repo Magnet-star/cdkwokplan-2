@@ -127,7 +127,7 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
   doc.line(14, y, pageW - 14, y);
   y += 4;
 
-  const drawApproval = (title: string, name?: string | null, decision?: string | null, when?: string | null, note?: string | null) => {
+  const drawApproval = (title: string, name?: string | null, decision?: string | null, when?: string | null, note?: string | null, approvedWord: string = "APPROVED") => {
     if (y > 250) { doc.addPage(); y = 20; }
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
@@ -138,7 +138,11 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     const lineY = y;
     doc.text(`Name (signature): ${name ?? "— pending —"}`, 14, lineY);
     y += 5;
-    doc.text(`Decision: ${decision ? decision.replace("_", " ").toUpperCase() : "— pending —"}`, 14, y);
+    const decisionText = decision === "approved"
+      ? approvedWord
+      : decision ? decision.replace("_", " ").toUpperCase() : "— pending —";
+    const decisionLabel = approvedWord === "AUTHORIZED" ? "Authorized by" : "Decision";
+    doc.text(`${decisionLabel}: ${decisionText}${decision === "approved" && name ? ` — ${name}` : ""}`, 14, y);
     y += 5;
     doc.text(`Date: ${when ? format(parseISO(when), "PPpp") : "—"}`, 14, y);
     y += 5;
@@ -151,8 +155,8 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
   };
 
   drawApproval("Finance Administrator", data.finance_admin_name, data.finance_admin_decision, data.finance_admin_at, data.finance_admin_note);
-  drawApproval("Vicar General", data.vicar_general_name, data.vicar_general_decision, data.vicar_general_at, data.vicar_general_note);
-  drawApproval("Procurator", data.procurator_name, data.procurator_decision, data.procurator_at, data.procurator_note);
+  drawApproval("Vicar General", data.vicar_general_name, data.vicar_general_decision, data.vicar_general_at, data.vicar_general_note, "AUTHORIZED");
+  drawApproval("Procurator", data.procurator_name, data.procurator_decision, data.procurator_at, data.procurator_note, "AUTHORIZED");
 
   return doc;
 }
