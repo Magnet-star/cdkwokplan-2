@@ -951,45 +951,9 @@ function RequestCard({
               );
             }
             return (
-              <>
-                {isAccountsViewer && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant={r.accounts_disbursement_status === "funds_available" ? "default" : "outline"}
-                      className={r.accounts_disbursement_status === "funds_available" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
-                      onClick={() => setDisbursement("funds_available")}
-                      disabled={disbursing}
-                    >
-                      <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Funds Available
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={r.accounts_disbursement_status === "funds_not_available" ? "default" : "outline"}
-                      className={r.accounts_disbursement_status === "funds_not_available" ? "bg-red-600 hover:bg-red-700 text-white" : ""}
-                      onClick={() => setDisbursement("funds_not_available")}
-                      disabled={disbursing}
-                    >
-                      <XCircle className="mr-1 h-3.5 w-3.5" /> Funds Not Available
-                    </Button>
-                  </>
-                )}
-                {(() => {
-                  const needsDisbursement = isAccountsViewer && !r.accounts_disbursement_status;
-                  if (needsDisbursement) {
-                    return (
-                      <span className="rounded border border-dashed border-muted-foreground/40 px-2 py-1 text-[11px] text-muted-foreground">
-                        Select Funds Available / Not Available to enable download
-                      </span>
-                    );
-                  }
-                  return (
-                    <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
-                      <Download className="mr-1 h-3.5 w-3.5" /> PDF
-                    </Button>
-                  );
-                })()}
-              </>
+              <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
+                <Download className="mr-1 h-3.5 w-3.5" /> PDF
+              </Button>
             );
           })()}
           {canEditOrCancel && (
