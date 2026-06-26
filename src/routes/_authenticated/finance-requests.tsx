@@ -874,23 +874,8 @@ function RequestCard({
     toast.success("Request deleted"); onChanged();
   };
 
-  // CDK Accounts disbursement decision
-  const [disbursing, setDisbursing] = useState(false);
-  const setDisbursement = async (status: "funds_available" | "funds_not_available") => {
-    if (!user || !profile) return;
-    const label = status === "funds_available" ? "FUNDS AVAILABLE" : "FUNDS NOT AVAILABLE";
-    if (!confirm(`Mark this request as ${label}?`)) return;
-    setDisbursing(true);
-    const { error } = await supabase.from("finance_requests").update({
-      accounts_disbursement_status: status,
-      accounts_disbursement_by: user.id,
-      accounts_disbursement_name: profile.full_name,
-      accounts_disbursement_at: new Date().toISOString(),
-    } as never).eq("id", r.id);
-    setDisbursing(false);
-    if (error) return toast.error(error.message);
-    toast.success(`Marked as ${label}`); onChanged();
-  };
+
+
 
 
 
