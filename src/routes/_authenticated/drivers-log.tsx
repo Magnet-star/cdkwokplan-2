@@ -658,3 +658,57 @@ function DriversLogPage() {
     </div>
   );
 }
+
+function WeeklyArchiveGroups({ logs, renderLog }: { logs: DriverLog[]; renderLog: (l: DriverLog) => React.ReactNode }) {
+  const groups = (() => {
+    const map = new Map<string, { start: Date; end: Date; items: DriverLog[] }>();
+    for (const l of logs) {
+      const ref = l.approved_at ? parseISO(l.approved_at) : (l.log_date ? parseISO(l.log_date) : null);
+      if (!ref || isNaN(ref.getTime())) continue;
+      const ws = startOfWeek(ref, { weekStartsOn: 1 });
+      const we = endOfWeek(ref, { weekStartsOn: 1 });
+      const key = format(ws, "yyyy-MM-dd");
+      const g = map.get(key) ?? { start: ws, end: we, items: [] };
+      g.items.push(l);
+      map.set(key, g);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([key, g]) => ({ key, ...g }));
+  })();
+
+  return (
+    <div className="space-y-3">
+      {groups.map((g) => (
+        <WeekGroup
+          key={g.key}
+          label={`Week of ${format(g.start, "MMM d")} – ${format(g.end, "MMM d, yyyy")}`}
+          count={g.items.length}
+        >
+          {g.items.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+        </WeekGroup>
+      ))}
+    </div>
+  );
+}
+
+function WeekGroup({ label, count, children }: { label: string; count: number; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-md border border-border">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40"
+      >
+        <span className="text-sm font-medium">{label}</span>
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+          {count} approved {count === 1 ? "trip" : "trips"}
+          {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </span>
+      </button>
+      {open && <div className="space-y-3 border-t border-border p-3">{children}</div>}
+    </div>
+  );
+}
+
