@@ -45,7 +45,7 @@ interface Profile { id: string; full_name: string }
 interface Vehicle { id: string; registration: string; make_model: string | null; active: boolean }
 
 function DriversLogPage() {
-  const { user, isDriver, isHod, isSuperAdmin, isProtectedSuperAdmin, canViewAll, profile, rolesLoaded } = useAuth();
+  const { user, isDriver, isHod, isSuperAdmin, isAdministrator, isProtectedSuperAdmin, canViewAll, profile, rolesLoaded } = useAuth();
   const [depts, setDepts] = useState<Dept[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Record<string, Profile>>({});
@@ -168,7 +168,7 @@ function DriversLogPage() {
 
   const myDeptId = profile?.department_id ?? null;
   const canApprove = (l: DriverLog) =>
-    l.status === "pending" && (isSuperAdmin || (isHod && l.department_id === myDeptId));
+    l.status === "pending" && (isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId));
 
   const deptName = (id: string | null) => depts.find((d) => d.id === id)?.name ?? "—";
   const vehicleLabel = (id: string | null) => {
@@ -352,7 +352,7 @@ function DriversLogPage() {
         {!rolesLoaded && (
           <p className="mt-2 text-xs text-muted-foreground">Loading your permissions…</p>
         )}
-        {rolesLoaded && !isDriver && !isSuperAdmin && (
+        {rolesLoaded && !isDriver && !isSuperAdmin && !isAdministrator && (
           <p className="mt-2 text-xs text-muted-foreground">You don't have the Driver role, so you can only view logs. Ask a Super Admin to assign you the Driver role from Administration.</p>
         )}
       </div>
@@ -605,7 +605,7 @@ function DriversLogPage() {
                     )}
                     {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {(isSuperAdmin || (isHod && l.department_id === myDeptId)) && (
+                      {(isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId)) && (
                         <Button size="sm" variant="outline" onClick={() => startEdit(l)}>
                           <Pencil className="mr-1 h-4 w-4" /> Update closing details
                         </Button>

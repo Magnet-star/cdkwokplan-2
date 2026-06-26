@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 function ReportsPage() {
-  const { user, profile, isSuperAdmin, isProtectedSuperAdmin, isHod } = useAuth();
+  const { user, profile, isSuperAdmin, isProtectedSuperAdmin, isAdministrator, isHod } = useAuth();
   const now = new Date();
   const [period, setPeriod] = useState<"monthly" | "weekly">("monthly");
   const [year, setYear] = useState(now.getFullYear());
@@ -69,12 +69,12 @@ function ReportsPage() {
         });
         setHodByDept(map);
       }
-      if (isSuperAdmin || isHod) {
+      if (isSuperAdmin || isAdministrator || isHod) {
         setPeople(profiles);
       }
       await loadUploaded();
     })();
-  }, [isSuperAdmin, isHod]);
+  }, [isSuperAdmin, isAdministrator, isHod]);
 
   const handleDownload = async () => {
     if (!user || !profile) return;
@@ -166,7 +166,7 @@ function ReportsPage() {
       <Tabs defaultValue="generate">
         <TabsList>
           <TabsTrigger value="generate">Generate PDF</TabsTrigger>
-          {isHod && <TabsTrigger value="upload">Upload report</TabsTrigger>}
+          {(isHod || isAdministrator) && <TabsTrigger value="upload">Upload report</TabsTrigger>}
           <TabsTrigger value="uploaded">Uploaded reports</TabsTrigger>
         </TabsList>
 
@@ -215,7 +215,7 @@ function ReportsPage() {
                 </TabsContent>
               </Tabs>
 
-              {(isSuperAdmin || isHod) && people.length > 0 && (
+              {(isSuperAdmin || isAdministrator || isHod) && people.length > 0 && (
                 <div>
                   <Label>Report for</Label>
                   <Select value={targetUserId} onValueChange={setTargetUserId}>
@@ -223,7 +223,7 @@ function ReportsPage() {
                     <SelectContent>
                       <SelectItem value="self">Myself</SelectItem>
                       {people
-                        .filter((p) => isSuperAdmin || (isHod && p.department_id === profile?.department_id))
+                        .filter((p) => isSuperAdmin || isAdministrator || (isHod && p.department_id === profile?.department_id))
                         .filter((p) => p.id !== user?.id)
                         .map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
                     </SelectContent>
@@ -238,7 +238,7 @@ function ReportsPage() {
           </Card>
         </TabsContent>
 
-        {isHod && (
+        {(isHod || isAdministrator) && (
           <TabsContent value="upload" className="pt-4">
             <Card>
               <CardHeader>
