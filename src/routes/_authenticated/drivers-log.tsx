@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { Truck, CheckCircle2, XCircle, Pencil, Save, X, Trash2, Download, Search } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { TimeGroupedList } from "@/components/TimeGroupedList";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/drivers-log")({
   component: DriversLogPage,
