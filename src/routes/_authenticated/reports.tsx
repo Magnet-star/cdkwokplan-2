@@ -238,7 +238,7 @@ function ReportsPage() {
           </Card>
         </TabsContent>
 
-        {isHod && (
+        {(isHod || isAdministrator) && (
           <TabsContent value="upload" className="pt-4">
             <Card>
               <CardHeader>
