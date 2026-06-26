@@ -1,0 +1,2 @@
+CREATE POLICY "Administrators view all work plans" ON public.work_plans FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'administrator'));
+CREATE POLICY "Administrators view all plan items" ON public.work_plan_items FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'administrator'));
