@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 function ReportsPage() {
-  const { user, profile, isSuperAdmin, isProtectedSuperAdmin, isHod } = useAuth();
+  const { user, profile, isSuperAdmin, isProtectedSuperAdmin, isAdministrator, isHod } = useAuth();
   const now = new Date();
   const [period, setPeriod] = useState<"monthly" | "weekly">("monthly");
   const [year, setYear] = useState(now.getFullYear());
