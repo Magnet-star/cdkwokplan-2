@@ -480,10 +480,15 @@ function DriversLogPage() {
             </div>
             {statsDeptSpending.length > 0 && (
               <div className="rounded-md border bg-background p-3">
-                <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex w-full items-center justify-between gap-3 text-left">
-                  <span className="text-xs font-medium uppercase text-muted-foreground">Departmental fuel spending</span>
-                  <span className="text-xs text-primary">{showRanking ? "Hide full ranking" : "Show full ranking"}</span>
-                </button>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex flex-1 items-center justify-between gap-3 text-left">
+                    <span className="text-xs font-medium uppercase text-muted-foreground">Departmental fuel spending</span>
+                    <span className="text-xs text-primary">{showRanking ? "Hide full ranking" : "Show full ranking"}</span>
+                  </button>
+                  <Button size="sm" variant="outline" onClick={downloadRankingPdf}>
+                    <Download className="mr-1 h-4 w-4" /> Download ranking PDF
+                  </Button>
+                </div>
                 {!showRanking ? (
                   <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
                     <div className="flex justify-between gap-3">
