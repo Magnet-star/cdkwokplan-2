@@ -991,7 +991,7 @@ function RequestCard({
           </div>
 
           {/* Desktop/tablet: original table, now horizontally scrollable as a safety net */}
-          <div className="hidden overflow-x-auto rounded-md border sm:block">
+          <div className="hidden overflow-x-auto sm:block">
             <table className="w-full">
               <thead className="bg-muted/50">
                 <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-left w-32">Date</th><th className="p-2 text-right w-32">Amount</th></tr>
