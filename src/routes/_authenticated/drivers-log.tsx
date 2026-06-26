@@ -168,7 +168,7 @@ function DriversLogPage() {
 
   const myDeptId = profile?.department_id ?? null;
   const canApprove = (l: DriverLog) =>
-    l.status === "pending" && (isSuperAdmin || (isHod && l.department_id === myDeptId));
+    l.status === "pending" && (isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId));
 
   const deptName = (id: string | null) => depts.find((d) => d.id === id)?.name ?? "—";
   const vehicleLabel = (id: string | null) => {
