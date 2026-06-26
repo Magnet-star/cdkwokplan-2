@@ -426,9 +426,9 @@ function FinanceRequestsPage() {
             <CardContent className="space-y-3">
               {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
               {!loading && myRequests.length === 0 && <p className="text-sm text-muted-foreground">No requests yet.</p>}
-              <GroupedRequests rows={myRequests}>
+              <ActiveAndCompleted rows={myRequests}>
                 {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={false} onChanged={refresh} />}
-              </GroupedRequests>
+              </ActiveAndCompleted>
             </CardContent>
           </Card>
         </>
