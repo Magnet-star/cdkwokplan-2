@@ -40,7 +40,6 @@ export function FinanceApproverGate({ children }: { children: ReactNode }) {
     setBusy(false);
     if (error) return toast.error(error.message);
     if (data === true) {
-      try { sessionStorage.setItem(STORAGE_KEY(user!.id), "1"); } catch {}
       setUnlocked(true);
       setPwd("");
     } else {
