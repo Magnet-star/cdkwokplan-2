@@ -640,9 +640,24 @@ function ActiveAndCompleted({ rows, children }: { rows: FRRow[]; children: (r: F
     c.sort((x, y) => (y.submitted_at || "").localeCompare(x.submitted_at || ""));
     return { active: a, completed: c };
   }, [rows]);
+  const activeSorted = useMemo(
+    () => [...active].sort((x, y) => (y.submitted_at || "").localeCompare(x.submitted_at || "")),
+    [active]
+  );
   return (
     <div className="space-y-4">
-      {active.length > 0 && <GroupedRequests rows={active}>{children}</GroupedRequests>}
+      {activeSorted.length > 0 && (
+        <div className="space-y-3">
+          {activeSorted.map((r) => (
+            <div key={r.id} className="space-y-1">
+              <div className="text-xs font-mono text-muted-foreground">
+                {(r.submitted_at || "").slice(0, 10)}
+              </div>
+              {children(r)}
+            </div>
+          ))}
+        </div>
+      )}
       {completed.length > 0 && (
         <Collapsible label={`Completed requests (folded) — ${completed.length}`} defaultOpen={false}>
           <div className="space-y-3">
