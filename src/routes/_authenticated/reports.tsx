@@ -166,7 +166,7 @@ function ReportsPage() {
       <Tabs defaultValue="generate">
         <TabsList>
           <TabsTrigger value="generate">Generate PDF</TabsTrigger>
-          {isHod && <TabsTrigger value="upload">Upload report</TabsTrigger>}
+          {(isHod || isAdministrator) && <TabsTrigger value="upload">Upload report</TabsTrigger>}
           <TabsTrigger value="uploaded">Uploaded reports</TabsTrigger>
         </TabsList>
 
