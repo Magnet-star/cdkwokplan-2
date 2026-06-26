@@ -403,7 +403,8 @@ function FinanceRequestsPage() {
                       <div>CDK Finance: <strong>{recipients.finance?.full_name ?? "— not configured —"}</strong></div>
                       <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
                       <div>CDK Procurator: <strong>{recipients.procurator?.full_name ?? "— not configured —"}</strong></div>
-                      <p className="text-muted-foreground pt-1">All three will see the request. Only CDK Finance approval is required for it to be marked Approved.</p>
+                      <div>CDK Accounts: <strong>{recipients.accounts?.full_name ?? "— not configured —"}</strong></div>
+                      <p className="text-muted-foreground pt-1">All four will see the request. CDK Finance approval is required for it to be marked Approved; CDK Accounts handles disbursement.</p>
                     </div>
                   </div>
                 </div>
