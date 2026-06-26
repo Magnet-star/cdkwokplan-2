@@ -352,7 +352,7 @@ function DriversLogPage() {
         {!rolesLoaded && (
           <p className="mt-2 text-xs text-muted-foreground">Loading your permissions…</p>
         )}
-        {rolesLoaded && !isDriver && !isSuperAdmin && (
+        {rolesLoaded && !isDriver && !isSuperAdmin && !isAdministrator && (
           <p className="mt-2 text-xs text-muted-foreground">You don't have the Driver role, so you can only view logs. Ask a Super Admin to assign you the Driver role from Administration.</p>
         )}
       </div>
