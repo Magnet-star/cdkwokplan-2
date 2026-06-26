@@ -652,6 +652,52 @@ function statusBadge(s: FRStatus) {
   return <Badge variant="outline" className={m.cls}>{m.label}</Badge>;
 }
 
+function ApprovalTracker({ r }: { r: FRRow }) {
+  if (r.status === "cancelled" || r.status === "rejected") return null;
+  const stages: { key: string; label: string; decision: string | null; name: string | null; at: string | null }[] = [
+    { key: "fin", label: "Finance Administrator", decision: r.finance_admin_decision, name: r.finance_admin_name, at: r.finance_admin_at },
+    { key: "vg", label: "Vicar General", decision: r.vicar_general_decision, name: r.vicar_general_name, at: r.vicar_general_at },
+    { key: "proc", label: "Procurator", decision: r.procurator_decision, name: r.procurator_name, at: r.procurator_at },
+  ];
+  const allApproved = stages.every((s) => s.decision === "approved");
+  return (
+    <div className="mt-2 rounded-md border bg-muted/30 p-2">
+      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Approval tracker</p>
+      <div className="flex flex-col gap-1">
+        {stages.map((s) => {
+          const approved = s.decision === "approved";
+          const rejected = s.decision === "rejected";
+          const adjusted = s.decision === "adjustment_requested";
+          const status = approved ? "APPROVED" : rejected ? "REJECTED" : adjusted ? "ADJUSTMENT REQUESTED" : "PENDING";
+          const cls = approved
+            ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+            : rejected
+              ? "bg-red-100 text-red-900 border-red-300"
+              : adjusted
+                ? "bg-blue-100 text-blue-900 border-blue-300"
+                : "bg-amber-100 text-amber-900 border-amber-300";
+          return (
+            <div key={s.key} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="font-medium">{s.label}</span>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={cls + " text-[10px]"}>{status}</Badge>
+                {approved && s.name && (
+                  <span className="text-[10px] text-muted-foreground">by {s.name}{s.at ? ` · ${format(new Date(s.at), "PP")}` : ""}</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {allApproved && (
+        <p className="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-center text-xs font-semibold text-emerald-900">
+          YOUR REQUEST HAS BEEN APPROVED — NOW AWAITING ACCOUNTS OFFICE VERDICT
+        </p>
+      )}
+    </div>
+  );
+}
+
 /* ===================== Request card ===================== */
 
 function RequestCard({
@@ -793,13 +839,8 @@ function RequestCard({
           </p>
           <p className="text-xs text-muted-foreground">By {r.requester_name} · {format(new Date(r.submitted_at), "PPp")}</p>
           <p className="text-xs text-muted-foreground">Sent to: {[r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || "—"}</p>
-          {(financeApproved || vicarApproved || procuratorApproved) && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {financeApproved && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]">✓ CDK Finance</Badge>}
-              {vicarApproved && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]">✓ Vicar General</Badge>}
-              {procuratorApproved && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]">✓ CDK Procurator</Badge>}
-            </div>
-          )}
+          <ApprovalTracker r={r} />
+
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
