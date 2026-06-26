@@ -47,6 +47,11 @@ interface FRRow {
   finance_admin_name: string | null; finance_admin_decision: string | null; finance_admin_note: string | null; finance_admin_at: string | null;
   vicar_general_name: string | null; vicar_general_decision: string | null; vicar_general_note: string | null; vicar_general_at: string | null;
   procurator_name: string | null; procurator_decision: string | null; procurator_note: string | null; procurator_at: string | null;
+  accounts_disbursement_status: string | null;
+  accounts_disbursement_by: string | null;
+  accounts_disbursement_name: string | null;
+  accounts_disbursement_at: string | null;
+  accounts_disbursement_note: string | null;
 }
 
 interface SuperAdminOption { id: string; full_name: string; }
@@ -55,6 +60,7 @@ interface CdkRecipients {
   finance: SuperAdminOption | null;
   vicar: SuperAdminOption | null;
   procurator: SuperAdminOption | null;
+  accounts: SuperAdminOption | null;
 }
 
 const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "" });
