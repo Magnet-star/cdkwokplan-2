@@ -319,6 +319,30 @@ function DriversLogPage() {
     doc.save(`drivers-log-${period}-${format(now, "yyyy-MM-dd")}.pdf`);
   };
 
+  const downloadRankingPdf = () => {
+    if (statsDeptSpending.length === 0) { toast.error("No data for the selected period"); return; }
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text("Departmental fuel spending ranking", 14, 16);
+    doc.setFontSize(10);
+    doc.text(`Period: ${statsPeriod.charAt(0).toUpperCase() + statsPeriod.slice(1)} — ${statsRange.label}`, 14, 22);
+    if (filterDept !== "all") doc.text(`Department filter: ${deptName(filterDept)}`, 14, 28);
+    const headerY = filterDept !== "all" ? 32 : 26;
+    doc.text(`Departments: ${statsTotals.departments}  ·  Total KM: ${statsTotals.km.toFixed(1)}  ·  Total KES: ${statsTotals.money.toLocaleString()}`, 14, headerY);
+
+    autoTable(doc, {
+      startY: headerY + 4,
+      head: [["Rank", "Department", "Fuel (KES)", "Kilometers", "Trips"]],
+      body: [
+        ...statsDeptSpending.map((s, i) => [String(i + 1), s.name, s.money.toLocaleString(), s.km.toFixed(1), String(s.trips)]),
+        ["", "TOTAL", statsTotals.money.toLocaleString(), statsTotals.km.toFixed(1), String(statsLogs.length)],
+      ],
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [40, 40, 40] },
+    });
+
+    doc.save(`fuel-spending-ranking-${statsPeriod}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  };
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -480,10 +504,15 @@ function DriversLogPage() {
             </div>
             {statsDeptSpending.length > 0 && (
               <div className="rounded-md border bg-background p-3">
-                <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex w-full items-center justify-between gap-3 text-left">
-                  <span className="text-xs font-medium uppercase text-muted-foreground">Departmental fuel spending</span>
-                  <span className="text-xs text-primary">{showRanking ? "Hide full ranking" : "Show full ranking"}</span>
-                </button>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex flex-1 items-center justify-between gap-3 text-left">
+                    <span className="text-xs font-medium uppercase text-muted-foreground">Departmental fuel spending</span>
+                    <span className="text-xs text-primary">{showRanking ? "Hide full ranking" : "Show full ranking"}</span>
+                  </button>
+                  <Button size="sm" variant="outline" onClick={downloadRankingPdf}>
+                    <Download className="mr-1 h-4 w-4" /> Download ranking PDF
+                  </Button>
+                </div>
                 {!showRanking ? (
                   <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
                     <div className="flex justify-between gap-3">
