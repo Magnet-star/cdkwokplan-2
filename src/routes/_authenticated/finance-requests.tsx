@@ -716,7 +716,8 @@ function RequestCard({
   onChanged: () => void;
   cdkOffice?: CdkOffice | null;
 }) {
-  const { user, profile, roles, isSuperAdmin, isProtectedSuperAdmin } = useAuth();
+  const { user, profile, roles, isSuperAdmin, isAdministrator, isProtectedSuperAdmin } = useAuth();
+  const isAccountsViewer = isAdministrator && !isSuperAdmin;
   const [open, setOpen] = useState(false);
   type ApproverRole = "finance_admin" | "vicar_general" | "procurator";
   const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust"; role: ApproverRole }>(null);
