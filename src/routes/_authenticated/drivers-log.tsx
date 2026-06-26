@@ -437,23 +437,79 @@ function DriversLogPage() {
             </div>
           </div>
 
-          {deptSummary.length > 0 && (
-            <div className="rounded-md border border-border bg-muted/30 p-3">
-              <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">Vehicle usage by department ({filteredLogs.length} trip{filteredLogs.length === 1 ? "" : "s"})</p>
-              <div className="grid gap-1 text-sm md:grid-cols-2">
-                {deptSummary.map((s) => (
-                  <div key={s.name} className="flex justify-between gap-3">
-                    <span>{s.name}</span>
-                    <span className="text-muted-foreground">{s.trips} trip{s.trips === 1 ? "" : "s"} · {s.km.toFixed(1)} km</span>
-                  </div>
-                ))}
-                <div className="flex justify-between gap-3 border-t pt-1 font-medium md:col-span-2">
-                  <span>Total kilometers covered</span>
-                  <span>{deptSummary.reduce((s, x) => s + x.km, 0).toFixed(1)} km</span>
+          <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium uppercase text-muted-foreground">Vehicle usage statistics</p>
+                <p className="text-xs text-muted-foreground">{statsRange.label}</p>
+              </div>
+              <div className="flex flex-wrap items-end gap-2">
+                <div>
+                  <Label className="text-xs">Period</Label>
+                  <Select value={statsPeriod} onValueChange={(v) => setStatsPeriod(v as any)}>
+                    <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="day">Day</SelectItem>
+                      <SelectItem value="week">Week</SelectItem>
+                      <SelectItem value="month">Month</SelectItem>
+                      <SelectItem value="year">Year</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                {statsPeriod === "week" && (
+                  <div>
+                    <Label className="text-xs">Week starting (Mon)</Label>
+                    <Input type="date" className="h-9" value={statsWeekStart} onChange={(e) => setStatsWeekStart(e.target.value)} />
+                  </div>
+                )}
               </div>
             </div>
-          )}
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-md border bg-background p-3">
+                <p className="text-xs text-muted-foreground">No. of departments</p>
+                <p className="font-serif text-2xl">{statsTotals.departments}</p>
+              </div>
+              <div className="rounded-md border bg-background p-3">
+                <p className="text-xs text-muted-foreground">Total kilometers covered</p>
+                <p className="font-serif text-2xl">{statsTotals.km.toFixed(1)} km</p>
+              </div>
+              <div className="rounded-md border bg-background p-3">
+                <p className="text-xs text-muted-foreground">Total money spent (KES)</p>
+                <p className="font-serif text-2xl">{statsTotals.money.toLocaleString()}</p>
+              </div>
+            </div>
+            {statsDeptSpending.length > 0 && (
+              <div className="rounded-md border bg-background p-3">
+                <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex w-full items-center justify-between gap-3 text-left">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Departmental fuel spending</span>
+                  <span className="text-xs text-primary">{showRanking ? "Hide full ranking" : "Show full ranking"}</span>
+                </button>
+                {!showRanking ? (
+                  <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                    <div className="flex justify-between gap-3">
+                      <span className="text-muted-foreground">Highest spender</span>
+                      <span className="font-medium">{statsDeptSpending[0].name} · KES {statsDeptSpending[0].money.toLocaleString()}</span>
+                    </div>
+                    {statsDeptSpending.length > 1 && (
+                      <div className="flex justify-between gap-3">
+                        <span className="text-muted-foreground">Lowest spender</span>
+                        <span className="font-medium">{statsDeptSpending[statsDeptSpending.length - 1].name} · KES {statsDeptSpending[statsDeptSpending.length - 1].money.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <ol className="mt-2 space-y-1 text-sm">
+                    {statsDeptSpending.map((s, i) => (
+                      <li key={s.name} className="flex justify-between gap-3 border-b border-border/50 py-1 last:border-0">
+                        <span><span className="text-muted-foreground">{i + 1}.</span> {s.name}</span>
+                        <span className="text-muted-foreground">KES {s.money.toLocaleString()} · {s.km.toFixed(1)} km · {s.trips} trip{s.trips === 1 ? "" : "s"}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            )}
+          </div>
 
           {filteredLogs.length === 0 && <p className="text-sm text-muted-foreground">No logs match the current filter.</p>}
 
