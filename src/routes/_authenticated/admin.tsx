@@ -299,15 +299,15 @@ function AdminPage() {
 
 
       <Tabs value={tab} onValueChange={(v) => navigate({ to: "/admin", search: { tab: v } })}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="vehicles">Vehicle approvals</TabsTrigger>
-          <TabsTrigger value="fleet">Fleet</TabsTrigger>
-          <TabsTrigger value="events">Diocesan events</TabsTrigger>
-          <TabsTrigger value="depts">Departments</TabsTrigger>
-          <TabsTrigger value="users">Users & roles</TabsTrigger>
-          <TabsTrigger value="allplans">Work plans</TabsTrigger>
-          <TabsTrigger value="cleanup">Logs & plans</TabsTrigger>
-          <TabsTrigger value="attendance">Office attendance</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:flex sm:flex-wrap">
+          <TabsTrigger value="vehicles" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Vehicle approvals</TabsTrigger>
+          <TabsTrigger value="fleet" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Fleet</TabsTrigger>
+          <TabsTrigger value="events" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Diocesan events</TabsTrigger>
+          <TabsTrigger value="depts" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Departments</TabsTrigger>
+          <TabsTrigger value="users" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Users & roles</TabsTrigger>
+          <TabsTrigger value="allplans" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Work plans</TabsTrigger>
+          <TabsTrigger value="cleanup" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Logs & plans</TabsTrigger>
+          <TabsTrigger value="attendance" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Office attendance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="attendance" className="space-y-3 pt-4">
