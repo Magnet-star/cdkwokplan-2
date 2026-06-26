@@ -722,9 +722,6 @@ function ApprovalTracker({ r }: { r: FRRow }) {
 function DisbursementNotice({ r }: { r: FRRow }) {
   if (!r.accounts_disbursement_status) return null;
   const isAvailable = r.accounts_disbursement_status === "funds_available";
-  const cls = isAvailable
-    ? "border-emerald-300 bg-emerald-50 text-emerald-900"
-    : "border-red-300 bg-red-50 text-red-900";
   const message = isAvailable
     ? "FUNDS AVAILABLE — DISBURSEMENT UNDERWAY"
     : "FUNDS NOT AVAILABLE FOR NOW — SEE FINANCE ADMINISTRATOR FOR GUIDANCE";
