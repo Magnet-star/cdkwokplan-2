@@ -17,6 +17,7 @@ import {
 import { Banknote, Plus, Trash2, Download, Send, CheckCircle2, XCircle, RefreshCw, Pencil, Ban, ChevronDown, ChevronUp } from "lucide-react";
 import { downloadFinanceRequestPDF, type FinanceRequestPDFData } from "@/lib/finance-request-pdf";
 import { downloadFinanceSummaryPDF } from "@/lib/finance-summary-pdf";
+import { FinanceApproverGate } from "@/components/FinanceApproverGate";
 
 export const Route = createFileRoute("/_authenticated/finance-requests")({
   component: FinanceRequestsPage,
