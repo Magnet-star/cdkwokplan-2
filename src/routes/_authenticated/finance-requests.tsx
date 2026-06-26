@@ -971,21 +971,21 @@ function RequestCard({
       {open && (
         <div className="mt-3 space-y-3 text-sm">
           {/* Mobile: stacked cards so long activity text wraps and is fully readable */}
-          <div className="space-y-2 sm:hidden">
+          <div className="space-y-1 sm:hidden">
             {(r.items ?? []).map((it, i) => (
-              <div key={i} className="rounded-md border p-3 text-sm">
+              <div key={i} className="text-sm py-1.5 border-b border-dashed last:border-0">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="font-bold">#{i + 1}</div>
+                  <div className="font-medium">#{i + 1}</div>
                   <div className="text-right font-bold">{fmtKES(Number(it.amount))}</div>
                 </div>
-                <div className="mt-1 break-words whitespace-pre-wrap">{it.activity}</div>
-                <div className="mt-1 text-xs text-muted-foreground">
+                <div className="break-words whitespace-pre-wrap">{it.activity}</div>
+                <div className="text-xs text-muted-foreground">
                   Date: <strong className="text-foreground">{it.activity_date ? format(new Date(it.activity_date), "PP") : "—"}</strong>
                 </div>
               </div>
             ))}
-            <div className="flex items-center justify-between rounded-md border bg-muted/40 p-3 text-sm">
-              <span className="font-bold">Tot</span>
+            <div className="flex items-center justify-between pt-2 text-sm">
+              <span className="font-bold">TOTAL</span>
               <span className="font-bold">{fmtKES(Number(r.total_amount))}</span>
             </div>
           </div>
