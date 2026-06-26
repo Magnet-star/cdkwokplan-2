@@ -1,0 +1,1 @@
+CREATE POLICY "Administrators view all vehicle requests" ON public.vehicle_requests FOR SELECT USING (has_role(auth.uid(), 'administrator'::app_role));
