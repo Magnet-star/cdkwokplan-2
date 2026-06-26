@@ -52,11 +52,8 @@ export function FinanceApproverGate({ children }: { children: ReactNode }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Lock className="h-5 w-5" /> Approver password required</CardTitle>
-            <CardDescription>
-              Enter your Finance Requests password. If you have not set one yet, or you have forgotten it,
-              use the email address you sign in with as the password.
-            </CardDescription>
           </CardHeader>
+
           <CardContent>
             <form onSubmit={submit} className="space-y-3">
               <div className="space-y-1.5">
