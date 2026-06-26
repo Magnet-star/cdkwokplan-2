@@ -1072,9 +1072,10 @@ function RequestCard({
   );
 }
 
-function ApprovalBlock({ title, name, decision, at, note, accountLabel }: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null; accountLabel?: string }) {
-  const decisionDisplay = decision
-    ? `${decision.replace("_", " ").toUpperCase()}${accountLabel ? ` [${accountLabel}${name ? `: ${name}` : ""}]` : ""}`
+function ApprovalBlock({ title, name, decision, at, note, accountLabel, approvedWord }: { title: string; name: string | null; decision: string | null; at: string | null; note: string | null; accountLabel?: string; approvedWord?: string }) {
+  const displayWord = decision === "approved" && approvedWord ? approvedWord : decision ? decision.replace("_", " ").toUpperCase() : null;
+  const decisionDisplay = displayWord
+    ? `${displayWord}${accountLabel ? ` [${accountLabel}${name ? `: ${name}` : ""}]` : ""}`
     : "— pending —";
   return (
     <div className="rounded-md border p-3 text-xs">
