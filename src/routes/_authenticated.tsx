@@ -86,7 +86,7 @@ function AuthLayout() {
               </Link>
             );
           })}
-          {canViewAll && (
+          {isSuperAdmin && (
             <div className="space-y-1">
               <button
                 onClick={() => setAdminOpen((o) => !o)}
