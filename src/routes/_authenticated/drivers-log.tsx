@@ -193,19 +193,54 @@ function DriversLogPage() {
   const distanceOf = (l: DriverLog) =>
     l.closing_km != null ? Number(l.closing_km) - Number(l.starting_km) : 0;
 
-  // Per-department summary across filtered logs
-  const deptSummary = (() => {
-    const map = new Map<string, { name: string; trips: number; km: number }>();
-    filteredLogs.forEach((l) => {
+  // Statistics period
+  const [statsPeriod, setStatsPeriod] = useState<"day" | "week" | "month" | "year">("week");
+  const [statsWeekStart, setStatsWeekStart] = useState<string>(format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"));
+  const [showRanking, setShowRanking] = useState(false);
+
+  const statsRange = (() => {
+    const now = new Date();
+    if (statsPeriod === "day") {
+      const s = new Date(now); s.setHours(0,0,0,0);
+      const e = new Date(now); e.setHours(23,59,59,999);
+      return { start: s, end: e, label: format(now, "PPP") };
+    }
+    if (statsPeriod === "week") {
+      const s = parseISO(statsWeekStart);
+      const e = endOfWeek(s, { weekStartsOn: 1 });
+      return { start: s, end: e, label: `${format(s, "PP")} – ${format(e, "PP")}` };
+    }
+    if (statsPeriod === "month") {
+      return { start: startOfMonth(now), end: endOfMonth(now), label: format(now, "MMMM yyyy") };
+    }
+    const s = new Date(now.getFullYear(), 0, 1);
+    const e = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    return { start: s, end: e, label: String(now.getFullYear()) };
+  })();
+
+  const statsLogs = filteredLogs.filter((l) => {
+    try { return isWithinInterval(parseISO(l.log_date), { start: statsRange.start, end: statsRange.end }); }
+    catch { return false; }
+  });
+
+  const statsDeptSpending = (() => {
+    const map = new Map<string, { name: string; money: number; km: number; trips: number }>();
+    statsLogs.forEach((l) => {
       const key = l.department_id ?? "none";
-      const name = deptName(l.department_id);
-      const cur = map.get(key) ?? { name, trips: 0, km: 0 };
-      cur.trips += 1;
+      const cur = map.get(key) ?? { name: deptName(l.department_id), money: 0, km: 0, trips: 0 };
+      cur.money += Number(l.fuel_order_amount ?? 0);
       cur.km += distanceOf(l);
+      cur.trips += 1;
       map.set(key, cur);
     });
-    return Array.from(map.values()).sort((a, b) => b.km - a.km);
+    return Array.from(map.values()).sort((a, b) => b.money - a.money);
   })();
+
+  const statsTotals = {
+    departments: statsDeptSpending.length,
+    km: statsLogs.reduce((s, l) => s + distanceOf(l), 0),
+    money: statsLogs.reduce((s, l) => s + Number(l.fuel_order_amount ?? 0), 0),
+  };
 
   const downloadPdf = (period: "daily" | "weekly" | "monthly") => {
     const now = new Date();
