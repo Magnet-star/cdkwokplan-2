@@ -69,12 +69,12 @@ function ReportsPage() {
         });
         setHodByDept(map);
       }
-      if (isSuperAdmin || isHod) {
+      if (isSuperAdmin || isAdministrator || isHod) {
         setPeople(profiles);
       }
       await loadUploaded();
     })();
-  }, [isSuperAdmin, isHod]);
+  }, [isSuperAdmin, isAdministrator, isHod]);
 
   const handleDownload = async () => {
     if (!user || !profile) return;
