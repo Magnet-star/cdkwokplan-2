@@ -683,7 +683,7 @@ function ApprovalTracker({ r }: { r: FRRow }) {
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className={cls + " text-[10px]"}>{status}</Badge>
                 {approved && s.name && (
-                  <span className="text-[10px] text-muted-foreground">by {s.name}{s.at ? ` · ${format(new Date(s.at), "PP")}` : ""}</span>
+                  <span className="text-[10px] text-muted-foreground">by {s.name}{s.at ? ` · ${format(new Date(s.at), "EEE, MMM d, yyyy 'at' h:mm:ss a")}` : ""}</span>
                 )}
               </div>
             </div>
