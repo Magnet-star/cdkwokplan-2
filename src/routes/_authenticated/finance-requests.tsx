@@ -81,7 +81,7 @@ function fmtKES(n: number) {
 
 function FinanceRequestsPage() {
   const { user, profile, roles, isSuperAdmin, isAdministrator } = useAuth();
-  const isHod = roles.includes("hod") || isSuperAdmin; // super admin can also submit
+  const isHod = roles.includes("hod") || isSuperAdmin || isAdministrator; // super admin / administrator can also submit for their department
   const isApprover =
     isSuperAdmin ||
     roles.includes("finance_admin") ||
