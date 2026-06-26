@@ -80,13 +80,16 @@ function fmtKES(n: number) {
 }
 
 function FinanceRequestsPage() {
-  const { user, profile, roles, isSuperAdmin } = useAuth();
+  const { user, profile, roles, isSuperAdmin, isAdministrator } = useAuth();
   const isHod = roles.includes("hod") || isSuperAdmin; // super admin can also submit
   const isApprover =
     isSuperAdmin ||
     roles.includes("finance_admin") ||
     roles.includes("vicar_general") ||
     roles.includes("procurator");
+  // CDK ACCOUNTS (administrator role) is a viewer office that observes and
+  // downloads fully-authorized requests, but never approves/authorizes.
+  const isAccountsViewer = isAdministrator && !isSuperAdmin;
 
   const [requests, setRequests] = useState<FRRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,10 +121,13 @@ function FinanceRequestsPage() {
   }, [profile?.full_name, departmentName]);
 
   // Only CDK Finance / Vicar General / Procurator super admins see the incoming approval section.
+  // CDK ACCOUNTS (administrator role) also sees incoming requests so they can
+  // download fully-authorized ones for processing.
   const canSeeIncoming = (isSuperAdmin && cdkOffice !== null)
     || roles.includes("finance_admin")
     || roles.includes("vicar_general")
-    || roles.includes("procurator");
+    || roles.includes("procurator")
+    || isAccountsViewer;
 
   // tab for super-admin: their own vs incoming
   const [tab, setTab] = useState<"incoming" | "mine">(canSeeIncoming ? "incoming" : "mine");
@@ -710,7 +716,8 @@ function RequestCard({
   onChanged: () => void;
   cdkOffice?: CdkOffice | null;
 }) {
-  const { user, profile, roles, isSuperAdmin, isProtectedSuperAdmin } = useAuth();
+  const { user, profile, roles, isSuperAdmin, isAdministrator, isProtectedSuperAdmin } = useAuth();
+  const isAccountsViewer = isAdministrator && !isSuperAdmin;
   const [open, setOpen] = useState(false);
   type ApproverRole = "finance_admin" | "vicar_general" | "procurator";
   const [dialog, setDialog] = useState<null | { decision: "approve" | "reject" | "adjust"; role: ApproverRole }>(null);
@@ -845,9 +852,25 @@ function RequestCard({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
-          <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
-            <Download className="mr-1 h-3.5 w-3.5" /> PDF
-          </Button>
+          {(() => {
+            // CDK Accounts (administrator viewer) can only download once a request is
+            // fully authorized: finance admin approved AND at least one of Vicar
+            // General / Procurator has authorized.
+            const fullyAuthorizedForAccounts =
+              financeApproved && (vicarApproved || procuratorApproved);
+            if (isAccountsViewer && !fullyAuthorizedForAccounts) {
+              return (
+                <span className="rounded border border-dashed border-muted-foreground/40 px-2 py-1 text-[11px] text-muted-foreground">
+                  Download unlocks after finance approval + authorization
+                </span>
+              );
+            }
+            return (
+              <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
+                <Download className="mr-1 h-3.5 w-3.5" /> PDF
+              </Button>
+            );
+          })()}
           {canEditOrCancel && (
             <>
               <Button size="sm" variant="outline" onClick={() => setEditing(true)}>

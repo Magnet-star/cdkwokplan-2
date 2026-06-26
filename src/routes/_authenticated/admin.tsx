@@ -36,7 +36,11 @@ function AdminPage() {
   const { isSuperAdmin, isProtectedSuperAdmin, isAdministrator, user } = useAuth();
   const canEdit = isSuperAdmin;
   const canDeleteSubmitted = isProtectedSuperAdmin;
-  const canAccess = isSuperAdmin || isAdministrator;
+  // Administration approvals area is restricted to Super Admins only.
+  // Administrators (e.g. CDK ACCOUNTS) have all other Super Admin access but
+  // cannot enter the approval/administration console.
+  void isAdministrator;
+  const canAccess = isSuperAdmin;
   const search = useSearch({ from: "/_authenticated/admin" }) as { tab?: string };
   const navigate = useNavigate();
   const tab = search.tab ?? "vehicles";
