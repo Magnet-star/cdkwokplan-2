@@ -125,11 +125,13 @@ function AuthLayout() {
           {(() => {
             const guideUrl = isSuperAdmin
               ? "/guides/SuperAdmin_User_Guide.pdf"
-              : isHod
-                ? "/guides/HOD_User_Guide.pdf"
-                : isDriver
-                  ? "/guides/Driver_User_Guide.pdf"
-                  : null;
+              : isAdministrator
+                ? "/guides/SuperAdmin_User_Guide.pdf"
+                : isHod
+                  ? "/guides/HOD_User_Guide.pdf"
+                  : isDriver
+                    ? "/guides/Driver_User_Guide.pdf"
+                    : null;
             if (!guideUrl) return null;
             return (
               <a
