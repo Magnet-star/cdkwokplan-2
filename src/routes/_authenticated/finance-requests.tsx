@@ -716,6 +716,30 @@ function ApprovalTracker({ r }: { r: FRRow }) {
           YOUR REQUEST HAS BEEN APPROVED &amp; AUTHORIZED — NOW AWAITING ACCOUNTS OFFICE VERDICT
         </p>
       )}
+      <DisbursementNotice r={r} />
+    </div>
+  );
+}
+
+function DisbursementNotice({ r }: { r: FRRow }) {
+  if (!r.accounts_disbursement_status) return null;
+  const isAvailable = r.accounts_disbursement_status === "funds_available";
+  const cls = isAvailable
+    ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+    : "border-red-300 bg-red-50 text-red-900";
+  const message = isAvailable
+    ? "FUNDS AVAILABLE — DISBURSEMENT UNDERWAY"
+    : "FUNDS NOT AVAILABLE FOR NOW — SEE FINANCE ADMINISTRATOR FOR GUIDANCE";
+  return (
+    <div className={`mt-2 rounded-md border p-2 ${cls}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-wide opacity-80">Disbursement process</p>
+      <p className="mt-1 text-xs font-bold">{message}</p>
+      {r.accounts_disbursement_name && (
+        <p className="mt-1 text-[10px] opacity-80">
+          by {r.accounts_disbursement_name}
+          {r.accounts_disbursement_at ? ` · ${format(new Date(r.accounts_disbursement_at), "EEE, MMM d, yyyy 'at' h:mm:ss a")}` : ""}
+        </p>
+      )}
     </div>
   );
 }
