@@ -215,7 +215,7 @@ function ReportsPage() {
                 </TabsContent>
               </Tabs>
 
-              {(isSuperAdmin || isHod) && people.length > 0 && (
+              {(isSuperAdmin || isAdministrator || isHod) && people.length > 0 && (
                 <div>
                   <Label>Report for</Label>
                   <Select value={targetUserId} onValueChange={setTargetUserId}>
@@ -223,7 +223,7 @@ function ReportsPage() {
                     <SelectContent>
                       <SelectItem value="self">Myself</SelectItem>
                       {people
-                        .filter((p) => isSuperAdmin || (isHod && p.department_id === profile?.department_id))
+                        .filter((p) => isSuperAdmin || isAdministrator || (isHod && p.department_id === profile?.department_id))
                         .filter((p) => p.id !== user?.id)
                         .map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
                     </SelectContent>
