@@ -47,6 +47,11 @@ interface FRRow {
   finance_admin_name: string | null; finance_admin_decision: string | null; finance_admin_note: string | null; finance_admin_at: string | null;
   vicar_general_name: string | null; vicar_general_decision: string | null; vicar_general_note: string | null; vicar_general_at: string | null;
   procurator_name: string | null; procurator_decision: string | null; procurator_note: string | null; procurator_at: string | null;
+  accounts_disbursement_status: string | null;
+  accounts_disbursement_by: string | null;
+  accounts_disbursement_name: string | null;
+  accounts_disbursement_at: string | null;
+  accounts_disbursement_note: string | null;
 }
 
 interface SuperAdminOption { id: string; full_name: string; }
@@ -55,6 +60,7 @@ interface CdkRecipients {
   finance: SuperAdminOption | null;
   vicar: SuperAdminOption | null;
   procurator: SuperAdminOption | null;
+  accounts: SuperAdminOption | null;
 }
 
 const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "" });
@@ -93,7 +99,7 @@ function FinanceRequestsPage() {
 
   const [requests, setRequests] = useState<FRRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [recipients, setRecipients] = useState<CdkRecipients>({ finance: null, vicar: null, procurator: null });
+  const [recipients, setRecipients] = useState<CdkRecipients>({ finance: null, vicar: null, procurator: null, accounts: null });
   const [departmentName, setDepartmentName] = useState<string>("");
 
   // form state
@@ -152,7 +158,7 @@ function FinanceRequestsPage() {
   useEffect(() => {
     void refresh();
     void (async () => {
-      const next: CdkRecipients = { finance: null, vicar: null, procurator: null };
+      const next: CdkRecipients = { finance: null, vicar: null, procurator: null, accounts: null };
       const { data: rpcRows, error: rpcErr } = await supabase.rpc("get_super_admin_recipients");
       if (rpcErr) console.warn("get_super_admin_recipients failed", rpcErr);
       const profRows = ((rpcRows ?? []) as { id: string; full_name: string; department_name: string | null }[]);
@@ -170,6 +176,14 @@ function FinanceRequestsPage() {
       const fin = financePool.find((row) => /finance/i.test(row.full_name || ""))
         ?? financePool.find((row) => /finance/i.test(row.department_name || ""));
       next.finance = fin ? { id: fin.id, full_name: fin.full_name } : null;
+      // CDK Accounts (administrator role) — fetched from a separate RPC since
+      // they are not super admins. Picked first by name match, then dept.
+      const { data: accRows } = await supabase.rpc("get_accounts_recipients");
+      const accProfRows = ((accRows ?? []) as { id: string; full_name: string; department_name: string | null }[]);
+      const acc = accProfRows.find((row) => /accounts/i.test(row.full_name || ""))
+        ?? accProfRows.find((row) => /accounts/i.test(row.department_name || ""))
+        ?? accProfRows[0];
+      next.accounts = acc ? { id: acc.id, full_name: acc.full_name } : null;
       setRecipients(next);
       if (profile?.department_id) {
         const { data: dept } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
@@ -389,7 +403,8 @@ function FinanceRequestsPage() {
                       <div>CDK Finance: <strong>{recipients.finance?.full_name ?? "— not configured —"}</strong></div>
                       <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
                       <div>CDK Procurator: <strong>{recipients.procurator?.full_name ?? "— not configured —"}</strong></div>
-                      <p className="text-muted-foreground pt-1">All three will see the request. Only CDK Finance approval is required for it to be marked Approved.</p>
+                      <div>CDK Accounts: <strong>{recipients.accounts?.full_name ?? "— not configured —"}</strong></div>
+                      <p className="text-muted-foreground pt-1">All four will see the request. CDK Finance approval is required for it to be marked Approved; CDK Accounts handles disbursement.</p>
                     </div>
                   </div>
                 </div>
@@ -701,6 +716,30 @@ function ApprovalTracker({ r }: { r: FRRow }) {
           YOUR REQUEST HAS BEEN APPROVED &amp; AUTHORIZED — NOW AWAITING ACCOUNTS OFFICE VERDICT
         </p>
       )}
+      <DisbursementNotice r={r} />
+    </div>
+  );
+}
+
+function DisbursementNotice({ r }: { r: FRRow }) {
+  if (!r.accounts_disbursement_status) return null;
+  const isAvailable = r.accounts_disbursement_status === "funds_available";
+  const cls = isAvailable
+    ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+    : "border-red-300 bg-red-50 text-red-900";
+  const message = isAvailable
+    ? "FUNDS AVAILABLE — DISBURSEMENT UNDERWAY"
+    : "FUNDS NOT AVAILABLE FOR NOW — SEE FINANCE ADMINISTRATOR FOR GUIDANCE";
+  return (
+    <div className={`mt-2 rounded-md border p-2 ${cls}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-wide opacity-80">Disbursement process</p>
+      <p className="mt-1 text-xs font-bold">{message}</p>
+      {r.accounts_disbursement_name && (
+        <p className="mt-1 text-[10px] opacity-80">
+          by {r.accounts_disbursement_name}
+          {r.accounts_disbursement_at ? ` · ${format(new Date(r.accounts_disbursement_at), "EEE, MMM d, yyyy 'at' h:mm:ss a")}` : ""}
+        </p>
+      )}
     </div>
   );
 }
@@ -809,6 +848,26 @@ function RequestCard({
     toast.success("Request deleted"); onChanged();
   };
 
+  // CDK Accounts disbursement decision
+  const [disbursing, setDisbursing] = useState(false);
+  const setDisbursement = async (status: "funds_available" | "funds_not_available") => {
+    if (!user || !profile) return;
+    const label = status === "funds_available" ? "FUNDS AVAILABLE" : "FUNDS NOT AVAILABLE";
+    if (!confirm(`Mark this request as ${label}?`)) return;
+    setDisbursing(true);
+    const { error } = await supabase.from("finance_requests").update({
+      accounts_disbursement_status: status,
+      accounts_disbursement_by: user.id,
+      accounts_disbursement_name: profile.full_name,
+      accounts_disbursement_at: new Date().toISOString(),
+    } as never).eq("id", r.id);
+    setDisbursing(false);
+    if (error) return toast.error(error.message);
+    toast.success(`Marked as ${label}`); onChanged();
+  };
+
+
+
 
   const saveEdit = async () => {
     const cleaned = editItems.filter((i) => i.activity.trim() !== "" && Number(i.amount) > 0);
@@ -866,9 +925,33 @@ function RequestCard({
               );
             }
             return (
-              <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
-                <Download className="mr-1 h-3.5 w-3.5" /> PDF
-              </Button>
+              <>
+                {isAccountsViewer && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant={r.accounts_disbursement_status === "funds_available" ? "default" : "outline"}
+                      className={r.accounts_disbursement_status === "funds_available" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
+                      onClick={() => setDisbursement("funds_available")}
+                      disabled={disbursing}
+                    >
+                      <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Funds Available
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={r.accounts_disbursement_status === "funds_not_available" ? "default" : "outline"}
+                      className={r.accounts_disbursement_status === "funds_not_available" ? "bg-red-600 hover:bg-red-700 text-white" : ""}
+                      onClick={() => setDisbursement("funds_not_available")}
+                      disabled={disbursing}
+                    >
+                      <XCircle className="mr-1 h-3.5 w-3.5" /> Funds Not Available
+                    </Button>
+                  </>
+                )}
+                <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
+                  <Download className="mr-1 h-3.5 w-3.5" /> PDF
+                </Button>
+              </>
             );
           })()}
           {canEditOrCancel && (
