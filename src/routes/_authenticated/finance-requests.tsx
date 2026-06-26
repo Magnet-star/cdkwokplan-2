@@ -654,10 +654,10 @@ function statusBadge(s: FRStatus) {
 
 function ApprovalTracker({ r }: { r: FRRow }) {
   if (r.status === "cancelled" || r.status === "rejected") return null;
-  const stages: { key: string; label: string; decision: string | null; name: string | null; at: string | null }[] = [
-    { key: "fin", label: "Finance Administrator", decision: r.finance_admin_decision, name: r.finance_admin_name, at: r.finance_admin_at },
-    { key: "vg", label: "Vicar General", decision: r.vicar_general_decision, name: r.vicar_general_name, at: r.vicar_general_at },
-    { key: "proc", label: "Procurator", decision: r.procurator_decision, name: r.procurator_name, at: r.procurator_at },
+  const stages: { key: string; label: string; decision: string | null; name: string | null; at: string | null; isAuthorize: boolean }[] = [
+    { key: "fin", label: "Finance Administrator", decision: r.finance_admin_decision, name: r.finance_admin_name, at: r.finance_admin_at, isAuthorize: false },
+    { key: "vg", label: "Vicar General", decision: r.vicar_general_decision, name: r.vicar_general_name, at: r.vicar_general_at, isAuthorize: true },
+    { key: "proc", label: "Procurator", decision: r.procurator_decision, name: r.procurator_name, at: r.procurator_at, isAuthorize: true },
   ];
   const allApproved = stages.every((s) => s.decision === "approved");
   return (
@@ -668,7 +668,8 @@ function ApprovalTracker({ r }: { r: FRRow }) {
           const approved = s.decision === "approved";
           const rejected = s.decision === "rejected";
           const adjusted = s.decision === "adjustment_requested";
-          const status = approved ? "APPROVED" : rejected ? "REJECTED" : adjusted ? "ADJUSTMENT REQUESTED" : "PENDING";
+          const approvedWord = s.isAuthorize ? "AUTHORIZED" : "APPROVED";
+          const status = approved ? approvedWord : rejected ? "REJECTED" : adjusted ? "ADJUSTMENT REQUESTED" : "PENDING";
           const cls = approved
             ? "bg-emerald-100 text-emerald-900 border-emerald-300"
             : rejected
@@ -691,7 +692,7 @@ function ApprovalTracker({ r }: { r: FRRow }) {
       </div>
       {allApproved && (
         <p className="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-center text-xs font-semibold text-emerald-900">
-          YOUR REQUEST HAS BEEN APPROVED — NOW AWAITING ACCOUNTS OFFICE VERDICT
+          YOUR REQUEST HAS BEEN APPROVED &amp; AUTHORIZED — NOW AWAITING ACCOUNTS OFFICE VERDICT
         </p>
       )}
     </div>
