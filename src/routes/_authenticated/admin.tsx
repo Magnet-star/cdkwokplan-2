@@ -309,7 +309,16 @@ function AdminPage() {
           <TabsTrigger value="allplans" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Work plans</TabsTrigger>
           <TabsTrigger value="cleanup" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Logs & plans</TabsTrigger>
           <TabsTrigger value="attendance" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Office attendance</TabsTrigger>
+          {isSuperAdmin && (
+            <TabsTrigger value="capacity" className="h-auto min-h-9 whitespace-normal break-words px-2 py-2 text-center text-xs leading-tight sm:text-sm">Capacity</TabsTrigger>
+          )}
         </TabsList>
+
+        {isSuperAdmin && (
+          <TabsContent value="capacity" className="space-y-3 pt-4">
+            <StorageUsagePanel />
+          </TabsContent>
+        )}
 
         <TabsContent value="attendance" className="space-y-3 pt-4">
           <AttendanceLogPanel />
