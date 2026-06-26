@@ -852,9 +852,25 @@ function RequestCard({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
-          <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
-            <Download className="mr-1 h-3.5 w-3.5" /> PDF
-          </Button>
+          {(() => {
+            // CDK Accounts (administrator viewer) can only download once a request is
+            // fully authorized: finance admin approved AND at least one of Vicar
+            // General / Procurator has authorized.
+            const fullyAuthorizedForAccounts =
+              financeApproved && (vicarApproved || procuratorApproved);
+            if (isAccountsViewer && !fullyAuthorizedForAccounts) {
+              return (
+                <span className="rounded border border-dashed border-muted-foreground/40 px-2 py-1 text-[11px] text-muted-foreground">
+                  Download unlocks after finance approval + authorization
+                </span>
+              );
+            }
+            return (
+              <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
+                <Download className="mr-1 h-3.5 w-3.5" /> PDF
+              </Button>
+            );
+          })()}
           {canEditOrCancel && (
             <>
               <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
