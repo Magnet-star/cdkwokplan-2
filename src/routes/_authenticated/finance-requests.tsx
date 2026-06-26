@@ -80,13 +80,16 @@ function fmtKES(n: number) {
 }
 
 function FinanceRequestsPage() {
-  const { user, profile, roles, isSuperAdmin } = useAuth();
+  const { user, profile, roles, isSuperAdmin, isAdministrator } = useAuth();
   const isHod = roles.includes("hod") || isSuperAdmin; // super admin can also submit
   const isApprover =
     isSuperAdmin ||
     roles.includes("finance_admin") ||
     roles.includes("vicar_general") ||
     roles.includes("procurator");
+  // CDK ACCOUNTS (administrator role) is a viewer office that observes and
+  // downloads fully-authorized requests, but never approves/authorizes.
+  const isAccountsViewer = isAdministrator && !isSuperAdmin;
 
   const [requests, setRequests] = useState<FRRow[]>([]);
   const [loading, setLoading] = useState(true);
