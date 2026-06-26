@@ -158,7 +158,7 @@ function FinanceRequestsPage() {
   useEffect(() => {
     void refresh();
     void (async () => {
-      const next: CdkRecipients = { finance: null, vicar: null, procurator: null };
+      const next: CdkRecipients = { finance: null, vicar: null, procurator: null, accounts: null };
       const { data: rpcRows, error: rpcErr } = await supabase.rpc("get_super_admin_recipients");
       if (rpcErr) console.warn("get_super_admin_recipients failed", rpcErr);
       const profRows = ((rpcRows ?? []) as { id: string; full_name: string; department_name: string | null }[]);
@@ -176,6 +176,14 @@ function FinanceRequestsPage() {
       const fin = financePool.find((row) => /finance/i.test(row.full_name || ""))
         ?? financePool.find((row) => /finance/i.test(row.department_name || ""));
       next.finance = fin ? { id: fin.id, full_name: fin.full_name } : null;
+      // CDK Accounts (administrator role) — fetched from a separate RPC since
+      // they are not super admins. Picked first by name match, then dept.
+      const { data: accRows } = await supabase.rpc("get_accounts_recipients");
+      const accProfRows = ((accRows ?? []) as { id: string; full_name: string; department_name: string | null }[]);
+      const acc = accProfRows.find((row) => /accounts/i.test(row.full_name || ""))
+        ?? accProfRows.find((row) => /accounts/i.test(row.department_name || ""))
+        ?? accProfRows[0];
+      next.accounts = acc ? { id: acc.id, full_name: acc.full_name } : null;
       setRecipients(next);
       if (profile?.department_id) {
         const { data: dept } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
