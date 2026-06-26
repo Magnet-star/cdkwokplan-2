@@ -128,30 +128,48 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
   y += 4;
 
   const drawApproval = (title: string, name?: string | null, decision?: string | null, when?: string | null, note?: string | null, approvedWord: string = "APPROVED") => {
-    if (y > 250) { doc.addPage(); y = 20; }
+    if (y > 240) { doc.addPage(); y = 20; }
+    const blockStartY = y;
+    const sigBoxX = pageW - 84;
+    const sigBoxW = 70;
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.text(title, 14, y);
     y += 5;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    const lineY = y;
-    doc.text(`Name (signature): ${name ?? "— pending —"}`, 14, lineY);
+    doc.text(`Name (e-signature): ${name ?? "— pending —"}`, 14, y);
     y += 5;
-    const decisionText = decision === "approved"
-      ? approvedWord
-      : decision ? decision.replace("_", " ").toUpperCase() : "— pending —";
-    const decisionLabel = approvedWord === "AUTHORIZED" ? "Authorized by" : "Decision";
-    doc.text(`${decisionLabel}: ${decisionText}${decision === "approved" && name ? ` — ${name}` : ""}`, 14, y);
+    let decisionLine: string;
+    if (decision === "approved") {
+      decisionLine = approvedWord === "AUTHORIZED"
+        ? `Authorized by: ${name ?? "—"}`
+        : `Decision: APPROVED — ${name ?? "—"}`;
+    } else {
+      const txt = decision ? decision.replace("_", " ").toUpperCase() : "— pending —";
+      decisionLine = approvedWord === "AUTHORIZED" ? `Authorized by: ${txt}` : `Decision: ${txt}`;
+    }
+    doc.text(decisionLine, 14, y);
     y += 5;
     doc.text(`Date: ${when ? format(parseISO(when), "PPpp") : "—"}`, 14, y);
     y += 5;
     if (note) {
-      const lines = doc.splitTextToSize(`Note: ${note}`, pageW - 28);
+      const lines = doc.splitTextToSize(`Note: ${note}`, sigBoxX - 18);
       doc.text(lines, 14, y);
       y += lines.length * 5;
     }
-    y += 4;
+
+    const blockEndY = Math.max(y, blockStartY + 24);
+    doc.setDrawColor(150);
+    doc.rect(sigBoxX, blockStartY, sigBoxW, blockEndY - blockStartY);
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text("Hand signature", sigBoxX + 2, blockStartY + 4);
+    doc.setTextColor(30, 30, 30);
+    doc.setFontSize(10);
+
+    y = blockEndY + 6;
   };
 
   drawApproval("Finance Administrator", data.finance_admin_name, data.finance_admin_decision, data.finance_admin_at, data.finance_admin_note);
