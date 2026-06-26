@@ -605,7 +605,7 @@ function DriversLogPage() {
                     )}
                     {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {(isSuperAdmin || (isHod && l.department_id === myDeptId)) && (
+                      {(isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId)) && (
                         <Button size="sm" variant="outline" onClick={() => startEdit(l)}>
                           <Pencil className="mr-1 h-4 w-4" /> Update closing details
                         </Button>
