@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Lock, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 
-const STORAGE_KEY = (uid: string) => `fin-approver-unlock:${uid}`;
 
 export function FinanceApproverGate({ children }: { children: ReactNode }) {
   const { user, profile, roles } = useAuth();
@@ -27,12 +26,8 @@ export function FinanceApproverGate({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [showChange, setShowChange] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-    try {
-      if (sessionStorage.getItem(STORAGE_KEY(user.id)) === "1") setUnlocked(true);
-    } catch {}
-  }, [user]);
+  // Re-lock on every fresh entry to the Finance Requests area.
+  // Navigating away unmounts this component; coming back remounts it with unlocked=false.
 
   if (!gated) return <>{children}</>;
 
@@ -44,7 +39,6 @@ export function FinanceApproverGate({ children }: { children: ReactNode }) {
     setBusy(false);
     if (error) return toast.error(error.message);
     if (data === true) {
-      try { sessionStorage.setItem(STORAGE_KEY(user!.id), "1"); } catch {}
       setUnlocked(true);
       setPwd("");
     } else {
