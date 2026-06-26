@@ -12,10 +12,15 @@ import { toast } from "sonner";
 const STORAGE_KEY = (uid: string) => `fin-approver-unlock:${uid}`;
 
 export function FinanceApproverGate({ children }: { children: ReactNode }) {
-  const { user, roles } = useAuth();
+  const { user, profile, roles } = useAuth();
+  const name = (profile?.full_name ?? "").toLowerCase();
+  const nameMatch = /finance|vicar|procurator/.test(name);
   const gated =
     !!user &&
-    (roles.includes("finance_admin") || roles.includes("vicar_general") || roles.includes("procurator"));
+    (roles.includes("finance_admin") ||
+      roles.includes("vicar_general") ||
+      roles.includes("procurator") ||
+      (roles.includes("super_admin") && nameMatch));
 
   const [unlocked, setUnlocked] = useState(false);
   const [pwd, setPwd] = useState("");
