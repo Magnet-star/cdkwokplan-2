@@ -72,6 +72,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let sessionRowId: string | null = null;
+    let heartbeat: ReturnType<typeof setInterval> | null = null;
+
+    const startTracking = async (uid: string) => {
+      if (sessionRowId) return;
+      try {
+        const { data } = await supabase
+          .from("user_sessions")
+          .insert({ user_id: uid })
+          .select("id")
+          .single();
+        sessionRowId = data?.id ?? null;
+      } catch {}
+      if (heartbeat) clearInterval(heartbeat);
+      heartbeat = setInterval(() => {
+        if (!sessionRowId) return;
+        supabase
+          .from("user_sessions")
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq("id", sessionRowId)
+          .then(() => {}, () => {});
+      }, 60_000);
+    };
+
+    const stopTracking = () => {
+      if (heartbeat) { clearInterval(heartbeat); heartbeat = null; }
+      if (sessionRowId) {
+        supabase
+          .from("user_sessions")
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq("id", sessionRowId)
+          .then(() => {}, () => {});
+      }
+      sessionRowId = null;
+    };
+
+    const beforeUnload = () => {
+      if (sessionRowId) {
+        try {
+          navigator.sendBeacon?.(
+            "data:,",
+            new Blob([JSON.stringify({ id: sessionRowId })], { type: "application/json" }),
+          );
+        } catch {}
+        supabase
+          .from("user_sessions")
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq("id", sessionRowId)
+          .then(() => {}, () => {});
+      }
+    };
+    if (typeof window !== "undefined") window.addEventListener("beforeunload", beforeUnload);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((evt, sess) => {
       setSession(sess);
       setUser(sess?.user ?? null);
@@ -81,7 +134,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (evt === "TOKEN_REFRESHED" || evt === "USER_UPDATED") return;
         hydrateFromCache(sess.user.id);
         setTimeout(() => { loadProfile(sess.user.id); }, 0);
+        if (evt === "SIGNED_IN") startTracking(sess.user.id);
       } else if (evt === "SIGNED_OUT") {
+        stopTracking();
         setProfile(null);
         setRoles([]);
         setRolesLoaded(false);
@@ -95,10 +150,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (sess?.user) {
         hydrateFromCache(sess.user.id);
         loadProfile(sess.user.id);
+        startTracking(sess.user.id);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (typeof window !== "undefined") window.removeEventListener("beforeunload", beforeUnload);
+      stopTracking();
+    };
   }, []);
 
   const value: AuthState = {
