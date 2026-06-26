@@ -506,6 +506,24 @@ export type Database = {
           },
         ]
       }
+      finance_approver_passwords: {
+        Row: {
+          password_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          password_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          password_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       finance_requests: {
         Row: {
           accounts_disbursement_at: string | null
@@ -1183,6 +1201,14 @@ export type Database = {
         Returns: boolean
       }
       lookup_email_by_phone: { Args: { _phone: string }; Returns: string }
+      set_finance_approver_password: {
+        Args: { _password: string }
+        Returns: undefined
+      }
+      verify_finance_approver_password: {
+        Args: { _password: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
