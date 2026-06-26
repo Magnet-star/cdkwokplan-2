@@ -943,9 +943,21 @@ function RequestCard({
                     </Button>
                   </>
                 )}
-                <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
-                  <Download className="mr-1 h-3.5 w-3.5" /> PDF
-                </Button>
+                {(() => {
+                  const needsDisbursement = isAccountsViewer && !r.accounts_disbursement_status;
+                  if (needsDisbursement) {
+                    return (
+                      <span className="rounded border border-dashed border-muted-foreground/40 px-2 py-1 text-[11px] text-muted-foreground">
+                        Select Funds Available / Not Available to enable download
+                      </span>
+                    );
+                  }
+                  return (
+                    <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
+                      <Download className="mr-1 h-3.5 w-3.5" /> PDF
+                    </Button>
+                  );
+                })()}
               </>
             );
           })()}
