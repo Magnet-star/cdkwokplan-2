@@ -426,9 +426,9 @@ function FinanceRequestsPage() {
             <CardContent className="space-y-3">
               {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
               {!loading && myRequests.length === 0 && <p className="text-sm text-muted-foreground">No requests yet.</p>}
-              <GroupedRequests rows={myRequests}>
+              <ActiveAndCompleted rows={myRequests}>
                 {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={false} onChanged={refresh} />}
-              </GroupedRequests>
+              </ActiveAndCompleted>
             </CardContent>
           </Card>
         </>
@@ -571,9 +571,9 @@ function ApproverPanel({
         <CardContent className="space-y-3">
           {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
           {!loading && filtered.length === 0 && <p className="text-sm text-muted-foreground">Nothing in this range.</p>}
-          <GroupedRequests rows={filtered}>
+          <ActiveAndCompleted rows={filtered}>
             {(r) => <RequestCard key={r.id} r={r} toPDFData={toPDFData} canAct={isApprover} onChanged={onChanged} cdkOffice={cdkOffice} />}
-          </GroupedRequests>
+          </ActiveAndCompleted>
         </CardContent>
       </Card>
     </>
@@ -582,7 +582,18 @@ function ApproverPanel({
 
 /* ===================== Grouped list (clamped) ===================== */
 
-function GroupedRequests({ rows, children }: { rows: FRRow[]; children: (r: FRRow) => React.ReactNode }) {
+export function isFullyProcessed(r: FRRow): boolean {
+  // A request is "done" if cancelled/rejected, OR fully approved+authorized
+  // by all three offices AND CDK Accounts has marked disbursement.
+  if (r.status === "cancelled" || r.status === "rejected") return true;
+  const allApproved =
+    r.finance_admin_decision === "approved" &&
+    r.vicar_general_decision === "approved" &&
+    r.procurator_decision === "approved";
+  return allApproved && !!r.accounts_disbursement_status;
+}
+
+function GroupedRequests({ rows, children, defaultOpen = true }: { rows: FRRow[]; children: (r: FRRow) => React.ReactNode; defaultOpen?: boolean }) {
   // Group by year → month → week → day. Render collapsibles.
   const tree = useMemo(() => {
     const root: Record<string, Record<string, Record<string, Record<string, FRRow[]>>>> = {};
@@ -602,13 +613,13 @@ function GroupedRequests({ rows, children }: { rows: FRRow[]; children: (r: FRRo
   return (
     <div className="space-y-2">
       {years.map((y) => (
-        <Collapsible key={y} label={y} defaultOpen>
+        <Collapsible key={y} label={y} defaultOpen={defaultOpen}>
           {Object.keys(tree[y]).map((m) => (
-            <Collapsible key={m} label={m} defaultOpen>
+            <Collapsible key={m} label={m} defaultOpen={defaultOpen}>
               {Object.keys(tree[y][m]).map((w) => (
-                <Collapsible key={w} label={w} defaultOpen>
+                <Collapsible key={w} label={w} defaultOpen={defaultOpen}>
                   {Object.keys(tree[y][m][w]).map((day) => (
-                    <Collapsible key={day} label={day} defaultOpen>
+                    <Collapsible key={day} label={day} defaultOpen={defaultOpen}>
                       <div className="space-y-3">{tree[y][m][w][day].map(children)}</div>
                     </Collapsible>
                   ))}
@@ -618,6 +629,24 @@ function GroupedRequests({ rows, children }: { rows: FRRow[]; children: (r: FRRo
           ))}
         </Collapsible>
       ))}
+    </div>
+  );
+}
+
+function ActiveAndCompleted({ rows, children }: { rows: FRRow[]; children: (r: FRRow) => React.ReactNode }) {
+  const { active, completed } = useMemo(() => {
+    const a: FRRow[] = [], c: FRRow[] = [];
+    rows.forEach((r) => (isFullyProcessed(r) ? c : a).push(r));
+    return { active: a, completed: c };
+  }, [rows]);
+  return (
+    <div className="space-y-4">
+      {active.length > 0 && <GroupedRequests rows={active}>{children}</GroupedRequests>}
+      {completed.length > 0 && (
+        <Collapsible label={`Completed requests (folded) — ${completed.length}`} defaultOpen={false}>
+          <GroupedRequests rows={completed} defaultOpen={false}>{children}</GroupedRequests>
+        </Collapsible>
+      )}
     </div>
   );
 }
