@@ -759,21 +759,13 @@ function ApprovalTracker({ r }: { r: FRRow }) {
 }
 
 function DisbursementNotice({ r }: { r: FRRow }) {
-  if (!r.accounts_disbursement_status) return null;
-  const isAvailable = r.accounts_disbursement_status === "funds_available";
-  const message = isAvailable
-    ? "FUNDS AVAILABLE — DISBURSEMENT UNDERWAY"
-    : "FUNDS NOT AVAILABLE FOR NOW — SEE FINANCE ADMINISTRATOR FOR GUIDANCE";
+  const financeApproved = r.finance_admin_decision === "approved";
+  const authorized = r.vicar_general_decision === "approved" || r.procurator_decision === "approved";
+  if (!(financeApproved && authorized)) return null;
   return (
-    <div className={`mt-2 border-l-2 pl-2 ${isAvailable ? "border-emerald-500" : "border-red-500"}`}>
+    <div className="mt-2 border-l-2 border-emerald-500 pl-2">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Disbursement process</p>
-      <p className={`text-xs font-bold ${isAvailable ? "text-emerald-800" : "text-red-800"}`}>{message}</p>
-      {r.accounts_disbursement_name && (
-        <p className="text-[10px] text-muted-foreground">
-          by {r.accounts_disbursement_name}
-          {r.accounts_disbursement_at ? `, ${format(new Date(r.accounts_disbursement_at), "MMM d, yyyy h:mm a")}` : ""}
-        </p>
-      )}
+      <p className="text-xs font-bold text-emerald-800">THE ACCOUNTS OFFICE HAS RECEIVED YOUR APPROVED REQUEST</p>
     </div>
   );
 }
