@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, parseISO, addDays } from "date-fns";
 import { toast } from "sonner";
-import { Download, ChevronDown, ChevronRight, ClipboardList, Save, Trash2, FileText, ChevronLeft, CalendarDays } from "lucide-react";
+import { Download, ChevronDown, ChevronRight, ClipboardList, ChevronLeft, CalendarDays } from "lucide-react";
 import {
-  buildAllDepartmentsWorkPlansPDF,
   downloadAllDepartmentsWorkPlansPDF,
   type DeptWorkPlanPDF,
 } from "@/lib/all-workplans-pdf";
@@ -28,24 +27,12 @@ interface WPRow {
   week_start_date: string;
 }
 
-interface SavedRow {
-  id: string;
-  week_start_date: string;
-  week_end_date: string;
-  file_path: string;
-  department_count: number;
-  generated_by_name: string | null;
-  created_at: string;
-}
-
 function AllWorkPlansPage() {
-  const { canViewAll, profile, user } = useAuth();
+  const { canViewAll } = useAuth();
   const [departments, setDepartments] = useState<Record<string, string>>({});
   const [plans, setPlans] = useState<DeptWorkPlanPDF[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState<SavedRow[]>([]);
 
   const todayWeekStart = useMemo(
     () => format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"),
@@ -72,16 +59,6 @@ function AllWorkPlansPage() {
       setDepartments(deptMap);
     })();
   }, []);
-
-  const loadSaved = useCallback(async () => {
-    const { data } = await (supabase as any)
-      .from("saved_weekly_workplans")
-      .select("*")
-      .order("week_start_date", { ascending: false });
-    setSaved((data as SavedRow[]) ?? []);
-  }, []);
-
-  useEffect(() => { loadSaved(); }, [loadSaved]);
 
   useEffect(() => {
     (async () => {
@@ -150,78 +127,6 @@ function AllWorkPlansPage() {
     downloadAllDepartmentsWorkPlansPDF(plans, currentWeekStart);
   };
 
-  const handleSaveAndDownload = async () => {
-    if (plans.length === 0) {
-      toast.error("No submitted work plans for this week yet");
-      return;
-    }
-    setSaving(true);
-    try {
-      const { blob, filename } = buildAllDepartmentsWorkPlansPDF(plans, currentWeekStart);
-      const path = `${currentWeekStart}/${Date.now()}-${filename}`;
-      const { error: upErr } = await supabase.storage
-        .from("workplan-pdfs")
-        .upload(path, blob, { contentType: "application/pdf", upsert: false });
-      if (upErr) throw upErr;
-      const { error: insErr } = await (supabase as any)
-        .from("saved_weekly_workplans")
-        .insert({
-          week_start_date: currentWeekStart,
-          week_end_date: currentWeekEnd,
-          file_path: path,
-          department_count: plans.length,
-          generated_by: user?.id ?? null,
-          generated_by_name: profile?.full_name ?? null,
-        });
-      if (insErr) throw insErr;
-
-      // also trigger a local download for the user
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-      toast.success("Saved to system & downloaded");
-      loadSaved();
-    } catch (err: any) {
-      toast.error(err?.message ?? "Failed to save weekly PDF");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const downloadSaved = async (row: SavedRow) => {
-    const { data, error } = await supabase.storage
-      .from("workplan-pdfs")
-      .createSignedUrl(row.file_path, 120);
-    if (error || !data?.signedUrl) {
-      toast.error(error?.message ?? "Unable to fetch file");
-      return;
-    }
-    window.open(data.signedUrl, "_blank");
-  };
-
-  const deleteSaved = async (row: SavedRow) => {
-    if (!confirm("Delete this saved weekly PDF?")) return;
-    await supabase.storage.from("workplan-pdfs").remove([row.file_path]);
-    await (supabase as any).from("saved_weekly_workplans").delete().eq("id", row.id);
-    toast.success("Deleted");
-    loadSaved();
-  };
-
-  // Group saved PDFs by week (week_start_date) – they are already per-week
-  const savedByWeek = useMemo(() => {
-    const map = new Map<string, SavedRow[]>();
-    for (const row of saved) {
-      const key = row.week_start_date;
-      const arr = map.get(key) ?? [];
-      arr.push(row);
-      map.set(key, arr);
-    }
-    return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [saved]);
-
   if (!canViewAll) {
     return (
       <div className="mx-auto max-w-5xl">
@@ -235,8 +140,8 @@ function AllWorkPlansPage() {
       <div>
         <h1 className="font-serif text-3xl">All Workplans</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          All departments' submitted workplans grouped by week. The Diocesan Secretary can save the
-          weekly consolidated PDF in the system for later access.
+          All departments' submitted workplans grouped by week. Download-only — PDFs are not saved
+          to system storage.
         </p>
       </div>
 
@@ -281,18 +186,10 @@ function AllWorkPlansPage() {
               </Button>
               <Button
                 size="sm"
-                variant="outline"
                 disabled={plans.length === 0 || loading}
                 onClick={handleDownload}
               >
-                <Download className="mr-1 h-4 w-4" /> Download only
-              </Button>
-              <Button
-                size="sm"
-                disabled={plans.length === 0 || loading || saving}
-                onClick={handleSaveAndDownload}
-              >
-                <Save className="mr-1 h-4 w-4" /> {saving ? "Saving…" : "Save & download"}
+                <Download className="mr-1 h-4 w-4" /> Download PDF
               </Button>
             </div>
           </div>
@@ -326,60 +223,6 @@ function AllWorkPlansPage() {
             )}
           </CardContent>
         )}
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-serif flex items-center gap-2">
-            <FileText className="h-5 w-5" /> Saved weekly workplan PDFs
-          </CardTitle>
-          <CardDescription>
-            Past weekly consolidated PDFs saved by the Diocesan Secretary. Grouped per week.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {savedByWeek.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No saved weekly PDFs yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {savedByWeek.map(([weekStart, rows]) => {
-                const ws = parseISO(weekStart);
-                const we = addDays(ws, 6);
-                return (
-                  <div key={weekStart} className="rounded-md border border-border">
-                    <div className="border-b bg-muted/40 px-3 py-2 text-sm font-medium">
-                      Week of {format(ws, "EEE, MMM d")} – {format(we, "EEE, MMM d, yyyy")}
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        ({rows.length} PDF{rows.length === 1 ? "" : "s"} saved)
-                      </span>
-                    </div>
-                    <ul className="divide-y">
-                      {rows.map((r) => (
-                        <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
-                          <div>
-                            <p className="font-medium">{r.department_count} department{r.department_count === 1 ? "" : "s"}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Saved {format(parseISO(r.created_at), "PPp")}
-                              {r.generated_by_name ? ` by ${r.generated_by_name}` : ""}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => downloadSaved(r)}>
-                              <Download className="mr-1 h-4 w-4" /> Open
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => deleteSaved(r)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
       </Card>
     </div>
   );
