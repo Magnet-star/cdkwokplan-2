@@ -246,7 +246,9 @@ function FinanceRequestsPage() {
   const incomingRequests = requests.filter((r) => r.requester_id !== user?.id);
 
   return (
+    <FinanceApproverGate>
     <div className="space-y-6">
+
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#660000] text-white"><Banknote className="h-5 w-5" /></div>
         <div>
