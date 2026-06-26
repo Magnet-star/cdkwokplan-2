@@ -729,13 +729,13 @@ function DisbursementNotice({ r }: { r: FRRow }) {
     ? "FUNDS AVAILABLE — DISBURSEMENT UNDERWAY"
     : "FUNDS NOT AVAILABLE FOR NOW — SEE FINANCE ADMINISTRATOR FOR GUIDANCE";
   return (
-    <div className={`mt-2 rounded-md border p-2 ${cls}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-wide opacity-80">Disbursement process</p>
-      <p className="mt-1 text-xs font-bold">{message}</p>
+    <div className={`mt-2 border-l-2 pl-2 ${isAvailable ? "border-emerald-500" : "border-red-500"}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Disbursement process</p>
+      <p className={`text-xs font-bold ${isAvailable ? "text-emerald-800" : "text-red-800"}`}>{message}</p>
       {r.accounts_disbursement_name && (
-        <p className="mt-1 text-[10px] opacity-80">
+        <p className="text-[10px] text-muted-foreground">
           by {r.accounts_disbursement_name}
-          {r.accounts_disbursement_at ? ` · ${format(new Date(r.accounts_disbursement_at), "EEE, MMM d, yyyy 'at' h:mm:ss a")}` : ""}
+          {r.accounts_disbursement_at ? `, ${format(new Date(r.accounts_disbursement_at), "MMM d, yyyy h:mm a")}` : ""}
         </p>
       )}
     </div>
