@@ -584,13 +584,13 @@ function ApproverPanel({
 
 export function isFullyProcessed(r: FRRow): boolean {
   // A request is "done" if cancelled/rejected, OR fully approved+authorized
-  // by all three offices AND CDK Accounts has marked disbursement.
+  // by all three offices.
   if (r.status === "cancelled" || r.status === "rejected") return true;
   const allApproved =
     r.finance_admin_decision === "approved" &&
     r.vicar_general_decision === "approved" &&
     r.procurator_decision === "approved";
-  return allApproved && !!r.accounts_disbursement_status;
+  return allApproved;
 }
 
 function GroupedRequests({ rows, children, defaultOpen = true }: { rows: FRRow[]; children: (r: FRRow) => React.ReactNode; defaultOpen?: boolean }) {
