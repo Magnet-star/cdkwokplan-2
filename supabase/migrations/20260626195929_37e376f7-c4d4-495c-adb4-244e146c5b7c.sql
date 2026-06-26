@@ -1,0 +1,1 @@
+DELETE FROM public.finance_requests WHERE id = '43f73dea-f38d-4c02-ad2e-ae136a2a509b';
