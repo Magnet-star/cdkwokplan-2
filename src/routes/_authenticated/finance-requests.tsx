@@ -584,13 +584,13 @@ function ApproverPanel({
 
 export function isFullyProcessed(r: FRRow): boolean {
   // A request is "done" if cancelled/rejected, OR fully approved+authorized
-  // by all three offices AND CDK Accounts has marked disbursement.
+  // by all three offices.
   if (r.status === "cancelled" || r.status === "rejected") return true;
   const allApproved =
     r.finance_admin_decision === "approved" &&
     r.vicar_general_decision === "approved" &&
     r.procurator_decision === "approved";
-  return allApproved && !!r.accounts_disbursement_status;
+  return allApproved;
 }
 
 function GroupedRequests({ rows, children, defaultOpen = true }: { rows: FRRow[]; children: (r: FRRow) => React.ReactNode; defaultOpen?: boolean }) {
@@ -759,21 +759,13 @@ function ApprovalTracker({ r }: { r: FRRow }) {
 }
 
 function DisbursementNotice({ r }: { r: FRRow }) {
-  if (!r.accounts_disbursement_status) return null;
-  const isAvailable = r.accounts_disbursement_status === "funds_available";
-  const message = isAvailable
-    ? "FUNDS AVAILABLE — DISBURSEMENT UNDERWAY"
-    : "FUNDS NOT AVAILABLE FOR NOW — SEE FINANCE ADMINISTRATOR FOR GUIDANCE";
+  const financeApproved = r.finance_admin_decision === "approved";
+  const authorized = r.vicar_general_decision === "approved" || r.procurator_decision === "approved";
+  if (!(financeApproved && authorized)) return null;
   return (
-    <div className={`mt-2 border-l-2 pl-2 ${isAvailable ? "border-emerald-500" : "border-red-500"}`}>
+    <div className="mt-2 border-l-2 border-emerald-500 pl-2">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Disbursement process</p>
-      <p className={`text-xs font-bold ${isAvailable ? "text-emerald-800" : "text-red-800"}`}>{message}</p>
-      {r.accounts_disbursement_name && (
-        <p className="text-[10px] text-muted-foreground">
-          by {r.accounts_disbursement_name}
-          {r.accounts_disbursement_at ? `, ${format(new Date(r.accounts_disbursement_at), "MMM d, yyyy h:mm a")}` : ""}
-        </p>
-      )}
+      <p className="text-xs font-bold text-emerald-800">THE ACCOUNTS OFFICE HAS RECEIVED YOUR APPROVED REQUEST</p>
     </div>
   );
 }
@@ -882,23 +874,8 @@ function RequestCard({
     toast.success("Request deleted"); onChanged();
   };
 
-  // CDK Accounts disbursement decision
-  const [disbursing, setDisbursing] = useState(false);
-  const setDisbursement = async (status: "funds_available" | "funds_not_available") => {
-    if (!user || !profile) return;
-    const label = status === "funds_available" ? "FUNDS AVAILABLE" : "FUNDS NOT AVAILABLE";
-    if (!confirm(`Mark this request as ${label}?`)) return;
-    setDisbursing(true);
-    const { error } = await supabase.from("finance_requests").update({
-      accounts_disbursement_status: status,
-      accounts_disbursement_by: user.id,
-      accounts_disbursement_name: profile.full_name,
-      accounts_disbursement_at: new Date().toISOString(),
-    } as never).eq("id", r.id);
-    setDisbursing(false);
-    if (error) return toast.error(error.message);
-    toast.success(`Marked as ${label}`); onChanged();
-  };
+
+
 
 
 
@@ -959,45 +936,9 @@ function RequestCard({
               );
             }
             return (
-              <>
-                {isAccountsViewer && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant={r.accounts_disbursement_status === "funds_available" ? "default" : "outline"}
-                      className={r.accounts_disbursement_status === "funds_available" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
-                      onClick={() => setDisbursement("funds_available")}
-                      disabled={disbursing}
-                    >
-                      <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Funds Available
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={r.accounts_disbursement_status === "funds_not_available" ? "default" : "outline"}
-                      className={r.accounts_disbursement_status === "funds_not_available" ? "bg-red-600 hover:bg-red-700 text-white" : ""}
-                      onClick={() => setDisbursement("funds_not_available")}
-                      disabled={disbursing}
-                    >
-                      <XCircle className="mr-1 h-3.5 w-3.5" /> Funds Not Available
-                    </Button>
-                  </>
-                )}
-                {(() => {
-                  const needsDisbursement = isAccountsViewer && !r.accounts_disbursement_status;
-                  if (needsDisbursement) {
-                    return (
-                      <span className="rounded border border-dashed border-muted-foreground/40 px-2 py-1 text-[11px] text-muted-foreground">
-                        Select Funds Available / Not Available to enable download
-                      </span>
-                    );
-                  }
-                  return (
-                    <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
-                      <Download className="mr-1 h-3.5 w-3.5" /> PDF
-                    </Button>
-                  );
-                })()}
-              </>
+              <Button size="sm" variant="outline" onClick={() => downloadFinanceRequestPDF(toPDFData(r))}>
+                <Download className="mr-1 h-3.5 w-3.5" /> PDF
+              </Button>
             );
           })()}
           {canEditOrCancel && (
