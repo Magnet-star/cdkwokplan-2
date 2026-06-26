@@ -121,10 +121,13 @@ function FinanceRequestsPage() {
   }, [profile?.full_name, departmentName]);
 
   // Only CDK Finance / Vicar General / Procurator super admins see the incoming approval section.
+  // CDK ACCOUNTS (administrator role) also sees incoming requests so they can
+  // download fully-authorized ones for processing.
   const canSeeIncoming = (isSuperAdmin && cdkOffice !== null)
     || roles.includes("finance_admin")
     || roles.includes("vicar_general")
-    || roles.includes("procurator");
+    || roles.includes("procurator")
+    || isAccountsViewer;
 
   // tab for super-admin: their own vs incoming
   const [tab, setTab] = useState<"incoming" | "mine">(canSeeIncoming ? "incoming" : "mine");
