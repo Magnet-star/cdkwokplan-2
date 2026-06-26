@@ -27,12 +27,8 @@ export function FinanceApproverGate({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [showChange, setShowChange] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-    try {
-      if (sessionStorage.getItem(STORAGE_KEY(user.id)) === "1") setUnlocked(true);
-    } catch {}
-  }, [user]);
+  // Re-lock on every fresh entry to the Finance Requests area.
+  // Navigating away unmounts this component; coming back remounts it with unlocked=false.
 
   if (!gated) return <>{children}</>;
 
