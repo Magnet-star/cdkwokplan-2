@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Truck, CheckCircle2, XCircle, Pencil, Save, X, Trash2, Download, Search } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { TimeGroupedList } from "@/components/TimeGroupedList";
 
 export const Route = createFileRoute("/_authenticated/drivers-log")({
   component: DriversLogPage,
@@ -420,93 +421,123 @@ function DriversLogPage() {
           )}
 
           {filteredLogs.length === 0 && <p className="text-sm text-muted-foreground">No logs match the current filter.</p>}
-          {filteredLogs.map((l) => (
-            <div key={l.id} className="rounded-md border border-border p-4">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="font-medium">{l.start_point} → {l.destination}</p>
-                  <p className="break-words text-xs text-muted-foreground">
-                    {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)} · Vehicle: {vehicleLabel(l.vehicle_id)}
-                  </p>
-                </div>
-                <Badge variant={l.status === "approved" ? "default" : l.status === "rejected" ? "destructive" : "secondary"}>
-                  {l.status}
-                </Badge>
-              </div>
-              <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2 md:grid-cols-4">
-                <div><span className="text-muted-foreground">Start KM:</span> {l.starting_km}</div>
-                <div><span className="text-muted-foreground">Close KM:</span> {l.closing_km ?? "—"}</div>
-                <div><span className="text-muted-foreground">Distance:</span> {l.closing_km != null ? (Number(l.closing_km) - Number(l.starting_km)).toFixed(1) : "—"}</div>
-                <div><span className="text-muted-foreground">Passengers:</span> {l.passengers ?? 0}</div>
-                <div><span className="text-muted-foreground">Fuel (KES):</span> {l.fuel_order_amount != null ? Number(l.fuel_order_amount).toLocaleString() : "—"}</div>
-                <div><span className="text-muted-foreground">Fuel litres:</span> {l.fuel_litres != null ? Number(l.fuel_litres).toFixed(2) : "—"}</div>
-              </div>
-              {editingId === l.id ? (
-                <div className="mt-3 grid gap-3 rounded-md border border-dashed border-border p-3 sm:grid-cols-2">
-                  <div>
-                    <Label>Closing kilometers</Label>
-                    <Input type="number" step="0.1" value={editForm.closing_km} onChange={(e) => setEditForm({ ...editForm, closing_km: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label>Fuel order amount (KES)</Label>
-                    <Input type="number" min="0" step="0.01" value={editForm.fuel_order_amount} onChange={(e) => setEditForm({ ...editForm, fuel_order_amount: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label>Fuel litres (after fueling)</Label>
-                    <Input type="number" min="0" step="0.01" value={editForm.fuel_litres} onChange={(e) => setEditForm({ ...editForm, fuel_litres: e.target.value })} />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label>Vehicle condition at start</Label>
-                    <Textarea rows={2} value={editForm.condition_start} onChange={(e) => setEditForm({ ...editForm, condition_start: e.target.value })} />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label>Vehicle condition at end</Label>
-                    <Textarea rows={2} value={editForm.condition_end} onChange={(e) => setEditForm({ ...editForm, condition_end: e.target.value })} />
-                  </div>
-                  <div className="flex flex-wrap gap-2 sm:col-span-2">
-                    <Button size="sm" onClick={() => saveEdit(l.id)}><Save className="mr-1 h-4 w-4" /> Save</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="mr-1 h-4 w-4" /> Cancel</Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {(l.condition_start || l.condition_end) && (
-                    <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
-                      {l.condition_start && <div className="break-words"><span className="text-muted-foreground">Condition (start):</span> {l.condition_start}</div>}
-                      {l.condition_end && <div className="break-words"><span className="text-muted-foreground">Condition (end):</span> {l.condition_end}</div>}
-                    </div>
-                  )}
-                  {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {(isSuperAdmin || (isHod && l.department_id === myDeptId)) && (
-                      <Button size="sm" variant="outline" onClick={() => startEdit(l)}>
-                        <Pencil className="mr-1 h-4 w-4" /> Update closing details
-                      </Button>
-                    )}
-                    {canApprove(l) && (
-                      <>
-                        <Button size="sm" onClick={() => decide(l.id, "approved")}>
-                          <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => {
-                          const note = window.prompt("Reason for rejection (optional):") ?? "";
-                          decide(l.id, "rejected", note || undefined);
-                        }}>
-                          <XCircle className="mr-1 h-4 w-4" /> Reject
-                        </Button>
-                      </>
-                    )}
-                    {isProtectedSuperAdmin && (
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteLog(l.id)}>
-                        <Trash2 className="mr-1 h-4 w-4" /> Delete log
-                      </Button>
-                    )}
-                  </div>
-                </>
-              )}
 
-            </div>
-          ))}
+          {(() => {
+            const isArchived = (l: DriverLog) => l.status === "approved" && l.closing_km != null;
+            const openLogs = filteredLogs.filter((l) => !isArchived(l));
+            const archivedLogs = filteredLogs.filter(isArchived);
+
+            const renderLog = (l: DriverLog) => (
+              <div className="rounded-md border border-border p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium">{l.start_point} → {l.destination}</p>
+                    <p className="break-words text-xs text-muted-foreground">
+                      {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)} · Vehicle: {vehicleLabel(l.vehicle_id)}
+                    </p>
+                  </div>
+                  <Badge variant={l.status === "approved" ? "default" : l.status === "rejected" ? "destructive" : "secondary"}>
+                    {l.status}
+                  </Badge>
+                </div>
+                <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2 md:grid-cols-4">
+                  <div><span className="text-muted-foreground">Start KM:</span> {l.starting_km}</div>
+                  <div><span className="text-muted-foreground">Close KM:</span> {l.closing_km ?? "—"}</div>
+                  <div><span className="text-muted-foreground">Distance:</span> {l.closing_km != null ? (Number(l.closing_km) - Number(l.starting_km)).toFixed(1) : "—"}</div>
+                  <div><span className="text-muted-foreground">Passengers:</span> {l.passengers ?? 0}</div>
+                  <div><span className="text-muted-foreground">Fuel (KES):</span> {l.fuel_order_amount != null ? Number(l.fuel_order_amount).toLocaleString() : "—"}</div>
+                  <div><span className="text-muted-foreground">Fuel litres:</span> {l.fuel_litres != null ? Number(l.fuel_litres).toFixed(2) : "—"}</div>
+                </div>
+                {editingId === l.id ? (
+                  <div className="mt-3 grid gap-3 rounded-md border border-dashed border-border p-3 sm:grid-cols-2">
+                    <div>
+                      <Label>Closing kilometers</Label>
+                      <Input type="number" step="0.1" value={editForm.closing_km} onChange={(e) => setEditForm({ ...editForm, closing_km: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Fuel order amount (KES)</Label>
+                      <Input type="number" min="0" step="0.01" value={editForm.fuel_order_amount} onChange={(e) => setEditForm({ ...editForm, fuel_order_amount: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Fuel litres (after fueling)</Label>
+                      <Input type="number" min="0" step="0.01" value={editForm.fuel_litres} onChange={(e) => setEditForm({ ...editForm, fuel_litres: e.target.value })} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label>Vehicle condition at start</Label>
+                      <Textarea rows={2} value={editForm.condition_start} onChange={(e) => setEditForm({ ...editForm, condition_start: e.target.value })} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label>Vehicle condition at end</Label>
+                      <Textarea rows={2} value={editForm.condition_end} onChange={(e) => setEditForm({ ...editForm, condition_end: e.target.value })} />
+                    </div>
+                    <div className="flex flex-wrap gap-2 sm:col-span-2">
+                      <Button size="sm" onClick={() => saveEdit(l.id)}><Save className="mr-1 h-4 w-4" /> Save</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="mr-1 h-4 w-4" /> Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {(l.condition_start || l.condition_end) && (
+                      <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                        {l.condition_start && <div className="break-words"><span className="text-muted-foreground">Condition (start):</span> {l.condition_start}</div>}
+                        {l.condition_end && <div className="break-words"><span className="text-muted-foreground">Condition (end):</span> {l.condition_end}</div>}
+                      </div>
+                    )}
+                    {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(isSuperAdmin || (isHod && l.department_id === myDeptId)) && (
+                        <Button size="sm" variant="outline" onClick={() => startEdit(l)}>
+                          <Pencil className="mr-1 h-4 w-4" /> Update closing details
+                        </Button>
+                      )}
+                      {canApprove(l) && (
+                        <>
+                          <Button size="sm" onClick={() => decide(l.id, "approved")}>
+                            <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => {
+                            const note = window.prompt("Reason for rejection (optional):") ?? "";
+                            decide(l.id, "rejected", note || undefined);
+                          }}>
+                            <XCircle className="mr-1 h-4 w-4" /> Reject
+                          </Button>
+                        </>
+                      )}
+                      {isProtectedSuperAdmin && (
+                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteLog(l.id)}>
+                          <Trash2 className="mr-1 h-4 w-4" /> Delete log
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+
+            return (
+              <div className="space-y-4">
+                {openLogs.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Open trips (pending approval or awaiting closing details)</h3>
+                    {openLogs.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+                  </div>
+                )}
+                {archivedLogs.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Completed trips archive</h3>
+                    <TimeGroupedList
+                      items={archivedLogs}
+                      getDate={(l) => l.log_date ? parseISO(l.log_date) : null}
+                      keyOf={(l) => l.id}
+                      renderItem={renderLog}
+                      groupLabel="Trips"
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
         </CardContent>
       </Card>
     </div>
