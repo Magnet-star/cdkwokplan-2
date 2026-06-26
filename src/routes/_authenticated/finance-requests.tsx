@@ -637,7 +637,7 @@ function ActiveAndCompleted({ rows, children }: { rows: FRRow[]; children: (r: F
   const { active, completed } = useMemo(() => {
     const a: FRRow[] = [], c: FRRow[] = [];
     rows.forEach((r) => (isFullyProcessed(r) ? c : a).push(r));
-    c.sort((x, y) => (y.created_at || "").localeCompare(x.created_at || ""));
+    c.sort((x, y) => (y.submitted_at || "").localeCompare(x.submitted_at || ""));
     return { active: a, completed: c };
   }, [rows]);
   return (
@@ -649,7 +649,7 @@ function ActiveAndCompleted({ rows, children }: { rows: FRRow[]; children: (r: F
             {completed.map((r) => (
               <div key={r.id} className="space-y-1">
                 <div className="text-xs font-mono text-muted-foreground">
-                  {(r.created_at || "").slice(0, 10)}
+                  {(r.submitted_at || "").slice(0, 10)}
                 </div>
                 {children(r)}
               </div>
