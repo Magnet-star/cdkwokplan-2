@@ -681,7 +681,7 @@ function Collapsible({ label, children, defaultOpen = false }: { label: string; 
 }
 
 function bestDate(r: FRRow): Date {
-  const s = r.approved_at || r.cancelled_at || r.rejected_at || r.accounts_disbursement_at || r.submitted_at || r.created_at;
+  const s = (r as any).accounts_disbursement_at || (r as any).submitted_at || (r as any).created_at;
   const d = s ? new Date(s) : new Date();
   return isNaN(d.getTime()) ? new Date() : d;
 }
