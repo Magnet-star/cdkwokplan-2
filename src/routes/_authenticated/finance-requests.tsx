@@ -793,13 +793,8 @@ function RequestCard({
           </p>
           <p className="text-xs text-muted-foreground">By {r.requester_name} · {format(new Date(r.submitted_at), "PPp")}</p>
           <p className="text-xs text-muted-foreground">Sent to: {[r.selected_super_admin_name, r.vicar_super_admin_name, r.procurator_super_admin_name].filter(Boolean).join(", ") || "—"}</p>
-          {(financeApproved || vicarApproved || procuratorApproved) && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {financeApproved && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]">✓ CDK Finance</Badge>}
-              {vicarApproved && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]">✓ Vicar General</Badge>}
-              {procuratorApproved && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]">✓ CDK Procurator</Badge>}
-            </div>
-          )}
+          <ApprovalTracker r={r} />
+
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
