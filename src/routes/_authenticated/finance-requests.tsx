@@ -99,7 +99,7 @@ function FinanceRequestsPage() {
 
   const [requests, setRequests] = useState<FRRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [recipients, setRecipients] = useState<CdkRecipients>({ finance: null, vicar: null, procurator: null });
+  const [recipients, setRecipients] = useState<CdkRecipients>({ finance: null, vicar: null, procurator: null, accounts: null });
   const [departmentName, setDepartmentName] = useState<string>("");
 
   // form state
