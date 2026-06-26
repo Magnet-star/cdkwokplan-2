@@ -508,6 +508,11 @@ export type Database = {
       }
       finance_requests: {
         Row: {
+          accounts_disbursement_at: string | null
+          accounts_disbursement_by: string | null
+          accounts_disbursement_name: string | null
+          accounts_disbursement_note: string | null
+          accounts_disbursement_status: string | null
           created_at: string
           department_id: string | null
           department_name: string | null
@@ -545,6 +550,11 @@ export type Database = {
           vicar_super_admin_name: string | null
         }
         Insert: {
+          accounts_disbursement_at?: string | null
+          accounts_disbursement_by?: string | null
+          accounts_disbursement_name?: string | null
+          accounts_disbursement_note?: string | null
+          accounts_disbursement_status?: string | null
           created_at?: string
           department_id?: string | null
           department_name?: string | null
@@ -582,6 +592,11 @@ export type Database = {
           vicar_super_admin_name?: string | null
         }
         Update: {
+          accounts_disbursement_at?: string | null
+          accounts_disbursement_by?: string | null
+          accounts_disbursement_name?: string | null
+          accounts_disbursement_note?: string | null
+          accounts_disbursement_status?: string | null
           created_at?: string
           department_id?: string | null
           department_name?: string | null
