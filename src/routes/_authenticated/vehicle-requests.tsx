@@ -1115,18 +1115,16 @@ function SavedWeeklyPdfs({ refreshKey }: { refreshKey: number }) {
               <div key={e.path} className="flex flex-wrap items-center justify-between gap-2 p-3">
                 <div className="min-w-0">
                   <p className="text-sm font-medium">
-                    Week of {format(parseISO(e.weekStart), "EEE, MMM d")} – {format(parseISO(e.weekEnd), "EEE, MMM d, yyyy")}
+                    Week of {format(parseISO(e.weekStart), "MMM d")} – {format(parseISO(e.weekEnd), "MMM d, yyyy")}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {e.name}
-                    {e.created_at ? ` · saved ${format(parseISO(e.created_at), "PPp")}` : ""}
-                  </p>
+                  <p className="text-xs text-muted-foreground">Saved vehicle request PDF</p>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" disabled={busy === e.path} onClick={() => openPdf(e.path)}>
                     <Download className="mr-1 h-3.5 w-3.5" />Open
                   </Button>
                 </div>
+
               </div>
             ))}
           </div>
