@@ -17,6 +17,7 @@ import {
 import { Banknote, Plus, Trash2, Download, Send, CheckCircle2, XCircle, RefreshCw, Pencil, Ban, ChevronDown, ChevronUp } from "lucide-react";
 import { downloadFinanceRequestPDF, type FinanceRequestPDFData } from "@/lib/finance-request-pdf";
 import { downloadFinanceSummaryPDF } from "@/lib/finance-summary-pdf";
+import { FinanceApproverGate } from "@/components/FinanceApproverGate";
 
 export const Route = createFileRoute("/_authenticated/finance-requests")({
   component: FinanceRequestsPage,
@@ -245,7 +246,9 @@ function FinanceRequestsPage() {
   const incomingRequests = requests.filter((r) => r.requester_id !== user?.id);
 
   return (
+    <FinanceApproverGate>
     <div className="space-y-6">
+
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#660000] text-white"><Banknote className="h-5 w-5" /></div>
         <div>
@@ -446,6 +449,7 @@ function FinanceRequestsPage() {
         />
       )}
     </div>
+    </FinanceApproverGate>
   );
 }
 
