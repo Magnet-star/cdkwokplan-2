@@ -660,16 +660,7 @@ function ActiveAndCompleted({ rows, children }: { rows: FRRow[]; children: (r: F
       )}
       {completed.length > 0 && (
         <Collapsible label={`Completed requests (folded) — ${completed.length}`} defaultOpen={false}>
-          <div className="space-y-3">
-            {completed.map((r) => (
-              <div key={r.id} className="space-y-1">
-                <div className="text-xs font-mono text-muted-foreground">
-                  {(r.submitted_at || "").slice(0, 10)}
-                </div>
-                {children(r)}
-              </div>
-            ))}
-          </div>
+          <CompletedGrouped rows={completed}>{children}</CompletedGrouped>
         </Collapsible>
       )}
     </div>
