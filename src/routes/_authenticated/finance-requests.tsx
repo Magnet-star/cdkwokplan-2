@@ -840,6 +840,8 @@ function ApprovalTracker({ r }: { r: FRRow }) {
 }
 
 function DisbursementNotice({ r }: { r: FRRow }) {
+  const { user } = useAuth();
+  if (r.requester_id !== user?.id) return null;
   const financeApproved = r.finance_admin_decision === "approved";
   const authorized = r.vicar_general_decision === "approved" || r.procurator_decision === "approved";
   if (!(financeApproved && authorized)) return null;
