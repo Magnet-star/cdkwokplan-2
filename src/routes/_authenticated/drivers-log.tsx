@@ -616,6 +616,8 @@ function DriversLogPage() {
                           <span className="text-muted-foreground">·</span>
                           <span>{d?.name ?? "—"}</span>
                           <span className="text-muted-foreground">·</span>
+                          <span>Driver: <span className="font-medium">{drivers[l.user_id]?.full_name ?? "—"}</span></span>
+                          <span className="text-muted-foreground">·</span>
                           <span>{l.start_point} → {l.destination}</span>
                         </div>
                         <Badge className="bg-green-600 hover:bg-green-600">Active</Badge>
