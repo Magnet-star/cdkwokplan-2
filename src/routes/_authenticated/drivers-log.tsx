@@ -955,23 +955,25 @@ function DriversLogPage() {
                                             <td className="px-3 py-2 whitespace-nowrap">{l.lost_km_attributed_at ? format(new Date(l.lost_km_attributed_at), "PP") : "—"}</td>
                                             <td className="px-3 py-2">{deptName(l.department_id)}</td>
                                             <td className="px-3 py-2">{vehicleLabel(l.vehicle_id)}</td>
-                                            <td className="px-3 py-2">
+                                            <td className="px-3 py-2 min-w-[260px]">
                                               {canEditDesc ? (
-                                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
+                                                <div className="flex flex-col gap-2">
                                                   <Input
                                                     value={editing ? draftVal : currentVal}
                                                     placeholder="Describe the trip (e.g. Office → Karatina visit)"
                                                     onChange={(e) => setAllocTripDraft((prev) => ({ ...prev, [draftKey]: e.target.value }))}
-                                                    className="h-8 text-xs"
+                                                    className="h-9 w-full text-xs"
                                                   />
-                                                  <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    disabled={allocSaving === l.id || (!editing && currentVal.length === 0)}
-                                                    onClick={() => saveAllocTrip(l.id)}
-                                                  >
-                                                    <Save className="mr-1 h-3 w-3" /> Save
-                                                  </Button>
+                                                  <div className="flex justify-end">
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      disabled={allocSaving === l.id || (!editing && currentVal.length === 0)}
+                                                      onClick={() => saveAllocTrip(l.id)}
+                                                    >
+                                                      <Save className="mr-1 h-3 w-3" /> Save
+                                                    </Button>
+                                                  </div>
                                                 </div>
                                               ) : (
                                                 <span className={currentVal ? "" : "text-xs text-muted-foreground"}>
@@ -979,6 +981,7 @@ function DriversLogPage() {
                                                 </span>
                                               )}
                                             </td>
+
                                             <td className="px-3 py-2 text-right font-medium whitespace-nowrap">{Number(l.lost_km_value ?? 0).toFixed(1)}</td>
                                           </tr>
                                         );
