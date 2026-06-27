@@ -437,6 +437,10 @@ export type Database = {
           fuel_order_amount: number | null
           id: string
           log_date: string
+          lost_km_attributed_at: string | null
+          lost_km_attributed_by: string | null
+          lost_km_attributed_to: string | null
+          lost_km_value: number | null
           passengers: number | null
           start_point: string
           starting_km: number
@@ -459,6 +463,10 @@ export type Database = {
           fuel_order_amount?: number | null
           id?: string
           log_date: string
+          lost_km_attributed_at?: string | null
+          lost_km_attributed_by?: string | null
+          lost_km_attributed_to?: string | null
+          lost_km_value?: number | null
           passengers?: number | null
           start_point: string
           starting_km: number
@@ -481,6 +489,10 @@ export type Database = {
           fuel_order_amount?: number | null
           id?: string
           log_date?: string
+          lost_km_attributed_at?: string | null
+          lost_km_attributed_by?: string | null
+          lost_km_attributed_to?: string | null
+          lost_km_value?: number | null
           passengers?: number | null
           start_point?: string
           starting_km?: number
@@ -493,6 +505,13 @@ export type Database = {
           {
             foreignKeyName: "driver_logs_department_id_fkey"
             columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_logs_lost_km_attributed_to_fkey"
+            columns: ["lost_km_attributed_to"]
             isOneToOne: false
             referencedRelation: "departments"
             referencedColumns: ["id"]

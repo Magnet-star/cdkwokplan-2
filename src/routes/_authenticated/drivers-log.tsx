@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { Truck, CheckCircle2, XCircle, Pencil, Save, X, Trash2, Download, Search } from "lucide-react";
+import { Truck, CheckCircle2, XCircle, Pencil, Save, X, Trash2, Download, Search, AlertTriangle } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -38,6 +39,11 @@ interface DriverLog {
   status: string;
   approver_notes: string | null;
   approved_at: string | null;
+  created_at?: string | null;
+  lost_km_attributed_to?: string | null;
+  lost_km_attributed_at?: string | null;
+  lost_km_attributed_by?: string | null;
+  lost_km_value?: number | null;
 }
 
 interface Dept { id: string; name: string; hod_id: string | null }
@@ -169,11 +175,56 @@ function DriversLogPage() {
   const myDeptId = profile?.department_id ?? null;
   const canApprove = (l: DriverLog) =>
     l.status === "pending" && (isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId));
+  const canViewLost = (l: DriverLog) =>
+    isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId);
+  const canAttributeLost = (l: DriverLog) =>
+    isSuperAdmin || (isHod && l.department_id === myDeptId);
 
-  const deptName = (id: string | null) => depts.find((d) => d.id === id)?.name ?? "—";
+  const deptName = (id: string | null | undefined) => depts.find((d) => d.id === id)?.name ?? "—";
   const vehicleLabel = (id: string | null) => {
     const v = vehicles.find((x) => x.id === id);
     return v ? `${v.registration}${v.make_model ? " · " + v.make_model : ""}` : "—";
+  };
+
+  // Baseline lost-km calc: previous trip (by date, then created_at) of the same vehicle.
+  const vehicleLogsSorted = (vehicleId: string | null) => {
+    if (!vehicleId) return [] as DriverLog[];
+    return logs
+      .filter((x) => x.vehicle_id === vehicleId)
+      .slice()
+      .sort((a, b) => {
+        const ad = a.log_date.localeCompare(b.log_date);
+        if (ad !== 0) return ad;
+        return (a.created_at ?? "").localeCompare(b.created_at ?? "");
+      });
+  };
+  const previousClosingFor = (l: DriverLog): number | null => {
+    const sorted = vehicleLogsSorted(l.vehicle_id);
+    const idx = sorted.findIndex((x) => x.id === l.id);
+    for (let i = idx - 1; i >= 0; i--) {
+      if (sorted[i].closing_km != null) return Number(sorted[i].closing_km);
+    }
+    return null;
+  };
+  const computedLostKm = (l: DriverLog): { value: number; baseline: number | null; firstTrip: boolean } => {
+    const baseline = previousClosingFor(l);
+    if (baseline == null) return { value: 0, baseline: null, firstTrip: true };
+    const diff = Number(l.starting_km) - baseline;
+    return { value: diff > 0 ? diff : 0, baseline, firstTrip: false };
+  };
+
+  const saveLostAttribution = async (l: DriverLog, deptId: string | null) => {
+    if (!user) return;
+    const { value } = computedLostKm(l);
+    const { error } = await supabase.from("driver_logs").update({
+      lost_km_attributed_to: deptId,
+      lost_km_attributed_at: deptId ? new Date().toISOString() : null,
+      lost_km_attributed_by: deptId ? user.id : null,
+      lost_km_value: deptId ? value : null,
+    } as any).eq("id", l.id);
+    if (error) return toast.error(error.message);
+    toast.success(deptId ? "Lost kilometers attributed" : "Attribution cleared");
+    load();
   };
 
   // Filters
@@ -604,6 +655,51 @@ function DriversLogPage() {
                       </div>
                     )}
                     {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
+                    {canViewLost(l) && (() => {
+                      const { value, baseline, firstTrip } = computedLostKm(l);
+                      return (
+                        <div className="mt-3 rounded-md border border-amber-300/60 bg-amber-50/60 p-3 dark:border-amber-700/40 dark:bg-amber-950/30">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+                                <AlertTriangle className="h-3.5 w-3.5" /> Lost Kilometers
+                              </p>
+                              <p className="mt-1 text-sm">
+                                <span className="font-semibold">{value.toFixed(1)} km</span>
+                                <span className="text-muted-foreground"> · Last closing: {baseline != null ? baseline.toFixed(1) : "—"} → Start: {Number(l.starting_km).toFixed(1)}</span>
+                                {firstTrip && <span className="ml-1 text-xs text-muted-foreground">(first trip for this vehicle — no baseline)</span>}
+                              </p>
+                              {l.lost_km_attributed_to && (
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  Attributed to <span className="font-medium text-foreground">{deptName(l.lost_km_attributed_to)}</span>
+                                  {l.lost_km_attributed_at && <> · {format(new Date(l.lost_km_attributed_at), "PP p")}</>}
+                                  {l.lost_km_value != null && <> · {Number(l.lost_km_value).toFixed(1)} km recorded</>}
+                                </p>
+                              )}
+                            </div>
+                            <div className="min-w-[220px]">
+                              <Label className="text-xs">Attribute lost kilometers to</Label>
+                              <div className="flex gap-1">
+                                <Select
+                                  value={l.lost_km_attributed_to ?? "__none"}
+                                  onValueChange={(v) => canAttributeLost(l) && saveLostAttribution(l, v === "__none" ? null : v)}
+                                  disabled={!canAttributeLost(l)}
+                                >
+                                  <SelectTrigger className="h-9"><SelectValue placeholder="Select department" /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__none">— Not attributed —</SelectItem>
+                                    {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              {!canAttributeLost(l) && (
+                                <p className="mt-1 text-[10px] text-muted-foreground">Only the department's HOD or a Super Admin can attribute.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     <div className="mt-3 flex flex-wrap gap-2">
                       {(isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId)) && (
                         <Button size="sm" variant="outline" onClick={() => startEdit(l)}>
@@ -634,7 +730,28 @@ function DriversLogPage() {
               </div>
             );
 
-            return (
+            const showAllocTab = isSuperAdmin || isAdministrator || isHod;
+            const allocated = logs.filter((l) => l.lost_km_attributed_to);
+            const allocByDept = (() => {
+              const m = new Map<string, DriverLog[]>();
+              for (const l of allocated) {
+                const k = l.lost_km_attributed_to as string;
+                const arr = m.get(k) ?? [];
+                arr.push(l);
+                m.set(k, arr);
+              }
+              return Array.from(m.entries()).map(([deptId, items]) => ({
+                deptId,
+                name: deptName(deptId),
+                items: items.sort((a, b) => (b.lost_km_attributed_at ?? "").localeCompare(a.lost_km_attributed_at ?? "")),
+                total: items.reduce((s, x) => s + Number(x.lost_km_value ?? 0), 0),
+              })).sort((a, b) => b.total - a.total);
+            })();
+            const visibleAlloc = isHod && !isSuperAdmin && !isAdministrator
+              ? allocByDept.filter((g) => g.deptId === myDeptId)
+              : allocByDept;
+
+            const logsView = (
               <div className="space-y-4">
                 {openLogs.length > 0 && (
                   <div className="space-y-3">
@@ -648,8 +765,61 @@ function DriversLogPage() {
                     <WeeklyArchiveGroups logs={archivedLogs} renderLog={renderLog} />
                   </div>
                 )}
-
               </div>
+            );
+
+            if (!showAllocTab) return logsView;
+
+            return (
+              <Tabs defaultValue="logs">
+                <TabsList>
+                  <TabsTrigger value="logs">Logs</TabsTrigger>
+                  <TabsTrigger value="alloc">Allocated Kilometers{visibleAlloc.length ? ` (${visibleAlloc.reduce((s, g) => s + g.items.length, 0)})` : ""}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="logs" className="mt-4">{logsView}</TabsContent>
+                <TabsContent value="alloc" className="mt-4">
+                  {visibleAlloc.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No lost kilometers have been allocated yet.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {visibleAlloc.map((g) => (
+                        <div key={g.deptId} className="rounded-md border border-border">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2">
+                            <div>
+                              <p className="font-medium">{g.name}</p>
+                              <p className="text-xs text-muted-foreground">Kilometers allocated: <span className="font-semibold text-foreground">{g.total.toFixed(1)} km</span> · {g.items.length} record{g.items.length === 1 ? "" : "s"}</p>
+                            </div>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead className="bg-muted/30 text-xs uppercase text-muted-foreground">
+                                <tr>
+                                  <th className="px-3 py-2 text-left">Date allocated</th>
+                                  <th className="px-3 py-2 text-left">Allocated by (source dept)</th>
+                                  <th className="px-3 py-2 text-left">Vehicle</th>
+                                  <th className="px-3 py-2 text-left">Trip</th>
+                                  <th className="px-3 py-2 text-right">Lost km</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {g.items.map((l) => (
+                                  <tr key={l.id} className="border-t border-border">
+                                    <td className="px-3 py-2">{l.lost_km_attributed_at ? format(new Date(l.lost_km_attributed_at), "PP") : "—"}</td>
+                                    <td className="px-3 py-2">{deptName(l.department_id)}</td>
+                                    <td className="px-3 py-2">{vehicleLabel(l.vehicle_id)}</td>
+                                    <td className="px-3 py-2 text-xs text-muted-foreground">{l.start_point} → {l.destination} · {format(parseISO(l.log_date), "PP")}</td>
+                                    <td className="px-3 py-2 text-right font-medium">{Number(l.lost_km_value ?? 0).toFixed(1)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             );
           })()}
 
