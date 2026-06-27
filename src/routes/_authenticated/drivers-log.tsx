@@ -751,7 +751,28 @@ function DriversLogPage() {
             );
 
             const showAllocTab = isSuperAdmin || isAdministrator || isHod;
-            const allocated = logs.filter((l) => l.lost_km_attributed_to);
+            const now = new Date();
+            const periodInterval = allocPeriod === "week"
+              ? { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) }
+              : allocPeriod === "month"
+                ? { start: startOfMonth(now), end: endOfMonth(now) }
+                : allocPeriod === "year"
+                  ? { start: startOfYear(now), end: endOfYear(now) }
+                  : null;
+            const periodLabel = allocPeriod === "week"
+              ? `this week (${format(startOfWeek(now, { weekStartsOn: 1 }), "PP")} – ${format(endOfWeek(now, { weekStartsOn: 1 }), "PP")})`
+              : allocPeriod === "month"
+                ? `this month (${format(now, "MMMM yyyy")})`
+                : allocPeriod === "year"
+                  ? `this year (${format(now, "yyyy")})`
+                  : "all time";
+            const allocated = logs.filter((l) => {
+              if (!l.lost_km_attributed_to) return false;
+              if (!periodInterval) return true;
+              const d = l.lost_km_attributed_at ? new Date(l.lost_km_attributed_at) : null;
+              if (!d || isNaN(d.getTime())) return false;
+              return isWithinInterval(d, periodInterval);
+            });
             const allocByDept = (() => {
               const m = new Map<string, DriverLog[]>();
               for (const l of allocated) {
@@ -770,6 +791,8 @@ function DriversLogPage() {
             const visibleAlloc = isHod && !isSuperAdmin && !isAdministrator
               ? allocByDept.filter((g) => g.deptId === myDeptId)
               : allocByDept;
+            const totalAllocCount = visibleAlloc.reduce((s, g) => s + g.items.length, 0);
+            const totalAllocKm = visibleAlloc.reduce((s, g) => s + g.total, 0);
 
             const logsView = (
               <div className="space-y-4">
