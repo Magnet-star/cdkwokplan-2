@@ -616,6 +616,16 @@ function DriversLogPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label className="text-xs">Filter by vehicle</Label>
+              <Select value={filterVehicle} onValueChange={setFilterVehicle}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All vehicles</SelectItem>
+                  {vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.registration}{v.make_model ? ` — ${v.make_model}` : ""}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex flex-wrap items-end gap-2 sm:col-span-2 md:col-span-1">
               <Button size="sm" variant="outline" onClick={() => downloadPdf("daily")}><Download className="mr-1 h-4 w-4" />Daily</Button>
               <Button size="sm" variant="outline" onClick={() => downloadPdf("weekly")}><Download className="mr-1 h-4 w-4" />Weekly</Button>
