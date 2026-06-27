@@ -206,6 +206,15 @@ function DriversLogPage() {
     }
     return null;
   };
+  const lastDeptForVehicle = (l: DriverLog): string | null => {
+    const sorted = vehicleLogsSorted(l.vehicle_id);
+    const idx = sorted.findIndex((x) => x.id === l.id);
+    const ref = idx >= 0 ? idx : sorted.length;
+    for (let i = ref - 1; i >= 0; i--) {
+      if (sorted[i].department_id) return deptName(sorted[i].department_id);
+    }
+    return null;
+  };
   const computedLostKm = (l: DriverLog): { value: number; baseline: number | null; firstTrip: boolean } => {
     const baseline = previousClosingFor(l);
     if (baseline == null) return { value: 0, baseline: null, firstTrip: true };
