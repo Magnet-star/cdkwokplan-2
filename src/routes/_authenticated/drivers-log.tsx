@@ -260,6 +260,22 @@ function DriversLogPage() {
   const [showRanking, setShowRanking] = useState(false);
   const [allocPeriod, setAllocPeriod] = useState<"week" | "month" | "year" | "all">("week");
   const [allocOpen, setAllocOpen] = useState(true);
+  const [allocTripDraft, setAllocTripDraft] = useState<Record<string, string>>({});
+  const [allocSaving, setAllocSaving] = useState<string | null>(null);
+
+  const saveAllocTrip = async (logId: string) => {
+    const value = (allocTripDraft[logId] ?? "").trim();
+    setAllocSaving(logId);
+    const { error } = await supabase
+      .from("driver_logs")
+      .update({ lost_km_trip_description: value.length ? value : null } as any)
+      .eq("id", logId);
+    setAllocSaving(null);
+    if (error) { toast.error(error.message); return; }
+    setLogs((prev) => prev.map((l) => l.id === logId ? { ...l, lost_km_trip_description: value.length ? value : null } : l));
+    setAllocTripDraft((prev) => { const n = { ...prev }; delete n[logId]; return n; });
+    toast.success("Trip description saved");
+  };
 
   const statsRange = (() => {
     const now = new Date();
