@@ -615,7 +615,16 @@ function DriversLogPage() {
                     <p className="break-words text-xs text-muted-foreground">
                       {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)} · Vehicle: {vehicleLabel(l.vehicle_id)}
                     </p>
-                  </div>
+                </div>
+                {canViewLost(l) && (() => {
+                  const last = lastDeptForVehicle(l);
+                  return (
+                    <p className="mt-2 text-xs">
+                      <span className="font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">Last Department:</span>{" "}
+                      <span className="font-bold text-green-600 dark:text-green-400">{last ?? "— (first trip for this vehicle)"}</span>
+                    </p>
+                  );
+                })()}
                   <Badge variant={l.status === "approved" ? "default" : l.status === "rejected" ? "destructive" : "secondary"}>
                     {l.status}
                   </Badge>
