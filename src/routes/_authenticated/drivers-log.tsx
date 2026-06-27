@@ -347,10 +347,12 @@ function DriversLogPage() {
     doc.text("Drivers Log Report", 14, 14);
     doc.setFontSize(10);
     doc.text(label, 14, 20);
-    if (filterDept !== "all") doc.text(`Department filter: ${deptName(filterDept)}`, 14, 26);
+    let yPos = 24;
+    if (filterDept !== "all") { doc.text(`Department filter: ${deptName(filterDept)}`, 14, yPos); yPos += 6; }
+    if (filterVehicle !== "all") { doc.text(`Vehicle filter: ${vehicleLabel(filterVehicle)}`, 14, yPos); yPos += 6; }
 
     autoTable(doc, {
-      startY: filterDept !== "all" ? 30 : 24,
+      startY: yPos,
       head: [["Date", "Driver", "Vehicle", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Fuel (L)", "Fuel (KES)", "Cond. start", "Cond. end", "Status"]],
       body: inRange.map((l) => [
         format(parseISO(l.log_date), "yyyy-MM-dd"),
