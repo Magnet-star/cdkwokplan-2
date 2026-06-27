@@ -378,6 +378,62 @@ function DriversLogPage() {
       headStyles: { fillColor: [40, 40, 40] },
     });
 
+    // Allocated kilometers (lost km attributed to departments) within the period
+    const allocInRange = logs.filter((l) => {
+      if (!l.lost_km_attributed_to || l.lost_km_value == null) return false;
+      const d = l.lost_km_attributed_at ? new Date(l.lost_km_attributed_at) : null;
+      if (!d || isNaN(d.getTime())) return false;
+      if (!isWithinInterval(d, { start, end })) return false;
+      if (filterDept !== "all" && l.lost_km_attributed_to !== filterDept) return false;
+      return true;
+    });
+
+    if (allocInRange.length > 0) {
+      const allocSummary = new Map<string, { name: string; records: number; km: number }>();
+      allocInRange.forEach((l) => {
+        const key = l.lost_km_attributed_to as string;
+        const cur = allocSummary.get(key) ?? { name: deptName(key), records: 0, km: 0 };
+        cur.records += 1;
+        cur.km += Number(l.lost_km_value ?? 0);
+        allocSummary.set(key, cur);
+      });
+      const totalAllocKm = allocInRange.reduce((s, l) => s + Number(l.lost_km_value ?? 0), 0);
+
+      autoTable(doc, {
+        head: [["Allocated Kilometers — Summary by receiving department", "", ""]],
+        body: [],
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [80, 80, 80] },
+      });
+      autoTable(doc, {
+        head: [["Receiving department", "Records", "Allocated km"]],
+        body: [
+          ...Array.from(allocSummary.values()).sort((a, b) => b.km - a.km).map((s) => [s.name, s.records, s.km.toFixed(1)]),
+          ["TOTAL", allocInRange.length, totalAllocKm.toFixed(1)],
+        ],
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [40, 40, 40] },
+      });
+
+      autoTable(doc, {
+        head: [["Date allocated", "Allocated to (dept)", "Source dept", "Vehicle", "Trip", "Log date", "Allocated km"]],
+        body: allocInRange
+          .slice()
+          .sort((a, b) => (b.lost_km_attributed_at ?? "").localeCompare(a.lost_km_attributed_at ?? ""))
+          .map((l) => [
+            l.lost_km_attributed_at ? format(new Date(l.lost_km_attributed_at), "yyyy-MM-dd") : "—",
+            deptName(l.lost_km_attributed_to ?? null),
+            deptName(l.department_id),
+            vehicleLabel(l.vehicle_id),
+            `${l.start_point} → ${l.destination}`,
+            format(parseISO(l.log_date), "yyyy-MM-dd"),
+            Number(l.lost_km_value ?? 0).toFixed(1),
+          ]),
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [40, 40, 40] },
+      });
+    }
+
     doc.save(`drivers-log-${period}-${format(now, "yyyy-MM-dd")}.pdf`);
   };
 
