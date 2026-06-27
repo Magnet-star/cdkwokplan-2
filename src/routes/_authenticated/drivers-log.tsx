@@ -655,6 +655,51 @@ function DriversLogPage() {
                       </div>
                     )}
                     {l.approver_notes && <p className="mt-2 text-sm"><span className="text-muted-foreground">Approver notes:</span> {l.approver_notes}</p>}
+                    {canViewLost(l) && (() => {
+                      const { value, baseline, firstTrip } = computedLostKm(l);
+                      return (
+                        <div className="mt-3 rounded-md border border-amber-300/60 bg-amber-50/60 p-3 dark:border-amber-700/40 dark:bg-amber-950/30">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+                                <AlertTriangle className="h-3.5 w-3.5" /> Lost Kilometers
+                              </p>
+                              <p className="mt-1 text-sm">
+                                <span className="font-semibold">{value.toFixed(1)} km</span>
+                                <span className="text-muted-foreground"> · Last closing: {baseline != null ? baseline.toFixed(1) : "—"} → Start: {Number(l.starting_km).toFixed(1)}</span>
+                                {firstTrip && <span className="ml-1 text-xs text-muted-foreground">(first trip for this vehicle — no baseline)</span>}
+                              </p>
+                              {l.lost_km_attributed_to && (
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  Attributed to <span className="font-medium text-foreground">{deptName(l.lost_km_attributed_to)}</span>
+                                  {l.lost_km_attributed_at && <> · {format(new Date(l.lost_km_attributed_at), "PP p")}</>}
+                                  {l.lost_km_value != null && <> · {Number(l.lost_km_value).toFixed(1)} km recorded</>}
+                                </p>
+                              )}
+                            </div>
+                            <div className="min-w-[220px]">
+                              <Label className="text-xs">Attribute lost kilometers to</Label>
+                              <div className="flex gap-1">
+                                <Select
+                                  value={l.lost_km_attributed_to ?? "__none"}
+                                  onValueChange={(v) => canAttributeLost(l) && saveLostAttribution(l, v === "__none" ? null : v)}
+                                  disabled={!canAttributeLost(l)}
+                                >
+                                  <SelectTrigger className="h-9"><SelectValue placeholder="Select department" /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__none">— Not attributed —</SelectItem>
+                                    {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              {!canAttributeLost(l) && (
+                                <p className="mt-1 text-[10px] text-muted-foreground">Only the department's HOD or a Super Admin can attribute.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     <div className="mt-3 flex flex-wrap gap-2">
                       {(isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId)) && (
                         <Button size="sm" variant="outline" onClick={() => startEdit(l)}>
