@@ -124,6 +124,30 @@ export function StorageUsagePanel() {
             </Card>
           )}
 
+          <Card className="md:col-span-2 border-sky-200 bg-sky-50/50 dark:bg-sky-950/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base"><Cloud className="h-4 w-4" /> Monthly Cloud credits</CardTitle>
+              <CardDescription>40 free Cloud credits refresh every month (covers database, auth, storage, and server activity).</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p className="text-muted-foreground">
+                The live credit balance isn't accessible from inside the app — it's workspace billing data. Check it directly in Lovable:
+              </p>
+              <p className="font-medium">Settings → Plans &amp; credits (hover the credit bar for the daily/monthly breakdown).</p>
+              <p className="text-xs text-muted-foreground">
+                If you ever approach the 40-credit monthly limit, you'll be notified and can top up from the same page. The free 40 credits reset automatically at the start of each billing month.
+              </p>
+              <a
+                href="https://lovable.dev/settings/plans"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm font-medium text-sky-700 hover:underline dark:text-sky-300"
+              >
+                Open Plans &amp; credits <ExternalLink className="h-3 w-3" />
+              </a>
+            </CardContent>
+          </Card>
+
           <p className="md:col-span-2 text-xs text-muted-foreground">
             Snapshot taken {new Date(snap.generatedAt).toLocaleString()}. Projection is linear from current data — actual growth can rise as more users and activities are added.
           </p>
