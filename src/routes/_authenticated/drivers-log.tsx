@@ -44,6 +44,7 @@ interface DriverLog {
   lost_km_attributed_at?: string | null;
   lost_km_attributed_by?: string | null;
   lost_km_value?: number | null;
+  lost_km_trip_description?: string | null;
 }
 
 interface Dept { id: string; name: string; hod_id: string | null }
