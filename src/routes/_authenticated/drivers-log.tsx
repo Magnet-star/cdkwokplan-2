@@ -592,7 +592,45 @@ function DriversLogPage() {
         </Card>
       )}
 
+      {(isSuperAdmin || isAdministrator) && (() => {
+        const today = format(new Date(), "yyyy-MM-dd");
+        const active = logs.filter((l) => l.log_date === today && l.closing_km == null && l.status !== "rejected");
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-serif flex items-center gap-2"><Truck className="h-5 w-5" />Vehicles currently out</CardTitle>
+              <CardDescription>Live status for today. Auto-clears at the start of the next day. A vehicle stays active until the HOD closes the trip.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {active.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No vehicles currently out.</p>
+              ) : (
+                <ul className="divide-y divide-border rounded-md border">
+                  {active.map((l) => {
+                    const v = vehicles.find((x) => x.id === l.vehicle_id);
+                    const d = depts.find((x) => x.id === l.department_id);
+                    return (
+                      <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="font-mono font-semibold">{v?.registration ?? "—"}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span>{d?.name ?? "—"}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span>{l.start_point} → {l.destination}</span>
+                        </div>
+                        <Badge className="bg-green-600 hover:bg-green-600">Active</Badge>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       <Card>
+
         <CardHeader>
           <CardTitle className="font-serif">All driver logs</CardTitle>
           <CardDescription>{canViewAll ? "Showing all logs across the diocese." : isHod ? "You can approve logs assigned to your department." : "Read-only view."}</CardDescription>
