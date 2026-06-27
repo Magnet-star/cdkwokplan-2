@@ -239,13 +239,15 @@ function DriversLogPage() {
 
   // Filters
   const [filterDept, setFilterDept] = useState<string>("all");
+  const [filterVehicle, setFilterVehicle] = useState<string>("all");
   const [searchText, setSearchText] = useState("");
 
   const filteredLogs = logs.filter((l) => {
     if (filterDept !== "all" && l.department_id !== filterDept) return false;
+    if (filterVehicle !== "all" && l.vehicle_id !== filterVehicle) return false;
     if (searchText) {
       const q = searchText.toLowerCase();
-      const hay = `${l.start_point} ${l.destination} ${deptName(l.department_id)} ${drivers[l.user_id]?.full_name ?? ""}`.toLowerCase();
+      const hay = `${l.start_point} ${l.destination} ${deptName(l.department_id)} ${vehicleLabel(l.vehicle_id)} ${drivers[l.user_id]?.full_name ?? ""}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -345,10 +347,12 @@ function DriversLogPage() {
     doc.text("Drivers Log Report", 14, 14);
     doc.setFontSize(10);
     doc.text(label, 14, 20);
-    if (filterDept !== "all") doc.text(`Department filter: ${deptName(filterDept)}`, 14, 26);
+    let yPos = 24;
+    if (filterDept !== "all") { doc.text(`Department filter: ${deptName(filterDept)}`, 14, yPos); yPos += 6; }
+    if (filterVehicle !== "all") { doc.text(`Vehicle filter: ${vehicleLabel(filterVehicle)}`, 14, yPos); yPos += 6; }
 
     autoTable(doc, {
-      startY: filterDept !== "all" ? 30 : 24,
+      startY: yPos,
       head: [["Date", "Driver", "Vehicle", "Department", "From", "To", "Start KM", "Close KM", "Distance", "Fuel (L)", "Fuel (KES)", "Cond. start", "Cond. end", "Status"]],
       body: inRange.map((l) => [
         format(parseISO(l.log_date), "yyyy-MM-dd"),
@@ -395,6 +399,28 @@ function DriversLogPage() {
       headStyles: { fillColor: [40, 40, 40] },
     });
 
+    // Per-vehicle summary (especially useful when filtering by vehicle to trace its usage)
+    const vehSummary = new Map<string, { name: string; trips: number; km: number; litres: number; money: number; depts: Set<string> }>();
+    inRange.forEach((l) => {
+      const key = l.vehicle_id ?? "none";
+      const cur = vehSummary.get(key) ?? { name: vehicleLabel(l.vehicle_id), trips: 0, km: 0, litres: 0, money: 0, depts: new Set<string>() };
+      cur.trips += 1;
+      cur.km += distanceOf(l);
+      cur.litres += Number(l.fuel_litres ?? 0);
+      cur.money += Number(l.fuel_order_amount ?? 0);
+      cur.depts.add(deptName(l.department_id));
+      vehSummary.set(key, cur);
+    });
+    autoTable(doc, {
+      head: [["Vehicle", "Trips", "Kilometers", "Fuel litres", "Fuel (KES)", "Departments that used it"]],
+      body: [
+        ...Array.from(vehSummary.values()).sort((a,b) => b.km - a.km).map((s) => [s.name, s.trips, s.km.toFixed(1), s.litres.toFixed(2), s.money.toLocaleString(), Array.from(s.depts).join(", ")]),
+        ["TOTAL", inRange.length, totalKm.toFixed(1), totalLitres.toFixed(2), totalMoney.toLocaleString(), ""],
+      ],
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [40, 40, 40] },
+    });
+
     // Allocated kilometers (lost km attributed to departments) within the period
     const allocInRange = logs.filter((l) => {
       if (!l.lost_km_attributed_to || l.lost_km_value == null) return false;
@@ -402,6 +428,7 @@ function DriversLogPage() {
       if (!d || isNaN(d.getTime())) return false;
       if (!isWithinInterval(d, { start, end })) return false;
       if (filterDept !== "all" && l.lost_km_attributed_to !== filterDept) return false;
+      if (filterVehicle !== "all" && l.vehicle_id !== filterVehicle) return false;
       return true;
     });
 
@@ -586,6 +613,16 @@ function DriversLogPage() {
                 <SelectContent>
                   <SelectItem value="all">All departments</SelectItem>
                   {depts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Filter by vehicle</Label>
+              <Select value={filterVehicle} onValueChange={setFilterVehicle}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All vehicles</SelectItem>
+                  {vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.registration}{v.make_model ? ` — ${v.make_model}` : ""}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
