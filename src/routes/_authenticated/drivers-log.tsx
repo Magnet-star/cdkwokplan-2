@@ -175,11 +175,56 @@ function DriversLogPage() {
   const myDeptId = profile?.department_id ?? null;
   const canApprove = (l: DriverLog) =>
     l.status === "pending" && (isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId));
+  const canViewLost = (l: DriverLog) =>
+    isSuperAdmin || isAdministrator || (isHod && l.department_id === myDeptId);
+  const canAttributeLost = (l: DriverLog) =>
+    isSuperAdmin || (isHod && l.department_id === myDeptId);
 
-  const deptName = (id: string | null) => depts.find((d) => d.id === id)?.name ?? "—";
+  const deptName = (id: string | null | undefined) => depts.find((d) => d.id === id)?.name ?? "—";
   const vehicleLabel = (id: string | null) => {
     const v = vehicles.find((x) => x.id === id);
     return v ? `${v.registration}${v.make_model ? " · " + v.make_model : ""}` : "—";
+  };
+
+  // Baseline lost-km calc: previous trip (by date, then created_at) of the same vehicle.
+  const vehicleLogsSorted = (vehicleId: string | null) => {
+    if (!vehicleId) return [] as DriverLog[];
+    return logs
+      .filter((x) => x.vehicle_id === vehicleId)
+      .slice()
+      .sort((a, b) => {
+        const ad = a.log_date.localeCompare(b.log_date);
+        if (ad !== 0) return ad;
+        return (a.created_at ?? "").localeCompare(b.created_at ?? "");
+      });
+  };
+  const previousClosingFor = (l: DriverLog): number | null => {
+    const sorted = vehicleLogsSorted(l.vehicle_id);
+    const idx = sorted.findIndex((x) => x.id === l.id);
+    for (let i = idx - 1; i >= 0; i--) {
+      if (sorted[i].closing_km != null) return Number(sorted[i].closing_km);
+    }
+    return null;
+  };
+  const computedLostKm = (l: DriverLog): { value: number; baseline: number | null; firstTrip: boolean } => {
+    const baseline = previousClosingFor(l);
+    if (baseline == null) return { value: 0, baseline: null, firstTrip: true };
+    const diff = Number(l.starting_km) - baseline;
+    return { value: diff > 0 ? diff : 0, baseline, firstTrip: false };
+  };
+
+  const saveLostAttribution = async (l: DriverLog, deptId: string | null) => {
+    if (!user) return;
+    const { value } = computedLostKm(l);
+    const { error } = await supabase.from("driver_logs").update({
+      lost_km_attributed_to: deptId,
+      lost_km_attributed_at: deptId ? new Date().toISOString() : null,
+      lost_km_attributed_by: deptId ? user.id : null,
+      lost_km_value: deptId ? value : null,
+    } as any).eq("id", l.id);
+    if (error) return toast.error(error.message);
+    toast.success(deptId ? "Lost kilometers attributed" : "Attribution cleared");
+    load();
   };
 
   // Filters
