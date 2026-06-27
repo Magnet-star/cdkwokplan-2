@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Truck, CheckCircle2, XCircle, Pencil, Save, X, Trash2, Download, Search, AlertTriangle } from "lucide-react";
 import jsPDF from "jspdf";
@@ -257,6 +257,8 @@ function DriversLogPage() {
   const [statsPeriod, setStatsPeriod] = useState<"day" | "week" | "month" | "year">("week");
   const [statsWeekStart, setStatsWeekStart] = useState<string>(format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"));
   const [showRanking, setShowRanking] = useState(false);
+  const [allocPeriod, setAllocPeriod] = useState<"week" | "month" | "year" | "all">("week");
+  const [allocOpen, setAllocOpen] = useState(true);
 
   const statsRange = (() => {
     const now = new Date();
@@ -749,7 +751,28 @@ function DriversLogPage() {
             );
 
             const showAllocTab = isSuperAdmin || isAdministrator || isHod;
-            const allocated = logs.filter((l) => l.lost_km_attributed_to);
+            const now = new Date();
+            const periodInterval = allocPeriod === "week"
+              ? { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) }
+              : allocPeriod === "month"
+                ? { start: startOfMonth(now), end: endOfMonth(now) }
+                : allocPeriod === "year"
+                  ? { start: startOfYear(now), end: endOfYear(now) }
+                  : null;
+            const periodLabel = allocPeriod === "week"
+              ? `this week (${format(startOfWeek(now, { weekStartsOn: 1 }), "PP")} – ${format(endOfWeek(now, { weekStartsOn: 1 }), "PP")})`
+              : allocPeriod === "month"
+                ? `this month (${format(now, "MMMM yyyy")})`
+                : allocPeriod === "year"
+                  ? `this year (${format(now, "yyyy")})`
+                  : "all time";
+            const allocated = logs.filter((l) => {
+              if (!l.lost_km_attributed_to) return false;
+              if (!periodInterval) return true;
+              const d = l.lost_km_attributed_at ? new Date(l.lost_km_attributed_at) : null;
+              if (!d || isNaN(d.getTime())) return false;
+              return isWithinInterval(d, periodInterval);
+            });
             const allocByDept = (() => {
               const m = new Map<string, DriverLog[]>();
               for (const l of allocated) {
@@ -768,6 +791,8 @@ function DriversLogPage() {
             const visibleAlloc = isHod && !isSuperAdmin && !isAdministrator
               ? allocByDept.filter((g) => g.deptId === myDeptId)
               : allocByDept;
+            const totalAllocCount = visibleAlloc.reduce((s, g) => s + g.items.length, 0);
+            const totalAllocKm = visibleAlloc.reduce((s, g) => s + g.total, 0);
 
             const logsView = (
               <div className="space-y-4">
@@ -792,50 +817,79 @@ function DriversLogPage() {
               <Tabs defaultValue="logs">
                 <TabsList>
                   <TabsTrigger value="logs">Logs</TabsTrigger>
-                  <TabsTrigger value="alloc">Allocated Kilometers{visibleAlloc.length ? ` (${visibleAlloc.reduce((s, g) => s + g.items.length, 0)})` : ""}</TabsTrigger>
+                  <TabsTrigger value="alloc">Allocated Kilometers{totalAllocCount ? ` (${totalAllocCount})` : ""}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="logs" className="mt-4">{logsView}</TabsContent>
-                <TabsContent value="alloc" className="mt-4">
-                  {visibleAlloc.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No lost kilometers have been allocated yet.</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {visibleAlloc.map((g) => (
-                        <div key={g.deptId} className="rounded-md border border-border">
-                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2">
-                            <div>
-                              <p className="font-medium">{g.name}</p>
-                              <p className="text-xs text-muted-foreground">Kilometers allocated: <span className="font-semibold text-foreground">{g.total.toFixed(1)} km</span> · {g.items.length} record{g.items.length === 1 ? "" : "s"}</p>
-                            </div>
+                <TabsContent value="alloc" className="mt-4 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label className="text-xs uppercase text-muted-foreground">Show allocations for</Label>
+                    <Select value={allocPeriod} onValueChange={(v) => setAllocPeriod(v as any)}>
+                      <SelectTrigger className="h-8 w-[180px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="week">This week</SelectItem>
+                        <SelectItem value="month">This month</SelectItem>
+                        <SelectItem value="year">This year</SelectItem>
+                        <SelectItem value="all">All time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="rounded-md border border-border">
+                    <button
+                      type="button"
+                      onClick={() => setAllocOpen((o) => !o)}
+                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium capitalize">Allocated {periodLabel}</p>
+                        <p className="text-xs text-muted-foreground">{totalAllocCount} record{totalAllocCount === 1 ? "" : "s"} · {totalAllocKm.toFixed(1)} km across {visibleAlloc.length} department{visibleAlloc.length === 1 ? "" : "s"}</p>
+                      </div>
+                      {allocOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </button>
+                    {allocOpen && (
+                      <div className="border-t border-border p-3">
+                        {visibleAlloc.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No lost kilometers have been allocated for this period.</p>
+                        ) : (
+                          <div className="space-y-4">
+                            {visibleAlloc.map((g) => (
+                              <div key={g.deptId} className="rounded-md border border-border">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2">
+                                  <div>
+                                    <p className="font-medium">{g.name}</p>
+                                    <p className="text-xs text-muted-foreground">Kilometers allocated: <span className="font-semibold text-foreground">{g.total.toFixed(1)} km</span> · {g.items.length} record{g.items.length === 1 ? "" : "s"}</p>
+                                  </div>
+                                </div>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead className="bg-muted/30 text-xs uppercase text-muted-foreground">
+                                      <tr>
+                                        <th className="px-3 py-2 text-left">Date allocated</th>
+                                        <th className="px-3 py-2 text-left">Allocated by (source dept)</th>
+                                        <th className="px-3 py-2 text-left">Vehicle</th>
+                                        <th className="px-3 py-2 text-left">Trip</th>
+                                        <th className="px-3 py-2 text-right">Lost km</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {g.items.map((l) => (
+                                        <tr key={l.id} className="border-t border-border">
+                                          <td className="px-3 py-2">{l.lost_km_attributed_at ? format(new Date(l.lost_km_attributed_at), "PP") : "—"}</td>
+                                          <td className="px-3 py-2">{deptName(l.department_id)}</td>
+                                          <td className="px-3 py-2">{vehicleLabel(l.vehicle_id)}</td>
+                                          <td className="px-3 py-2 text-xs text-muted-foreground">{l.start_point} → {l.destination} · {format(parseISO(l.log_date), "PP")}</td>
+                                          <td className="px-3 py-2 text-right font-medium">{Number(l.lost_km_value ?? 0).toFixed(1)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                              <thead className="bg-muted/30 text-xs uppercase text-muted-foreground">
-                                <tr>
-                                  <th className="px-3 py-2 text-left">Date allocated</th>
-                                  <th className="px-3 py-2 text-left">Allocated by (source dept)</th>
-                                  <th className="px-3 py-2 text-left">Vehicle</th>
-                                  <th className="px-3 py-2 text-left">Trip</th>
-                                  <th className="px-3 py-2 text-right">Lost km</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {g.items.map((l) => (
-                                  <tr key={l.id} className="border-t border-border">
-                                    <td className="px-3 py-2">{l.lost_km_attributed_at ? format(new Date(l.lost_km_attributed_at), "PP") : "—"}</td>
-                                    <td className="px-3 py-2">{deptName(l.department_id)}</td>
-                                    <td className="px-3 py-2">{vehicleLabel(l.vehicle_id)}</td>
-                                    <td className="px-3 py-2 text-xs text-muted-foreground">{l.start_point} → {l.destination} · {format(parseISO(l.log_date), "PP")}</td>
-                                    <td className="px-3 py-2 text-right font-medium">{Number(l.lost_km_value ?? 0).toFixed(1)}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
               </Tabs>
             );
