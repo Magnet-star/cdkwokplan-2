@@ -399,6 +399,28 @@ function DriversLogPage() {
       headStyles: { fillColor: [40, 40, 40] },
     });
 
+    // Per-vehicle summary (especially useful when filtering by vehicle to trace its usage)
+    const vehSummary = new Map<string, { name: string; trips: number; km: number; litres: number; money: number; depts: Set<string> }>();
+    inRange.forEach((l) => {
+      const key = l.vehicle_id ?? "none";
+      const cur = vehSummary.get(key) ?? { name: vehicleLabel(l.vehicle_id), trips: 0, km: 0, litres: 0, money: 0, depts: new Set<string>() };
+      cur.trips += 1;
+      cur.km += distanceOf(l);
+      cur.litres += Number(l.fuel_litres ?? 0);
+      cur.money += Number(l.fuel_order_amount ?? 0);
+      cur.depts.add(deptName(l.department_id));
+      vehSummary.set(key, cur);
+    });
+    autoTable(doc, {
+      head: [["Vehicle", "Trips", "Kilometers", "Fuel litres", "Fuel (KES)", "Departments that used it"]],
+      body: [
+        ...Array.from(vehSummary.values()).sort((a,b) => b.km - a.km).map((s) => [s.name, s.trips, s.km.toFixed(1), s.litres.toFixed(2), s.money.toLocaleString(), Array.from(s.depts).join(", ")]),
+        ["TOTAL", inRange.length, totalKm.toFixed(1), totalLitres.toFixed(2), totalMoney.toLocaleString(), ""],
+      ],
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [40, 40, 40] },
+    });
+
     // Allocated kilometers (lost km attributed to departments) within the period
     const allocInRange = logs.filter((l) => {
       if (!l.lost_km_attributed_to || l.lost_km_value == null) return false;
@@ -406,6 +428,7 @@ function DriversLogPage() {
       if (!d || isNaN(d.getTime())) return false;
       if (!isWithinInterval(d, { start, end })) return false;
       if (filterDept !== "all" && l.lost_km_attributed_to !== filterDept) return false;
+      if (filterVehicle !== "all" && l.vehicle_id !== filterVehicle) return false;
       return true;
     });
 
