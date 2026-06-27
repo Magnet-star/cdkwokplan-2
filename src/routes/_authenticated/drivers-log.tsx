@@ -425,7 +425,7 @@ function DriversLogPage() {
             deptName(l.lost_km_attributed_to ?? null),
             deptName(l.department_id),
             vehicleLabel(l.vehicle_id),
-            `${l.start_point} → ${l.destination}`,
+            "NOT SPECIFIED",
             format(parseISO(l.log_date), "yyyy-MM-dd"),
             Number(l.lost_km_value ?? 0).toFixed(1),
           ]),
