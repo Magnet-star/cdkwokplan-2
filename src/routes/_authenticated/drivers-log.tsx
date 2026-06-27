@@ -939,20 +939,50 @@ function DriversLogPage() {
                                         <th className="px-3 py-2 text-left">Date allocated</th>
                                         <th className="px-3 py-2 text-left">Allocated by (source dept)</th>
                                         <th className="px-3 py-2 text-left">Vehicle</th>
-                                        <th className="px-3 py-2 text-left">Trip</th>
+                                        <th className="px-3 py-2 text-left">Trip that used these kilometers</th>
                                         <th className="px-3 py-2 text-right">Lost km</th>
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      {g.items.map((l) => (
-                                        <tr key={l.id} className="border-t border-border">
-                                          <td className="px-3 py-2">{l.lost_km_attributed_at ? format(new Date(l.lost_km_attributed_at), "PP") : "—"}</td>
-                                          <td className="px-3 py-2">{deptName(l.department_id)}</td>
-                                          <td className="px-3 py-2">{vehicleLabel(l.vehicle_id)}</td>
-                                          <td className="px-3 py-2 text-xs text-muted-foreground">{l.start_point} → {l.destination} · {format(parseISO(l.log_date), "PP")}</td>
-                                          <td className="px-3 py-2 text-right font-medium">{Number(l.lost_km_value ?? 0).toFixed(1)}</td>
-                                        </tr>
-                                      ))}
+                                      {g.items.map((l) => {
+                                        const canEditDesc = isSuperAdmin || isAdministrator || (isHod && l.lost_km_attributed_to === myDeptId);
+                                        const draftKey = l.id;
+                                        const draftVal = allocTripDraft[draftKey];
+                                        const currentVal = l.lost_km_trip_description ?? "";
+                                        const editing = draftVal !== undefined;
+                                        return (
+                                          <tr key={l.id} className="border-t border-border align-top">
+                                            <td className="px-3 py-2 whitespace-nowrap">{l.lost_km_attributed_at ? format(new Date(l.lost_km_attributed_at), "PP") : "—"}</td>
+                                            <td className="px-3 py-2">{deptName(l.department_id)}</td>
+                                            <td className="px-3 py-2">{vehicleLabel(l.vehicle_id)}</td>
+                                            <td className="px-3 py-2">
+                                              {canEditDesc ? (
+                                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
+                                                  <Input
+                                                    value={editing ? draftVal : currentVal}
+                                                    placeholder="Describe the trip (e.g. Office → Karatina visit)"
+                                                    onChange={(e) => setAllocTripDraft((prev) => ({ ...prev, [draftKey]: e.target.value }))}
+                                                    className="h-8 text-xs"
+                                                  />
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    disabled={allocSaving === l.id || (!editing && currentVal.length === 0)}
+                                                    onClick={() => saveAllocTrip(l.id)}
+                                                  >
+                                                    <Save className="mr-1 h-3 w-3" /> Save
+                                                  </Button>
+                                                </div>
+                                              ) : (
+                                                <span className={currentVal ? "" : "text-xs text-muted-foreground"}>
+                                                  {currentVal || "Not specified"}
+                                                </span>
+                                              )}
+                                            </td>
+                                            <td className="px-3 py-2 text-right font-medium whitespace-nowrap">{Number(l.lost_km_value ?? 0).toFixed(1)}</td>
+                                          </tr>
+                                        );
+                                      })}
                                     </tbody>
                                   </table>
                                 </div>
