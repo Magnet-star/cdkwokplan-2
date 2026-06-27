@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { fetchUsageSnapshot, formatBytes, type UsageSnapshot } from "@/lib/storage-usage";
 import { toast } from "sonner";
-import { RefreshCw, Database, HardDrive } from "lucide-react";
+import { RefreshCw, Database, HardDrive, Cloud, ExternalLink } from "lucide-react";
 
 function Bar({ pct }: { pct: number }) {
   const clamped = Math.min(100, Math.max(0, pct));
