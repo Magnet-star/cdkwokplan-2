@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Church } from "lucide-react";
+import { lookupEmailByPhone } from "@/lib/phone-lookup.functions";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
