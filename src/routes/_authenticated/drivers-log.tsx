@@ -206,6 +206,15 @@ function DriversLogPage() {
     }
     return null;
   };
+  const lastDeptForVehicle = (l: DriverLog): string | null => {
+    const sorted = vehicleLogsSorted(l.vehicle_id);
+    const idx = sorted.findIndex((x) => x.id === l.id);
+    const ref = idx >= 0 ? idx : sorted.length;
+    for (let i = ref - 1; i >= 0; i--) {
+      if (sorted[i].department_id) return deptName(sorted[i].department_id);
+    }
+    return null;
+  };
   const computedLostKm = (l: DriverLog): { value: number; baseline: number | null; firstTrip: boolean } => {
     const baseline = previousClosingFor(l);
     if (baseline == null) return { value: 0, baseline: null, firstTrip: true };
@@ -606,7 +615,16 @@ function DriversLogPage() {
                     <p className="break-words text-xs text-muted-foreground">
                       {format(new Date(l.log_date), "PPP")} · Driver: {drivers[l.user_id]?.full_name ?? "—"} · Dept: {deptName(l.department_id)} · Vehicle: {vehicleLabel(l.vehicle_id)}
                     </p>
-                  </div>
+                </div>
+                {canViewLost(l) && (() => {
+                  const last = lastDeptForVehicle(l);
+                  return (
+                    <p className="mt-2 text-xs">
+                      <span className="font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">Last Department:</span>{" "}
+                      <span className="font-bold text-green-600 dark:text-green-400">{last ?? "— (first trip for this vehicle)"}</span>
+                    </p>
+                  );
+                })()}
                   <Badge variant={l.status === "approved" ? "default" : l.status === "rejected" ? "destructive" : "secondary"}>
                     {l.status}
                   </Badge>
