@@ -257,6 +257,8 @@ function DriversLogPage() {
   const [statsPeriod, setStatsPeriod] = useState<"day" | "week" | "month" | "year">("week");
   const [statsWeekStart, setStatsWeekStart] = useState<string>(format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"));
   const [showRanking, setShowRanking] = useState(false);
+  const [allocPeriod, setAllocPeriod] = useState<"week" | "month" | "year" | "all">("week");
+  const [allocOpen, setAllocOpen] = useState(true);
 
   const statsRange = (() => {
     const now = new Date();
