@@ -239,13 +239,15 @@ function DriversLogPage() {
 
   // Filters
   const [filterDept, setFilterDept] = useState<string>("all");
+  const [filterVehicle, setFilterVehicle] = useState<string>("all");
   const [searchText, setSearchText] = useState("");
 
   const filteredLogs = logs.filter((l) => {
     if (filterDept !== "all" && l.department_id !== filterDept) return false;
+    if (filterVehicle !== "all" && l.vehicle_id !== filterVehicle) return false;
     if (searchText) {
       const q = searchText.toLowerCase();
-      const hay = `${l.start_point} ${l.destination} ${deptName(l.department_id)} ${drivers[l.user_id]?.full_name ?? ""}`.toLowerCase();
+      const hay = `${l.start_point} ${l.destination} ${deptName(l.department_id)} ${vehicleLabel(l.vehicle_id)} ${drivers[l.user_id]?.full_name ?? ""}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
