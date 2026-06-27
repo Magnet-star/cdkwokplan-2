@@ -817,50 +817,79 @@ function DriversLogPage() {
               <Tabs defaultValue="logs">
                 <TabsList>
                   <TabsTrigger value="logs">Logs</TabsTrigger>
-                  <TabsTrigger value="alloc">Allocated Kilometers{visibleAlloc.length ? ` (${visibleAlloc.reduce((s, g) => s + g.items.length, 0)})` : ""}</TabsTrigger>
+                  <TabsTrigger value="alloc">Allocated Kilometers{totalAllocCount ? ` (${totalAllocCount})` : ""}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="logs" className="mt-4">{logsView}</TabsContent>
-                <TabsContent value="alloc" className="mt-4">
-                  {visibleAlloc.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No lost kilometers have been allocated yet.</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {visibleAlloc.map((g) => (
-                        <div key={g.deptId} className="rounded-md border border-border">
-                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2">
-                            <div>
-                              <p className="font-medium">{g.name}</p>
-                              <p className="text-xs text-muted-foreground">Kilometers allocated: <span className="font-semibold text-foreground">{g.total.toFixed(1)} km</span> · {g.items.length} record{g.items.length === 1 ? "" : "s"}</p>
-                            </div>
+                <TabsContent value="alloc" className="mt-4 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label className="text-xs uppercase text-muted-foreground">Show allocations for</Label>
+                    <Select value={allocPeriod} onValueChange={(v) => setAllocPeriod(v as any)}>
+                      <SelectTrigger className="h-8 w-[180px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="week">This week</SelectItem>
+                        <SelectItem value="month">This month</SelectItem>
+                        <SelectItem value="year">This year</SelectItem>
+                        <SelectItem value="all">All time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="rounded-md border border-border">
+                    <button
+                      type="button"
+                      onClick={() => setAllocOpen((o) => !o)}
+                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium capitalize">Allocated {periodLabel}</p>
+                        <p className="text-xs text-muted-foreground">{totalAllocCount} record{totalAllocCount === 1 ? "" : "s"} · {totalAllocKm.toFixed(1)} km across {visibleAlloc.length} department{visibleAlloc.length === 1 ? "" : "s"}</p>
+                      </div>
+                      {allocOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </button>
+                    {allocOpen && (
+                      <div className="border-t border-border p-3">
+                        {visibleAlloc.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No lost kilometers have been allocated for this period.</p>
+                        ) : (
+                          <div className="space-y-4">
+                            {visibleAlloc.map((g) => (
+                              <div key={g.deptId} className="rounded-md border border-border">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2">
+                                  <div>
+                                    <p className="font-medium">{g.name}</p>
+                                    <p className="text-xs text-muted-foreground">Kilometers allocated: <span className="font-semibold text-foreground">{g.total.toFixed(1)} km</span> · {g.items.length} record{g.items.length === 1 ? "" : "s"}</p>
+                                  </div>
+                                </div>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead className="bg-muted/30 text-xs uppercase text-muted-foreground">
+                                      <tr>
+                                        <th className="px-3 py-2 text-left">Date allocated</th>
+                                        <th className="px-3 py-2 text-left">Allocated by (source dept)</th>
+                                        <th className="px-3 py-2 text-left">Vehicle</th>
+                                        <th className="px-3 py-2 text-left">Trip</th>
+                                        <th className="px-3 py-2 text-right">Lost km</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {g.items.map((l) => (
+                                        <tr key={l.id} className="border-t border-border">
+                                          <td className="px-3 py-2">{l.lost_km_attributed_at ? format(new Date(l.lost_km_attributed_at), "PP") : "—"}</td>
+                                          <td className="px-3 py-2">{deptName(l.department_id)}</td>
+                                          <td className="px-3 py-2">{vehicleLabel(l.vehicle_id)}</td>
+                                          <td className="px-3 py-2 text-xs text-muted-foreground">{l.start_point} → {l.destination} · {format(parseISO(l.log_date), "PP")}</td>
+                                          <td className="px-3 py-2 text-right font-medium">{Number(l.lost_km_value ?? 0).toFixed(1)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                              <thead className="bg-muted/30 text-xs uppercase text-muted-foreground">
-                                <tr>
-                                  <th className="px-3 py-2 text-left">Date allocated</th>
-                                  <th className="px-3 py-2 text-left">Allocated by (source dept)</th>
-                                  <th className="px-3 py-2 text-left">Vehicle</th>
-                                  <th className="px-3 py-2 text-left">Trip</th>
-                                  <th className="px-3 py-2 text-right">Lost km</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {g.items.map((l) => (
-                                  <tr key={l.id} className="border-t border-border">
-                                    <td className="px-3 py-2">{l.lost_km_attributed_at ? format(new Date(l.lost_km_attributed_at), "PP") : "—"}</td>
-                                    <td className="px-3 py-2">{deptName(l.department_id)}</td>
-                                    <td className="px-3 py-2">{vehicleLabel(l.vehicle_id)}</td>
-                                    <td className="px-3 py-2 text-xs text-muted-foreground">{l.start_point} → {l.destination} · {format(parseISO(l.log_date), "PP")}</td>
-                                    <td className="px-3 py-2 text-right font-medium">{Number(l.lost_km_value ?? 0).toFixed(1)}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
               </Tabs>
             );
