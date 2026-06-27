@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Church } from "lucide-react";
+import { lookupEmailByPhone } from "@/lib/phone-lookup.functions";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -31,17 +32,20 @@ function AuthPage() {
     let email = identifier.trim();
     const looksLikeEmail = email.includes("@");
     if (!looksLikeEmail) {
-      // Phone sign-in: resolve to the account's email via RPC, then password-auth
-      const { data: foundEmail, error: rpcErr } = await (supabase as any).rpc(
-        "lookup_email_by_phone",
-        { _phone: email },
-      );
-      if (rpcErr || !foundEmail) {
+      // Phone sign-in: resolve to the account's email via server function, then password-auth
+      try {
+        const { email: foundEmail } = await lookupEmailByPhone({ data: { phone: email } });
+        if (!foundEmail) {
+          setBusy(false);
+          toast.error("No account found with that phone number");
+          return;
+        }
+        email = foundEmail;
+      } catch {
         setBusy(false);
         toast.error("No account found with that phone number");
         return;
       }
-      email = foundEmail as string;
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
