@@ -907,7 +907,7 @@ function PrepareWeeklyPdfDialog({
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleDownload} disabled={sorted.length === 0 || uploading}>
-            <Download className="mr-1 h-4 w-4" />{uploading ? "Saving…" : "Download & save PDF"}
+            <Download className="mr-1 h-4 w-4" />{uploading ? "Saving…" : existingPath ? "Download & update saved PDF" : "Download & save PDF"}
           </Button>
 
         </DialogFooter>
