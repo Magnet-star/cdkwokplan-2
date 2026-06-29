@@ -453,7 +453,7 @@ function DSWeeklyVehicleRequestsView() {
   const [vehicles, setVehicles] = useState<FleetVehicle[]>([]);
   const [drivers, setDrivers] = useState<DriverOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [prepare, setPrepare] = useState<{ weekStart: string; weekEnd: string; items: DSRow[] } | null>(null);
+  const [prepare, setPrepare] = useState<{ weekStart: string; weekEnd: string; items: DSRow[]; existingPath?: string } | null>(null);
   const [savedRefresh, setSavedRefresh] = useState(0);
 
 
