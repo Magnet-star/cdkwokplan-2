@@ -728,11 +728,22 @@ function DSWeeklyVehicleRequestsView() {
         departments={departments}
         vehicles={vehicles}
         drivers={drivers}
+        existingPath={prepare?.existingPath}
         onUploaded={() => setSavedRefresh((n) => n + 1)}
       />
 
 
-      <SavedWeeklyPdfs refreshKey={savedRefresh} />
+      <SavedWeeklyPdfs
+        refreshKey={savedRefresh}
+        onEdit={(ws, we, path) => {
+          const items = rows.filter((r) => r.date_needed >= ws && r.date_needed <= we);
+          if (items.length === 0) {
+            toast.error("No vehicle requests found for that week.");
+            return;
+          }
+          setPrepare({ weekStart: ws, weekEnd: we, items, existingPath: path });
+        }}
+      />
     </div>
   );
 }
