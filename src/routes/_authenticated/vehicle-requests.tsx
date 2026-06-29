@@ -453,7 +453,7 @@ function DSWeeklyVehicleRequestsView() {
   const [vehicles, setVehicles] = useState<FleetVehicle[]>([]);
   const [drivers, setDrivers] = useState<DriverOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [prepare, setPrepare] = useState<{ weekStart: string; weekEnd: string; items: DSRow[] } | null>(null);
+  const [prepare, setPrepare] = useState<{ weekStart: string; weekEnd: string; items: DSRow[]; existingPath?: string } | null>(null);
   const [savedRefresh, setSavedRefresh] = useState(0);
 
 
@@ -728,11 +728,22 @@ function DSWeeklyVehicleRequestsView() {
         departments={departments}
         vehicles={vehicles}
         drivers={drivers}
+        existingPath={prepare?.existingPath}
         onUploaded={() => setSavedRefresh((n) => n + 1)}
       />
 
 
-      <SavedWeeklyPdfs refreshKey={savedRefresh} />
+      <SavedWeeklyPdfs
+        refreshKey={savedRefresh}
+        onEdit={(ws, we, path) => {
+          const items = rows.filter((r) => r.date_needed >= ws && r.date_needed <= we);
+          if (items.length === 0) {
+            toast.error("No vehicle requests found for that week.");
+            return;
+          }
+          setPrepare({ weekStart: ws, weekEnd: we, items, existingPath: path });
+        }}
+      />
     </div>
   );
 }
@@ -758,6 +769,7 @@ function PrepareWeeklyPdfDialog({
   departments,
   vehicles,
   drivers,
+  existingPath,
   onUploaded,
 }: {
   open: boolean;
@@ -768,6 +780,7 @@ function PrepareWeeklyPdfDialog({
   departments: Record<string, string>;
   vehicles: FleetVehicle[];
   drivers: DriverOption[];
+  existingPath?: string;
   onUploaded?: () => void;
 }) {
   const [assignments, setAssignments] = useState<Record<string, { vehicle: string; driver: string }>>({});
@@ -776,6 +789,7 @@ function PrepareWeeklyPdfDialog({
   useEffect(() => {
     if (open) setAssignments({});
   }, [open, weekStart]);
+
 
 
   const sorted = useMemo(
@@ -810,14 +824,14 @@ function PrepareWeeklyPdfDialog({
       const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd);
       doc.save(filename);
       const blob = doc.output("blob");
-      const path = `${weekStart}_to_${weekEnd}/${Date.now()}_${filename}`;
+      const uploadPath = existingPath ?? `${weekStart}_to_${weekEnd}/${Date.now()}_${filename}`;
       const { error } = await supabase.storage
         .from("weekly-vehicle-pdfs")
-        .upload(path, blob, { contentType: "application/pdf", upsert: false });
+        .upload(uploadPath, blob, { contentType: "application/pdf", upsert: !!existingPath });
       if (error) {
         toast.error(`PDF downloaded, but saving to shared folder failed: ${error.message}`);
       } else {
-        toast.success("PDF downloaded and saved for other super admins");
+        toast.success(existingPath ? "PDF updated for all super admins" : "PDF downloaded and saved for other super admins");
         onUploaded?.();
       }
     } finally {
@@ -893,7 +907,7 @@ function PrepareWeeklyPdfDialog({
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleDownload} disabled={sorted.length === 0 || uploading}>
-            <Download className="mr-1 h-4 w-4" />{uploading ? "Saving…" : "Download & save PDF"}
+            <Download className="mr-1 h-4 w-4" />{uploading ? "Saving…" : existingPath ? "Download & update saved PDF" : "Download & save PDF"}
           </Button>
 
         </DialogFooter>
@@ -1033,7 +1047,7 @@ interface SavedPdfEntry {
   size: number | null;
 }
 
-function SavedWeeklyPdfs({ refreshKey }: { refreshKey: number }) {
+function SavedWeeklyPdfs({ refreshKey, onEdit }: { refreshKey: number; onEdit?: (weekStart: string, weekEnd: string, path: string) => void }) {
   const [entries, setEntries] = useState<SavedPdfEntry[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -1122,6 +1136,14 @@ function SavedWeeklyPdfs({ refreshKey }: { refreshKey: number }) {
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" disabled={busy === e.path} onClick={() => openPdf(e.path)}>
                     <Download className="mr-1 h-3.5 w-3.5" />Open
+                  </Button>
+                  {onEdit && (
+                    <Button size="sm" variant="outline" disabled={busy === e.path} onClick={() => onEdit(e.weekStart, e.weekEnd, e.path)}>
+                      <Pencil className="mr-1 h-3.5 w-3.5" />Edit & update
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" disabled={busy === e.path} onClick={() => removePdf(e.path)}>
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
 
