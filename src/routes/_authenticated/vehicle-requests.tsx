@@ -824,14 +824,14 @@ function PrepareWeeklyPdfDialog({
       const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd);
       doc.save(filename);
       const blob = doc.output("blob");
-      const path = `${weekStart}_to_${weekEnd}/${Date.now()}_${filename}`;
+      const uploadPath = existingPath ?? `${weekStart}_to_${weekEnd}/${Date.now()}_${filename}`;
       const { error } = await supabase.storage
         .from("weekly-vehicle-pdfs")
-        .upload(path, blob, { contentType: "application/pdf", upsert: false });
+        .upload(uploadPath, blob, { contentType: "application/pdf", upsert: !!existingPath });
       if (error) {
         toast.error(`PDF downloaded, but saving to shared folder failed: ${error.message}`);
       } else {
-        toast.success("PDF downloaded and saved for other super admins");
+        toast.success(existingPath ? "PDF updated for all super admins" : "PDF downloaded and saved for other super admins");
         onUploaded?.();
       }
     } finally {
