@@ -1137,6 +1137,14 @@ function SavedWeeklyPdfs({ refreshKey, onEdit }: { refreshKey: number; onEdit?: 
                   <Button size="sm" variant="outline" disabled={busy === e.path} onClick={() => openPdf(e.path)}>
                     <Download className="mr-1 h-3.5 w-3.5" />Open
                   </Button>
+                  {onEdit && (
+                    <Button size="sm" variant="outline" disabled={busy === e.path} onClick={() => onEdit(e.weekStart, e.weekEnd, e.path)}>
+                      <Pencil className="mr-1 h-3.5 w-3.5" />Edit & update
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" disabled={busy === e.path} onClick={() => removePdf(e.path)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
 
               </div>
