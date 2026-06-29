@@ -1047,7 +1047,7 @@ interface SavedPdfEntry {
   size: number | null;
 }
 
-function SavedWeeklyPdfs({ refreshKey }: { refreshKey: number }) {
+function SavedWeeklyPdfs({ refreshKey, onEdit }: { refreshKey: number; onEdit?: (weekStart: string, weekEnd: string, path: string) => void }) {
   const [entries, setEntries] = useState<SavedPdfEntry[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
