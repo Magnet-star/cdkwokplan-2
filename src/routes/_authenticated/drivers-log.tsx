@@ -858,11 +858,22 @@ function DriversLogPage() {
                                 {firstTrip && <span className="ml-1 text-xs text-muted-foreground">(first trip for this vehicle — no baseline)</span>}
                               </p>
                               {l.lost_km_attributed_to && (
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                  Attributed to <span className="font-medium text-foreground">{deptName(l.lost_km_attributed_to)}</span>
-                                  {l.lost_km_attributed_at && <> · {format(new Date(l.lost_km_attributed_at), "PP p")}</>}
-                                  {l.lost_km_value != null && <> · {Number(l.lost_km_value).toFixed(1)} km recorded</>}
-                                </p>
+                                <>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    Attributed to <span className="font-medium text-foreground">{deptName(l.lost_km_attributed_to)}</span>
+                                    {l.lost_km_attributed_at && <> · {format(new Date(l.lost_km_attributed_at), "PP p")}</>}
+                                    {l.lost_km_value != null && <> · {Number(l.lost_km_value).toFixed(1)} km recorded</>}
+                                  </p>
+                                  {l.lost_km_confirmed_at ? (
+                                    <p className="mt-1 inline-flex items-center gap-1 rounded bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
+                                      <CheckCircle2 className="h-3 w-3" /> Attribution confirmed by {deptName(l.lost_km_attributed_to)} on {format(new Date(l.lost_km_confirmed_at), "PP p")}
+                                    </p>
+                                  ) : (
+                                    <p className="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                                      Awaiting confirmation from {deptName(l.lost_km_attributed_to)}
+                                    </p>
+                                  )}
+                                </>
                               )}
                             </div>
                             <div className="min-w-[220px]">
