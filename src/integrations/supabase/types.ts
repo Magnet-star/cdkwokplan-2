@@ -440,6 +440,8 @@ export type Database = {
           lost_km_attributed_at: string | null
           lost_km_attributed_by: string | null
           lost_km_attributed_to: string | null
+          lost_km_confirmed_at: string | null
+          lost_km_confirmed_by: string | null
           lost_km_trip_description: string | null
           lost_km_value: number | null
           passengers: number | null
@@ -467,6 +469,8 @@ export type Database = {
           lost_km_attributed_at?: string | null
           lost_km_attributed_by?: string | null
           lost_km_attributed_to?: string | null
+          lost_km_confirmed_at?: string | null
+          lost_km_confirmed_by?: string | null
           lost_km_trip_description?: string | null
           lost_km_value?: number | null
           passengers?: number | null
@@ -494,6 +498,8 @@ export type Database = {
           lost_km_attributed_at?: string | null
           lost_km_attributed_by?: string | null
           lost_km_attributed_to?: string | null
+          lost_km_confirmed_at?: string | null
+          lost_km_confirmed_by?: string | null
           lost_km_trip_description?: string | null
           lost_km_value?: number | null
           passengers?: number | null

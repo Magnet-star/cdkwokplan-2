@@ -45,6 +45,8 @@ interface DriverLog {
   lost_km_attributed_by?: string | null;
   lost_km_value?: number | null;
   lost_km_trip_description?: string | null;
+  lost_km_confirmed_at?: string | null;
+  lost_km_confirmed_by?: string | null;
 }
 
 interface Dept { id: string; name: string; hod_id: string | null }
@@ -231,9 +233,25 @@ function DriversLogPage() {
       lost_km_attributed_at: deptId ? new Date().toISOString() : null,
       lost_km_attributed_by: deptId ? user.id : null,
       lost_km_value: deptId ? value : null,
+      // Re-attribution always resets confirmation and any prior trip description
+      lost_km_confirmed_at: null,
+      lost_km_confirmed_by: null,
+      lost_km_trip_description: null,
     } as any).eq("id", l.id);
     if (error) return toast.error(error.message);
-    toast.success(deptId ? "Lost kilometers attributed" : "Attribution cleared");
+    toast.success(deptId ? "Lost kilometers attributed — awaiting receiving department confirmation" : "Attribution cleared");
+    load();
+  };
+
+  const confirmAttribution = async (l: DriverLog) => {
+    if (!user) return;
+    if (!confirm(`Confirm that ${Number(l.lost_km_value ?? 0).toFixed(1)} lost km from ${deptName(l.department_id)} are attributed to your department?`)) return;
+    const { error } = await supabase.from("driver_logs").update({
+      lost_km_confirmed_at: new Date().toISOString(),
+      lost_km_confirmed_by: user.id,
+    } as any).eq("id", l.id);
+    if (error) return toast.error(error.message);
+    toast.success("Attribution confirmed — you can now fill the trip details");
     load();
   };
 
@@ -840,11 +858,22 @@ function DriversLogPage() {
                                 {firstTrip && <span className="ml-1 text-xs text-muted-foreground">(first trip for this vehicle — no baseline)</span>}
                               </p>
                               {l.lost_km_attributed_to && (
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                  Attributed to <span className="font-medium text-foreground">{deptName(l.lost_km_attributed_to)}</span>
-                                  {l.lost_km_attributed_at && <> · {format(new Date(l.lost_km_attributed_at), "PP p")}</>}
-                                  {l.lost_km_value != null && <> · {Number(l.lost_km_value).toFixed(1)} km recorded</>}
-                                </p>
+                                <>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    Attributed to <span className="font-medium text-foreground">{deptName(l.lost_km_attributed_to)}</span>
+                                    {l.lost_km_attributed_at && <> · {format(new Date(l.lost_km_attributed_at), "PP p")}</>}
+                                    {l.lost_km_value != null && <> · {Number(l.lost_km_value).toFixed(1)} km recorded</>}
+                                  </p>
+                                  {l.lost_km_confirmed_at ? (
+                                    <p className="mt-1 inline-flex items-center gap-1 rounded bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
+                                      <CheckCircle2 className="h-3 w-3" /> Attribution confirmed by {deptName(l.lost_km_attributed_to)} on {format(new Date(l.lost_km_confirmed_at), "PP p")}
+                                    </p>
+                                  ) : (
+                                    <p className="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                                      Awaiting confirmation from {deptName(l.lost_km_attributed_to)}
+                                    </p>
+                                  )}
+                                </>
                               )}
                             </div>
                             <div className="min-w-[220px]">
@@ -1022,7 +1051,10 @@ function DriversLogPage() {
                                     </thead>
                                     <tbody>
                                       {g.items.map((l) => {
-                                        const canEditDesc = isSuperAdmin || isAdministrator || (isHod && l.lost_km_attributed_to === myDeptId);
+                                        const isReceivingHod = isHod && l.lost_km_attributed_to === myDeptId;
+                                        const canConfirm = isReceivingHod || isSuperAdmin;
+                                        const confirmed = !!l.lost_km_confirmed_at;
+                                        const canEditDesc = confirmed && (isSuperAdmin || isAdministrator || isReceivingHod);
                                         const draftKey = l.id;
                                         const draftVal = allocTripDraft[draftKey];
                                         const currentVal = l.lost_km_trip_description ?? "";
@@ -1033,8 +1065,24 @@ function DriversLogPage() {
                                             <td className="px-3 py-2">{deptName(l.department_id)}</td>
                                             <td className="px-3 py-2">{vehicleLabel(l.vehicle_id)}</td>
                                             <td className="px-3 py-2 min-w-[260px]">
-                                              {canEditDesc ? (
+                                              {!confirmed ? (
                                                 <div className="flex flex-col gap-2">
+                                                  <span className="inline-flex w-fit items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                                                    <AlertTriangle className="h-3 w-3" /> Attribution pending confirmation
+                                                  </span>
+                                                  {canConfirm ? (
+                                                    <Button size="sm" variant="default" className="w-fit" onClick={() => confirmAttribution(l)}>
+                                                      <CheckCircle2 className="mr-1 h-3 w-3" /> Confirm attribution
+                                                    </Button>
+                                                  ) : (
+                                                    <p className="text-[10px] text-muted-foreground">Only the receiving department's HOD can confirm.</p>
+                                                  )}
+                                                </div>
+                                              ) : canEditDesc ? (
+                                                <div className="flex flex-col gap-2">
+                                                  <span className="inline-flex w-fit items-center gap-1 rounded bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
+                                                    <CheckCircle2 className="h-3 w-3" /> Confirmed {format(new Date(l.lost_km_confirmed_at!), "PP")}
+                                                  </span>
                                                   <Input
                                                     value={editing ? draftVal : currentVal}
                                                     placeholder="Describe the trip (e.g. Office → Karatina visit)"
@@ -1058,6 +1106,7 @@ function DriversLogPage() {
                                                 </span>
                                               )}
                                             </td>
+
 
                                             <td className="px-3 py-2 text-right font-medium whitespace-nowrap">{Number(l.lost_km_value ?? 0).toFixed(1)}</td>
                                           </tr>
