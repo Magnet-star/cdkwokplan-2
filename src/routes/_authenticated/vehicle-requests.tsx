@@ -769,6 +769,7 @@ function PrepareWeeklyPdfDialog({
   departments,
   vehicles,
   drivers,
+  existingPath,
   onUploaded,
 }: {
   open: boolean;
@@ -779,6 +780,7 @@ function PrepareWeeklyPdfDialog({
   departments: Record<string, string>;
   vehicles: FleetVehicle[];
   drivers: DriverOption[];
+  existingPath?: string;
   onUploaded?: () => void;
 }) {
   const [assignments, setAssignments] = useState<Record<string, { vehicle: string; driver: string }>>({});
@@ -787,6 +789,7 @@ function PrepareWeeklyPdfDialog({
   useEffect(() => {
     if (open) setAssignments({});
   }, [open, weekStart]);
+
 
 
   const sorted = useMemo(
