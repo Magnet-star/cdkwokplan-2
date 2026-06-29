@@ -233,9 +233,25 @@ function DriversLogPage() {
       lost_km_attributed_at: deptId ? new Date().toISOString() : null,
       lost_km_attributed_by: deptId ? user.id : null,
       lost_km_value: deptId ? value : null,
+      // Re-attribution always resets confirmation and any prior trip description
+      lost_km_confirmed_at: null,
+      lost_km_confirmed_by: null,
+      lost_km_trip_description: null,
     } as any).eq("id", l.id);
     if (error) return toast.error(error.message);
-    toast.success(deptId ? "Lost kilometers attributed" : "Attribution cleared");
+    toast.success(deptId ? "Lost kilometers attributed — awaiting receiving department confirmation" : "Attribution cleared");
+    load();
+  };
+
+  const confirmAttribution = async (l: DriverLog) => {
+    if (!user) return;
+    if (!confirm(`Confirm that ${Number(l.lost_km_value ?? 0).toFixed(1)} lost km from ${deptName(l.department_id)} are attributed to your department?`)) return;
+    const { error } = await supabase.from("driver_logs").update({
+      lost_km_confirmed_at: new Date().toISOString(),
+      lost_km_confirmed_by: user.id,
+    } as any).eq("id", l.id);
+    if (error) return toast.error(error.message);
+    toast.success("Attribution confirmed — you can now fill the trip details");
     load();
   };
 
