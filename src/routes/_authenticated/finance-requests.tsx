@@ -407,7 +407,7 @@ function FinanceRequestsPage() {
                       <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
                       <div>CDK Procurator: <strong>{recipients.procurator?.full_name ?? "— not configured —"}</strong></div>
                       <div>CDK Accounts: <strong>{recipients.accounts?.full_name ?? "— not configured —"}</strong></div>
-                      <p className="text-muted-foreground pt-1">All four will see the request. CDK Finance approval is required for it to be marked Approved; CDK Accounts handles disbursement.</p>
+                      <p className="text-muted-foreground pt-1">All four will see the request. Either CDK Finance Administrator OR CDK Procurator approval marks it Approved; Vicar General authorizes; CDK Accounts handles disbursement.</p>
                     </div>
                   </div>
                 </div>
@@ -801,8 +801,8 @@ function ApprovalTracker({ r }: { r: FRRow }) {
   if (r.status === "cancelled" || r.status === "rejected") return null;
   const stages: { key: string; label: string; decision: string | null; name: string | null; at: string | null; isAuthorize: boolean }[] = [
     { key: "fin", label: "Finance Administrator", decision: r.finance_admin_decision, name: r.finance_admin_name, at: r.finance_admin_at, isAuthorize: false },
+    { key: "proc", label: "Procurator", decision: r.procurator_decision, name: r.procurator_name, at: r.procurator_at, isAuthorize: false },
     { key: "vg", label: "Vicar General", decision: r.vicar_general_decision, name: r.vicar_general_name, at: r.vicar_general_at, isAuthorize: true },
-    { key: "proc", label: "Procurator", decision: r.procurator_decision, name: r.procurator_name, at: r.procurator_at, isAuthorize: true },
   ];
   const allApproved = stages.every((s) => s.decision === "approved");
   return (
@@ -847,8 +847,8 @@ function DisbursementNotice({ r }: { r: FRRow }) {
   const { user } = useAuth();
   if (r.requester_id !== user?.id) return null;
   const financeApproved = r.finance_admin_decision === "approved";
-  const authorized = r.vicar_general_decision === "approved" || r.procurator_decision === "approved";
-  if (!(financeApproved && authorized)) return null;
+  const procuratorApproved = r.procurator_decision === "approved";
+  if (!(financeApproved || procuratorApproved)) return null;
   return (
     <div className="mt-2 border-l-2 border-emerald-500 pl-2">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Disbursement process</p>
@@ -932,9 +932,9 @@ function RequestCard({
     if (dialog.decision === "reject") update.status = "rejected";
     else if (dialog.decision === "adjust") update.status = "adjustment_requested";
     else {
-      // Finance Administrator approval alone marks the request as approved.
-      // Vicar General and Procurator can remain pending and sign later.
-      if (prefix === "finance_admin") {
+      // Either Finance Administrator OR Procurator approval marks the
+      // request as approved. Vicar General remains an authorizer only.
+      if (prefix === "finance_admin" || prefix === "procurator") {
         update.status = "approved";
       }
     }
@@ -989,7 +989,6 @@ function RequestCard({
   // while the request is still pending (or in adjustment_requested).
   const canEditOrCancel = isMine && (r.status === "pending" || r.status === "adjustment_requested");
   const financeApproved = r.finance_admin_decision === "approved";
-  const vicarApproved = r.vicar_general_decision === "approved";
   const procuratorApproved = r.procurator_decision === "approved";
 
   return (
@@ -1010,15 +1009,13 @@ function RequestCard({
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
           {(() => {
-            // CDK Accounts (administrator viewer) can only download once a request is
-            // fully authorized: finance admin approved AND at least one of Vicar
-            // General / Procurator has authorized.
-            const fullyAuthorizedForAccounts =
-              financeApproved && (vicarApproved || procuratorApproved);
-            if (isAccountsViewer && !fullyAuthorizedForAccounts) {
+            // CDK Accounts (administrator viewer) can download once EITHER the
+            // Finance Administrator OR the Procurator has approved the request.
+            const approvedForAccounts = financeApproved || procuratorApproved;
+            if (isAccountsViewer && !approvedForAccounts) {
               return (
                 <span className="rounded border border-dashed border-muted-foreground/40 px-2 py-1 text-[11px] text-muted-foreground">
-                  Download unlocks after finance approval + authorization
+                  Download unlocks after Finance or Procurator approval
                 </span>
               );
             }
@@ -1101,7 +1098,7 @@ function RequestCard({
           <div className="grid gap-3 md:grid-cols-3">
             <ApprovalBlock title="Finance Administrator" name={r.finance_admin_name} decision={r.finance_admin_decision} at={r.finance_admin_at} note={r.finance_admin_note} accountLabel="CDK Finance" />
             <ApprovalBlock title="Vicar General" name={r.vicar_general_name} decision={r.vicar_general_decision} at={r.vicar_general_at} note={r.vicar_general_note} accountLabel="Vicar General" approvedWord="AUTHORIZED" />
-            <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} accountLabel="CDK Procurator" approvedWord="AUTHORIZED" />
+            <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} accountLabel="CDK Procurator" />
           </div>
 
           {canAct && !isMine && actableRoles.length > 0 && r.status !== "cancelled" && r.status !== "rejected" && (
@@ -1121,7 +1118,7 @@ function RequestCard({
                   <div key={role} className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-medium w-44">{roleLabel(role)}{currentDecision ? ` · ${currentDecision}` : ""}:</span>
                     <Button size="sm" onClick={() => openDialog("approve")}>
-                      <CheckCircle2 className="mr-1 h-4 w-4" /> {role === "finance_admin" ? "Approve" : "Authorize"}
+                      <CheckCircle2 className="mr-1 h-4 w-4" /> {role === "vicar_general" ? "Authorize" : "Approve"}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => openDialog("reject")}>
                       <XCircle className="mr-1 h-4 w-4" /> Reject
