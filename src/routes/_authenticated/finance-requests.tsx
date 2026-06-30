@@ -1010,15 +1010,13 @@ function RequestCard({
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(r.status)}
           {(() => {
-            // CDK Accounts (administrator viewer) can only download once a request is
-            // fully authorized: finance admin approved AND at least one of Vicar
-            // General / Procurator has authorized.
-            const fullyAuthorizedForAccounts =
-              financeApproved && (vicarApproved || procuratorApproved);
-            if (isAccountsViewer && !fullyAuthorizedForAccounts) {
+            // CDK Accounts (administrator viewer) can download once EITHER the
+            // Finance Administrator OR the Procurator has approved the request.
+            const approvedForAccounts = financeApproved || procuratorApproved;
+            if (isAccountsViewer && !approvedForAccounts) {
               return (
                 <span className="rounded border border-dashed border-muted-foreground/40 px-2 py-1 text-[11px] text-muted-foreground">
-                  Download unlocks after finance approval + authorization
+                  Download unlocks after Finance or Procurator approval
                 </span>
               );
             }
