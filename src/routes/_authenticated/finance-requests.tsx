@@ -989,7 +989,6 @@ function RequestCard({
   // while the request is still pending (or in adjustment_requested).
   const canEditOrCancel = isMine && (r.status === "pending" || r.status === "adjustment_requested");
   const financeApproved = r.finance_admin_decision === "approved";
-  const vicarApproved = r.vicar_general_decision === "approved";
   const procuratorApproved = r.procurator_decision === "approved";
 
   return (
