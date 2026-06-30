@@ -801,8 +801,8 @@ function ApprovalTracker({ r }: { r: FRRow }) {
   if (r.status === "cancelled" || r.status === "rejected") return null;
   const stages: { key: string; label: string; decision: string | null; name: string | null; at: string | null; isAuthorize: boolean }[] = [
     { key: "fin", label: "Finance Administrator", decision: r.finance_admin_decision, name: r.finance_admin_name, at: r.finance_admin_at, isAuthorize: false },
+    { key: "proc", label: "Procurator", decision: r.procurator_decision, name: r.procurator_name, at: r.procurator_at, isAuthorize: false },
     { key: "vg", label: "Vicar General", decision: r.vicar_general_decision, name: r.vicar_general_name, at: r.vicar_general_at, isAuthorize: true },
-    { key: "proc", label: "Procurator", decision: r.procurator_decision, name: r.procurator_name, at: r.procurator_at, isAuthorize: true },
   ];
   const allApproved = stages.every((s) => s.decision === "approved");
   return (
