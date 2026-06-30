@@ -1118,7 +1118,7 @@ function RequestCard({
                   <div key={role} className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-medium w-44">{roleLabel(role)}{currentDecision ? ` · ${currentDecision}` : ""}:</span>
                     <Button size="sm" onClick={() => openDialog("approve")}>
-                      <CheckCircle2 className="mr-1 h-4 w-4" /> {role === "finance_admin" ? "Approve" : "Authorize"}
+                      <CheckCircle2 className="mr-1 h-4 w-4" /> {role === "vicar_general" ? "Authorize" : "Approve"}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => openDialog("reject")}>
                       <XCircle className="mr-1 h-4 w-4" /> Reject
