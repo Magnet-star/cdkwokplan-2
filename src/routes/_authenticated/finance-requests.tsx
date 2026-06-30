@@ -932,9 +932,9 @@ function RequestCard({
     if (dialog.decision === "reject") update.status = "rejected";
     else if (dialog.decision === "adjust") update.status = "adjustment_requested";
     else {
-      // Finance Administrator approval alone marks the request as approved.
-      // Vicar General and Procurator can remain pending and sign later.
-      if (prefix === "finance_admin") {
+      // Either Finance Administrator OR Procurator approval marks the
+      // request as approved. Vicar General remains an authorizer only.
+      if (prefix === "finance_admin" || prefix === "procurator") {
         update.status = "approved";
       }
     }
