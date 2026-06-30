@@ -847,8 +847,8 @@ function DisbursementNotice({ r }: { r: FRRow }) {
   const { user } = useAuth();
   if (r.requester_id !== user?.id) return null;
   const financeApproved = r.finance_admin_decision === "approved";
-  const authorized = r.vicar_general_decision === "approved" || r.procurator_decision === "approved";
-  if (!(financeApproved && authorized)) return null;
+  const procuratorApproved = r.procurator_decision === "approved";
+  if (!(financeApproved || procuratorApproved)) return null;
   return (
     <div className="mt-2 border-l-2 border-emerald-500 pl-2">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Disbursement process</p>
