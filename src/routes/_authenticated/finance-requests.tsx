@@ -1097,8 +1097,8 @@ function RequestCard({
 
           <div className="grid gap-3 md:grid-cols-3">
             <ApprovalBlock title="Finance Administrator" name={r.finance_admin_name} decision={r.finance_admin_decision} at={r.finance_admin_at} note={r.finance_admin_note} accountLabel="CDK Finance" />
-            <ApprovalBlock title="Vicar General" name={r.vicar_general_name} decision={r.vicar_general_decision} at={r.vicar_general_at} note={r.vicar_general_note} accountLabel="Vicar General" approvedWord="AUTHORIZED" />
             <ApprovalBlock title="Procurator" name={r.procurator_name} decision={r.procurator_decision} at={r.procurator_at} note={r.procurator_note} accountLabel="CDK Procurator" />
+            <ApprovalBlock title="Vicar General" name={r.vicar_general_name} decision={r.vicar_general_decision} at={r.vicar_general_at} note={r.vicar_general_note} accountLabel="Vicar General" approvedWord="AUTHORIZED" />
           </div>
 
           {canAct && !isMine && actableRoles.length > 0 && r.status !== "cancelled" && r.status !== "rejected" && (
