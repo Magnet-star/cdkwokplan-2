@@ -174,6 +174,15 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
 
   drawApproval("Finance Administrator", data.finance_admin_name, data.finance_admin_decision, data.finance_admin_at, data.finance_admin_note);
   drawApproval("Procurator", data.procurator_name, data.procurator_decision, data.procurator_at, data.procurator_note);
+
+  if (y > 240) { doc.addPage(); y = 20; }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Authorization", 14, y);
+  y += 2;
+  doc.line(14, y, pageW - 14, y);
+  y += 4;
+
   drawApproval("Vicar General", data.vicar_general_name, data.vicar_general_decision, data.vicar_general_at, data.vicar_general_note, "AUTHORIZED");
 
   return doc;
