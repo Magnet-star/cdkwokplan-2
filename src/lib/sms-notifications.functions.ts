@@ -137,6 +137,6 @@ export const notifyFinanceAuthorized = createServerFn({ method: "POST" })
     const msisdn = toMsisdn(phone ?? null);
     if (!msisdn) return { ok: false, reason: "no_phone" };
     const msg = `Your finance request has been successfully authorized by ${data.authorizerName}. The workflow is complete.`;
-    await sendSms([msisdn], msg, `fr-auth-${r.id}`);
+    await sendSms(supabase, [{ msisdn, role: "requester" }], msg, "authorized", `fr-auth-${r.id}`, r.id);
     return { ok: true };
   });
