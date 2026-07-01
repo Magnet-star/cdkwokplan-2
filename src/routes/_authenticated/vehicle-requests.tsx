@@ -280,7 +280,7 @@ function VehicleRequestsPage() {
             weekStart: items[0].week_start_date ?? items[0].date_needed,
           })).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
 
-          return groupList.map((g) => {
+          const renderGroup = (g: typeof groupList[number]) => {
             if (g.items.length === 1) {
               const r = g.items[0];
               return (
@@ -371,7 +371,51 @@ function VehicleRequestsPage() {
                 </CardContent>
               </Card>
             );
-          });
+          };
+
+          const isFullyApproved = (g: typeof groupList[number]) =>
+            g.items.length > 0 && g.items.every((i) => i.status === "approved");
+          const active = groupList.filter((g) => !isFullyApproved(g));
+          const approved = groupList.filter(isFullyApproved);
+
+          // Group approved-only groups by year -> month
+          const byYM = new Map<string, typeof groupList>();
+          for (const g of approved) {
+            const d = parseISO(g.weekStart);
+            const key = format(d, "yyyy-MM");
+            const arr = byYM.get(key) ?? [];
+            arr.push(g);
+            byYM.set(key, arr);
+          }
+          const monthKeys = Array.from(byYM.keys()).sort((a, b) => b.localeCompare(a));
+
+          return (
+            <>
+              {active.map(renderGroup)}
+              {monthKeys.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Approved — archived by month
+                  </h3>
+                  {monthKeys.map((mk) => {
+                    const groupsInMonth = byYM.get(mk)!;
+                    const total = groupsInMonth.reduce((a, g) => a + g.items.length, 0);
+                    return (
+                      <details key={mk} className="rounded-md border border-border bg-card">
+                        <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium">
+                          <span>{format(parseISO(mk + "-01"), "MMMM yyyy")}</span>
+                          <span className="text-xs text-muted-foreground">{total} trip{total === 1 ? "" : "s"}</span>
+                        </summary>
+                        <div className="space-y-3 border-t border-border p-3">
+                          {groupsInMonth.map(renderGroup)}
+                        </div>
+                      </details>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          );
         })()}
       </div>
 
