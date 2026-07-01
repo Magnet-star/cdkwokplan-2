@@ -1061,7 +1061,7 @@ function PrepareWeeklyPdfDialog({
   );
 }
 
-function WeekBreakdown({ items, departments, onDelete }: { items: DSRow[]; departments: Record<string, string>; onDelete?: (id: string) => void }) {
+function WeekBreakdown({ items, departments, onEdit }: { items: DSRow[]; departments: Record<string, string>; onEdit?: (row: DSRow) => void }) {
   // Group by date, then by department
   const byDate = new Map<string, DSRow[]>();
   for (const r of items) {
