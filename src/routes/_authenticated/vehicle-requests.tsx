@@ -853,6 +853,7 @@ function DSWeeklyVehicleRequestsView() {
 
       <SavedWeeklyPdfs
         refreshKey={savedRefresh}
+        allowDelete={isSuperAdmin}
         onEdit={isSuperAdmin ? (ws, we, path) => {
           const items = rows.filter((r) => r.date_needed >= ws && r.date_needed <= we);
           if (items.length === 0) {
@@ -1238,7 +1239,7 @@ interface SavedPdfEntry {
   size: number | null;
 }
 
-function SavedWeeklyPdfs({ refreshKey, onEdit }: { refreshKey: number; onEdit?: (weekStart: string, weekEnd: string, path: string) => void }) {
+function SavedWeeklyPdfs({ refreshKey, onEdit, allowDelete }: { refreshKey: number; onEdit?: (weekStart: string, weekEnd: string, path: string) => void; allowDelete?: boolean }) {
   const [entries, setEntries] = useState<SavedPdfEntry[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -1333,9 +1334,11 @@ function SavedWeeklyPdfs({ refreshKey, onEdit }: { refreshKey: number; onEdit?: 
                       <Pencil className="mr-1 h-3.5 w-3.5" />Edit & update
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" disabled={busy === e.path} onClick={() => removePdf(e.path)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  {allowDelete && (
+                    <Button size="sm" variant="ghost" disabled={busy === e.path} onClick={() => removePdf(e.path)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
 
               </div>
