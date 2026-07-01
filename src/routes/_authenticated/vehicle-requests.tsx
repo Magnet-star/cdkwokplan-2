@@ -599,6 +599,17 @@ function DSWeeklyVehicleRequestsView() {
       };
     });
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this vehicle request? It will disappear from the requester's account and all views.")) return;
+    const { error } = await supabase.from("vehicle_requests").delete().eq("id", id);
+    if (error) {
+      toast.error(`Failed to delete: ${error.message}`);
+      return;
+    }
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    toast.success("Vehicle request deleted");
+  };
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
@@ -658,7 +669,7 @@ function DSWeeklyVehicleRequestsView() {
           {!currentWeek || currentWeek.items.length === 0 ? (
             <p className="text-sm text-muted-foreground">No vehicle requests submitted for this week yet.</p>
           ) : (
-            <WeekBreakdown items={currentWeek.items} departments={departments} />
+            <WeekBreakdown items={currentWeek.items} departments={departments} onDelete={handleDelete} />
           )}
         </CardContent>
       </Card>
@@ -687,6 +698,7 @@ function DSWeeklyVehicleRequestsView() {
                             weekStart={w.weekStart}
                             items={w.items}
                             departments={departments}
+                            onDelete={handleDelete}
                             onDownload={() =>
                               setPrepare({
                                 weekStart: w.weekStart,
@@ -707,6 +719,7 @@ function DSWeeklyVehicleRequestsView() {
                           weekStart={w.weekStart}
                           items={w.items}
                           departments={departments}
+                            onDelete={handleDelete}
                           onDownload={() =>
                             setPrepare({
                               weekStart: w.weekStart,
@@ -744,6 +757,7 @@ function DSWeeklyVehicleRequestsView() {
                         weekStart={w.weekStart}
                         items={w.items}
                         departments={departments}
+                            onDelete={handleDelete}
                         onDownload={() =>
                           setPrepare({
                             weekStart: w.weekStart,
@@ -993,7 +1007,7 @@ function PrepareWeeklyPdfDialog({
   );
 }
 
-function WeekBreakdown({ items, departments }: { items: DSRow[]; departments: Record<string, string> }) {
+function WeekBreakdown({ items, departments, onDelete }: { items: DSRow[]; departments: Record<string, string>; onDelete?: (id: string) => void }) {
   // Group by date, then by department
   const byDate = new Map<string, DSRow[]>();
   for (const r of items) {
@@ -1028,10 +1042,23 @@ function WeekBreakdown({ items, departments }: { items: DSRow[]; departments: Re
                       {deptRows.map((r) => {
                         const { start, end } = splitRoute(r.destination);
                         return (
-                          <li key={r.id}>
-                            <span className="font-medium text-foreground">{start || "—"} → {end}</span>
-                            {r.purpose ? ` · ${r.purpose}` : ""} · Passengers: {r.passengers ?? 1}
-                            <Badge variant="outline" className="ml-2 text-[10px]">{r.status}</Badge>
+                          <li key={r.id} className="flex items-start justify-between gap-2">
+                            <span className="min-w-0 flex-1">
+                              <span className="font-medium text-foreground">{start || "—"} → {end}</span>
+                              {r.purpose ? ` · ${r.purpose}` : ""} · Passengers: {r.passengers ?? 1}
+                              <Badge variant="outline" className="ml-2 text-[10px]">{r.status}</Badge>
+                            </span>
+                            {onDelete && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                title="Delete this request"
+                                onClick={() => onDelete(r.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
                           </li>
                         );
                       })}
@@ -1046,16 +1073,19 @@ function WeekBreakdown({ items, departments }: { items: DSRow[]; departments: Re
   );
 }
 
+
 function WeekFolder({
   weekStart,
   items,
   departments,
   onDownload,
+  onDelete,
 }: {
   weekStart: string;
   items: DSRow[];
   departments: Record<string, string>;
   onDownload: () => void;
+  onDelete?: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -1075,12 +1105,13 @@ function WeekFolder({
       </div>
       {open && (
         <div className="border-t border-border p-3">
-          <WeekBreakdown items={items} departments={departments} />
+          <WeekBreakdown items={items} departments={departments} onDelete={onDelete} />
         </div>
       )}
     </div>
   );
 }
+
 
 function CollapsibleFolder({
   label,
