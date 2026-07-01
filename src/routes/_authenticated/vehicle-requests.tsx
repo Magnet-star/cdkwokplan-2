@@ -837,6 +837,23 @@ function PrepareWeeklyPdfDialog({
     });
     setUploading(true);
     try {
+      // Persist assignments so late-added requests keep others intact
+      const updates = sorted
+        .map((r) => {
+          const v = assignments[r.id]?.vehicle ?? "";
+          const d = assignments[r.id]?.driver ?? "";
+          const changed = (r.assigned_vehicle ?? "") !== v || (r.assigned_driver ?? "") !== d;
+          return changed ? { id: r.id, assigned_vehicle: v || null, assigned_driver: d || null } : null;
+        })
+        .filter((x): x is { id: string; assigned_vehicle: string | null; assigned_driver: string | null } => !!x);
+      for (const u of updates) {
+        const { error: upErr } = await supabase
+          .from("vehicle_requests")
+          .update({ assigned_vehicle: u.assigned_vehicle, assigned_driver: u.assigned_driver })
+          .eq("id", u.id);
+        if (upErr) toast.error(`Failed to save allocation: ${upErr.message}`);
+      }
+
       const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd);
       doc.save(filename);
       const blob = doc.output("blob");
