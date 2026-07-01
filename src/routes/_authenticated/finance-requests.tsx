@@ -378,6 +378,15 @@ function FinanceRequestsPage() {
                             />
                           </td>
                           <td className="p-2">
+                            <Select value={it.payment_method} onValueChange={(v) => updateItem(i, "payment_method", v as "cash" | "cheque")}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="cash">Cash</SelectItem>
+                                <SelectItem value="cheque">Cheque</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="p-2">
                             {items.length > 1 && (
                               <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(i)}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
