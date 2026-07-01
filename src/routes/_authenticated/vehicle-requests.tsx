@@ -853,18 +853,45 @@ function DSWeeklyVehicleRequestsView() {
 
       <SavedWeeklyPdfs
         refreshKey={savedRefresh}
-        onEdit={(ws, we, path) => {
+        onEdit={isSuperAdmin ? (ws, we, path) => {
           const items = rows.filter((r) => r.date_needed >= ws && r.date_needed <= we);
           if (items.length === 0) {
             toast.error("No vehicle requests found for that week.");
             return;
           }
           setPrepare({ weekStart: ws, weekEnd: we, items, existingPath: path });
-        }}
+        } : undefined}
       />
+
+      <Dialog open={!!editingRow} onOpenChange={(o) => { if (!o) { setEditingRow(null); setEditRowForm(null); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit vehicle request</DialogTitle>
+            <DialogDescription>Update the details of this consolidated request. Changes reflect on all views.</DialogDescription>
+          </DialogHeader>
+          {editRowForm && (
+            <div className="grid gap-3 md:grid-cols-2">
+              <div><Label>Date</Label><Input type="date" value={editRowForm.date_needed} onChange={(e) => setEditRowForm({ ...editRowForm, date_needed: e.target.value })} /></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>From (time)</Label><Input type="time" value={editRowForm.time_from} onChange={(e) => setEditRowForm({ ...editRowForm, time_from: e.target.value })} /></div>
+                <div><Label>To (time)</Label><Input type="time" value={editRowForm.time_to} onChange={(e) => setEditRowForm({ ...editRowForm, time_to: e.target.value })} /></div>
+              </div>
+              <div><Label>Start point</Label><Input value={editRowForm.start_point} onChange={(e) => setEditRowForm({ ...editRowForm, start_point: e.target.value })} /></div>
+              <div><Label>Destination</Label><Input value={editRowForm.destination} onChange={(e) => setEditRowForm({ ...editRowForm, destination: e.target.value })} /></div>
+              <div><Label>Passengers</Label><Input type="number" min={1} value={editRowForm.passengers} onChange={(e) => setEditRowForm({ ...editRowForm, passengers: Number(e.target.value) })} /></div>
+              <div className="md:col-span-2"><Label>Purpose</Label><Textarea rows={3} value={editRowForm.purpose} onChange={(e) => setEditRowForm({ ...editRowForm, purpose: e.target.value })} /></div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditingRow(null); setEditRowForm(null); }}>Cancel</Button>
+            <Button onClick={saveConsolidatedEdit} disabled={editRowBusy}>{editRowBusy ? "Saving…" : "Save changes"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 
 interface WPRow {
