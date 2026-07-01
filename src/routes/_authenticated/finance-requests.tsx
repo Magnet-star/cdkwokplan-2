@@ -149,10 +149,17 @@ function FinanceRequestsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("finance_requests")
-      .select("*")
+      .select("*, finance_request_mpesa(phone)")
       .order("submitted_at", { ascending: false });
     if (error) { toast.error(error.message); setRequests([]); }
-    else setRequests((data ?? []) as unknown as FRRow[]);
+    else {
+      const rows = (data ?? []) as unknown as (FRRow & { finance_request_mpesa: { phone: string | null } | { phone: string | null }[] | null })[];
+      setRequests(rows.map((row) => {
+        const m = row.finance_request_mpesa;
+        const phone = Array.isArray(m) ? (m[0]?.phone ?? null) : (m?.phone ?? null);
+        return { ...row, mpesa_phone: phone } as FRRow;
+      }));
+    }
     setLoading(false);
   };
 
@@ -207,11 +214,10 @@ function FinanceRequestsPage() {
     if (!signature.trim()) return toast.error("Please type your name to sign");
     if (!recipients.finance) return toast.error("No CDK Finance super admin is configured. Contact the administrator.");
     setSubmitting(true);
-    const { error } = await supabase.from("finance_requests").insert({
+    const { data: inserted, error } = await supabase.from("finance_requests").insert({
       requester_id: user.id,
       requester_name: profile.full_name,
       requester_signature: signature.trim(),
-      mpesa_phone: mpesa.trim() || null,
       department_id: profile.department_id,
       department_name: departmentName || null,
       items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null, payment_method: i.payment_method || "cash" })),
@@ -222,9 +228,14 @@ function FinanceRequestsPage() {
       vicar_super_admin_name: recipients.vicar?.full_name ?? null,
       procurator_super_admin_id: recipients.procurator?.id ?? null,
       procurator_super_admin_name: recipients.procurator?.full_name ?? null,
-    });
+    }).select("id").single();
+    if (error) { setSubmitting(false); return toast.error(error.message); }
+    const phone = mpesa.trim();
+    if (phone && inserted?.id) {
+      const { error: mErr } = await supabase.from("finance_request_mpesa").insert({ finance_request_id: inserted.id, phone });
+      if (mErr) console.warn("mpesa save failed", mErr);
+    }
     setSubmitting(false);
-    if (error) return toast.error(error.message);
     toast.success("Finance request submitted to CDK Finance, Vicar General and Procurator");
     setItems([emptyItem(), emptyItem(), emptyItem(), emptyItem(), emptyItem()]);
     setSignature(""); setMpesa("");
@@ -995,8 +1006,16 @@ function RequestCard({
     const { error } = await supabase.from("finance_requests").update({
       items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null, payment_method: i.payment_method || "cash" })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
-      mpesa_phone: editMpesa.trim() || null,
     } as never).eq("id", r.id);
+    if (!error) {
+      const phone = editMpesa.trim();
+      if (phone) {
+        const { error: mErr } = await supabase.from("finance_request_mpesa").upsert({ finance_request_id: r.id, phone }, { onConflict: "finance_request_id" });
+        if (mErr) console.warn("mpesa update failed", mErr);
+      } else {
+        await supabase.from("finance_request_mpesa").delete().eq("finance_request_id", r.id);
+      }
+    }
     setSavingEdit(false);
     if (error) return toast.error(error.message);
     toast.success("Request updated");
