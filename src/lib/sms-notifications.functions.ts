@@ -14,12 +14,16 @@ function toMsisdn(raw: string | null | undefined): number | null {
   return Number.isFinite(n) && d.length >= 11 ? n : null;
 }
 
+type SbLike = {
+  from: (t: string) => { insert: (v: unknown) => { then: Parameters<Promise<unknown>["then"]>[0] } | Promise<unknown> };
+};
+
 async function logSms(
-  supabase: { from: (t: string) => { insert: (v: unknown) => Promise<unknown> } },
+  supabase: SbLike,
   entries: Array<{ kind: string; request_id?: string | null; recipient_msisdn: number; recipient_role?: string | null; message: string; reference?: string | null; status: string; error?: string | null }>,
 ) {
   if (entries.length === 0) return;
-  try { await supabase.from("sms_logs").insert(entries); } catch (e) { console.error("[sms] log failed", e); }
+  try { await (supabase.from("sms_logs").insert(entries) as Promise<unknown>); } catch (e) { console.error("[sms] log failed", e); }
 }
 
 async function sendSms(
