@@ -427,6 +427,8 @@ interface DSRow {
   passengers: number | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
+  assigned_vehicle: string | null;
+  assigned_driver: string | null;
 }
 
 function splitRoute(value: string): { start: string; end: string } {
