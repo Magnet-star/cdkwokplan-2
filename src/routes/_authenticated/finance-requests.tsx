@@ -993,7 +993,7 @@ function RequestCard({
     if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
     setSavingEdit(true);
     const { error } = await supabase.from("finance_requests").update({
-      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
+      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null, payment_method: i.payment_method || "cash" })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
       mpesa_phone: editMpesa.trim() || null,
     } as never).eq("id", r.id);
