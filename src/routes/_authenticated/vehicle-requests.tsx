@@ -496,6 +496,7 @@ interface FleetVehicle { id: string; registration: string; make_model: string | 
 interface DriverOption { id: string; full_name: string }
 
 function DSWeeklyVehicleRequestsView() {
+  const { isSuperAdmin } = useAuth();
   const [rows, setRows] = useState<DSRow[]>([]);
   const [departments, setDepartments] = useState<Record<string, string>>({});
   const [vehicles, setVehicles] = useState<FleetVehicle[]>([]);
@@ -503,6 +504,11 @@ function DSWeeklyVehicleRequestsView() {
   const [loading, setLoading] = useState(true);
   const [prepare, setPrepare] = useState<{ weekStart: string; weekEnd: string; items: DSRow[]; existingPath?: string } | null>(null);
   const [savedRefresh, setSavedRefresh] = useState(0);
+  const [editingRow, setEditingRow] = useState<DSRow | null>(null);
+  const [editRowForm, setEditRowForm] = useState<TripRow | null>(null);
+  const [editRowBusy, setEditRowBusy] = useState(false);
+
+
 
 
   useEffect(() => {
