@@ -14,19 +14,37 @@ function toMsisdn(raw: string | null | undefined): number | null {
   return Number.isFinite(n) && d.length >= 11 ? n : null;
 }
 
-async function sendSms(recipients: number[], message: string, reference?: string) {
-  const uniq = Array.from(new Set(recipients.filter((n) => n && Number.isFinite(n))));
+async function logSms(
+  supabase: { from: (t: string) => { insert: (v: unknown) => Promise<unknown> } },
+  entries: Array<{ kind: string; request_id?: string | null; recipient_msisdn: number; recipient_role?: string | null; message: string; reference?: string | null; status: string; error?: string | null }>,
+) {
+  if (entries.length === 0) return;
+  try { await supabase.from("sms_logs").insert(entries); } catch (e) { console.error("[sms] log failed", e); }
+}
+
+async function sendSms(
+  supabase: { from: (t: string) => { insert: (v: unknown) => Promise<unknown> } },
+  targets: Array<{ msisdn: number; role?: string | null }>,
+  message: string,
+  kind: string,
+  reference?: string,
+  requestId?: string | null,
+) {
+  const seen = new Set<number>();
+  const uniq = targets.filter((t) => t.msisdn && Number.isFinite(t.msisdn) && !seen.has(t.msisdn) && (seen.add(t.msisdn), true));
   if (uniq.length === 0) return { skipped: true as const };
   const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
   const GATEWAYAPI_API_KEY = process.env.GATEWAYAPI_API_KEY;
+  const nums = uniq.map((u) => u.msisdn);
   if (!LOVABLE_API_KEY || !GATEWAYAPI_API_KEY) {
     console.error("[sms] missing API keys");
+    await logSms(supabase, uniq.map((t) => ({ kind, request_id: requestId ?? null, recipient_msisdn: t.msisdn, recipient_role: t.role ?? null, message, reference: reference ?? null, status: "skipped", error: "missing_keys" })));
     return { skipped: true as const };
   }
-  const path = uniq.length === 1 ? "/mobile/single" : "/mobile/multi";
-  const body = uniq.length === 1
-    ? { sender: "CDK", recipient: uniq[0], message, reference }
-    : { sender: "CDK", messages: uniq.map((r) => ({ recipient: r, message, reference })) };
+  const path = nums.length === 1 ? "/mobile/single" : "/mobile/multi";
+  const body = nums.length === 1
+    ? { sender: "CDK", recipient: nums[0], message, reference }
+    : { sender: "CDK", messages: nums.map((r) => ({ recipient: r, message, reference })) };
   const res = await fetch(`https://connector-gateway.lovable.dev/gatewayapi${path}`, {
     method: "POST",
     headers: {
@@ -39,8 +57,10 @@ async function sendSms(recipients: number[], message: string, reference?: string
   if (!res.ok) {
     const t = await res.text().catch(() => "");
     console.error("[sms] gateway failed", res.status, t);
+    await logSms(supabase, uniq.map((tg) => ({ kind, request_id: requestId ?? null, recipient_msisdn: tg.msisdn, recipient_role: tg.role ?? null, message, reference: reference ?? null, status: "failed", error: `${res.status}: ${t.slice(0, 200)}` })));
     return { skipped: true as const, error: `${res.status}` };
   }
+  await logSms(supabase, uniq.map((tg) => ({ kind, request_id: requestId ?? null, recipient_msisdn: tg.msisdn, recipient_role: tg.role ?? null, message, reference: reference ?? null, status: "sent", error: null })));
   return { ok: true as const };
 }
 
