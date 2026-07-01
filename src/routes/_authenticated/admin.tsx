@@ -74,7 +74,7 @@ function AdminPage() {
   const load = async () => {
     const [{ data: d }, { data: u }, { data: r }, { data: v }, { data: f }, { data: l }, { data: p }, { data: ev }] = await Promise.all([
       supabase.from("departments").select("*").order("name"),
-      supabase.from("profiles").select("id,full_name,email,position,department_id").order("full_name"),
+      supabase.from("profiles").select("id,full_name,email,phone,position,department_id").order("full_name"),
       supabase.from("user_roles").select("user_id,role"),
       supabase.from("vehicle_requests").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("vehicles").select("*").order("registration"),
