@@ -705,6 +705,7 @@ function AdminPage() {
                 <div className="grid gap-3">
                   <div><Label>Full name</Label><Input value={editUser.full_name} onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })} /></div>
                   <div><Label>Email (login)</Label><Input type="email" value={editUser.email} onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} /></div>
+                  <div><Label>Phone (for phone sign-in)</Label><Input type="tel" value={editUser.phone} onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })} placeholder="e.g. +254712345678" /></div>
                   <div>
                     <Label>New password (optional, min 8 chars)</Label>
                     <Input type="text" value={editUser.password} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} placeholder="Leave blank to keep current" />
