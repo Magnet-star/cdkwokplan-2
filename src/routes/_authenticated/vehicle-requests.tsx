@@ -420,6 +420,8 @@ interface DSRow {
   department_id: string | null;
   week_start_date: string;
   date_needed: string;
+  time_from: string | null;
+  time_to: string | null;
   destination: string; // stored as "From -> To" or just To
   purpose: string;
   passengers: number | null;
