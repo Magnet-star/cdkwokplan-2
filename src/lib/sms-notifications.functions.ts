@@ -26,7 +26,7 @@ async function logSms(
 }
 
 async function sendSms(
-  supabase: { from: (t: string) => { insert: (v: unknown) => Promise<unknown> } },
+  supabase: unknown,
   targets: Array<{ msisdn: number; role?: string | null }>,
   message: string,
   kind: string,
