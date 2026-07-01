@@ -853,6 +853,7 @@ function DSWeeklyVehicleRequestsView() {
 
       <SavedWeeklyPdfs
         refreshKey={savedRefresh}
+        allowDelete={isSuperAdmin}
         onEdit={isSuperAdmin ? (ws, we, path) => {
           const items = rows.filter((r) => r.date_needed >= ws && r.date_needed <= we);
           if (items.length === 0) {
