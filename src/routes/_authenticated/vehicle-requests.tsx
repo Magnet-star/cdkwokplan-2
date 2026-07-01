@@ -605,16 +605,64 @@ function DSWeeklyVehicleRequestsView() {
       };
     });
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this vehicle request? It will disappear from the requester's account and all views.")) return;
-    const { error } = await supabase.from("vehicle_requests").delete().eq("id", id);
-    if (error) {
-      toast.error(`Failed to delete: ${error.message}`);
+  const openConsolidatedEdit = (r: DSRow) => {
+    if (!isSuperAdmin) return;
+    const cleaned = (r.destination || "").replace(/\u2192/g, "->");
+    const parts = cleaned.split(/\s*->\s*/);
+    const start = parts.length >= 2 ? parts[0].trim() : "";
+    const dest = parts.length >= 2 ? parts.slice(1).join(" -> ").trim() : cleaned.trim();
+    setEditingRow(r);
+    setEditRowForm({
+      date_needed: r.date_needed,
+      time_from: r.time_from ?? "09:00",
+      time_to: r.time_to ?? "17:00",
+      start_point: start,
+      destination: dest,
+      passengers: r.passengers ?? 1,
+      purpose: r.purpose ?? "",
+    });
+  };
+
+  const saveConsolidatedEdit = async () => {
+    if (!editingRow || !editRowForm) return;
+    if (!editRowForm.date_needed || !editRowForm.destination.trim()) {
+      toast.error("Date and destination are required");
       return;
     }
-    setRows((prev) => prev.filter((r) => r.id !== id));
-    toast.success("Vehicle request deleted");
+    setEditRowBusy(true);
+    const newWeekStart = format(startOfWeek(parseISO(editRowForm.date_needed), { weekStartsOn: 1 }), "yyyy-MM-dd");
+    const newDest = editRowForm.start_point.trim()
+      ? `${editRowForm.start_point.trim()} → ${editRowForm.destination.trim()}`
+      : editRowForm.destination.trim();
+    const { error } = await supabase
+      .from("vehicle_requests")
+      .update({
+        week_start_date: newWeekStart,
+        date_needed: editRowForm.date_needed,
+        time_from: editRowForm.time_from || null,
+        time_to: editRowForm.time_to || null,
+        destination: newDest,
+        purpose: editRowForm.purpose,
+        passengers: editRowForm.passengers,
+      })
+      .eq("id", editingRow.id);
+    setEditRowBusy(false);
+    if (error) { toast.error(`Failed to update: ${error.message}`); return; }
+    setRows((prev) => prev.map((x) => x.id === editingRow.id ? {
+      ...x,
+      week_start_date: newWeekStart,
+      date_needed: editRowForm.date_needed,
+      time_from: editRowForm.time_from || null,
+      time_to: editRowForm.time_to || null,
+      destination: newDest,
+      purpose: editRowForm.purpose,
+      passengers: editRowForm.passengers,
+    } : x));
+    toast.success("Vehicle request updated");
+    setEditingRow(null);
+    setEditRowForm(null);
   };
+
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
