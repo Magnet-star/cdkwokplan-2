@@ -793,8 +793,16 @@ function PrepareWeeklyPdfDialog({
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (open) setAssignments({});
-  }, [open, weekStart]);
+    if (!open) return;
+    const initial: Record<string, { vehicle: string; driver: string }> = {};
+    for (const r of items) {
+      initial[r.id] = {
+        vehicle: r.assigned_vehicle ?? "",
+        driver: r.assigned_driver ?? "",
+      };
+    }
+    setAssignments(initial);
+  }, [open, weekStart, items]);
 
 
 
