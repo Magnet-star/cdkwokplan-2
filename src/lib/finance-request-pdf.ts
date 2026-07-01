@@ -105,7 +105,7 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     headStyles: { fillColor: [102, 0, 0], textColor: 255, fontStyle: "bold" },
     footStyles: { fillColor: [240, 230, 230], textColor: 0, fontStyle: "bold" },
     columnStyles: { 0: { cellWidth: 12, halign: "center" }, 2: { cellWidth: 28 }, 3: { cellWidth: 22, halign: "center" }, 4: { cellWidth: 36, halign: "right" } },
-    styles: { fontSize: 10, cellPadding: 3 },
+    styles: { fontSize: 10, cellPadding: 3 , fontStyle: "bold", textColor: [0,0,0] },
   });
 
   // @ts-expect-error lastAutoTable injected by autotable

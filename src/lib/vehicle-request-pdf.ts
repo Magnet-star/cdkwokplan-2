@@ -190,7 +190,7 @@ export function downloadWeeklyVehicleRequestPDF(
         r.status.toUpperCase(),
       ];
     }),
-    styles: { fontSize: 9, cellPadding: 3, valign: "top" },
+    styles: { fontSize: 9, cellPadding: 3, valign: "top" , fontStyle: "bold", textColor: [0,0,0] },
     headStyles: { fillColor: [102, 0, 0], textColor: 255 },
     columnStyles: {
       0: { cellWidth: 30 },

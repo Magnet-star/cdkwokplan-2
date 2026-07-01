@@ -108,7 +108,7 @@ export function downloadWorkPlanPDF(plan: WorkPlanPDFData) {
     startY: y,
     head: [["Day & Date", "Activity / Activities", "Location", "Vehicle Required", "Funds Required", "Notes"]],
     body: tableRows,
-    styles: { fontSize: 9, cellPadding: 3, valign: "top", overflow: "linebreak" },
+    styles: { fontSize: 9, cellPadding: 3, valign: "top", overflow: "linebreak" , fontStyle: "bold", textColor: [0,0,0] },
     headStyles: { fillColor: [102, 0, 0], textColor: 255, fontStyle: "bold" },
     columnStyles: {
       0: { cellWidth: 28, fontStyle: "bold" },

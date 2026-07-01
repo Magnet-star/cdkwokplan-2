@@ -72,7 +72,7 @@ export function buildDSWeeklyVehicleRequestsPDF(
       sanitize(r.vehicle || ""),
       sanitize(r.driver || ""),
     ]),
-    styles: { fontSize: 9, cellPadding: 4, valign: "middle", minCellHeight: 12 },
+    styles: { fontSize: 9, cellPadding: 4, valign: "middle", minCellHeight: 12 , fontStyle: "bold", textColor: [0,0,0] },
     headStyles: { fillColor: [102, 0, 0], textColor: 255, halign: "center" },
     columnStyles: {
       0: { cellWidth: 45 },

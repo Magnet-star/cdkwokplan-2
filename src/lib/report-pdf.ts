@@ -159,7 +159,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
     foot: totalActivities ? [["", "", "", "Total", totalMoney.toLocaleString()]] : undefined,
     headStyles: { fillColor: [89, 25, 32], textColor: 255 },
     footStyles: { fillColor: [240, 230, 215], textColor: 40, fontStyle: "bold" },
-    styles: { fontSize: 9, cellPadding: 2 },
+    styles: { fontSize: 9, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
@@ -183,7 +183,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
     ]] : undefined,
     headStyles: { fillColor: [89, 25, 32], textColor: 255 },
     footStyles: { fillColor: [240, 230, 215], textColor: 40, fontStyle: "bold" },
-    styles: { fontSize: 9, cellPadding: 2 },
+    styles: { fontSize: 9, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
@@ -198,7 +198,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
       head: [["Serial", "Submitted", "Items", "Status", "Amount (KES)"]],
       body: [["—", "—", "No finance requests in this period", "—", "—"]],
       headStyles: { fillColor: [89, 25, 32], textColor: 255 },
-      styles: { fontSize: 9, cellPadding: 2 },
+      styles: { fontSize: 9, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
     });
   } else {
     autoTable(doc, {
@@ -225,7 +225,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
       ]],
       headStyles: { fillColor: [89, 25, 32], textColor: 255 },
       footStyles: { fillColor: [240, 230, 215], textColor: 40, fontStyle: "bold" },
-      styles: { fontSize: 9, cellPadding: 2 },
+      styles: { fontSize: 9, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
     });
   }
   y = (doc as any).lastAutoTable.finalY + 10;
@@ -251,7 +251,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
         [t.condition_start ? `Start: ${t.condition_start}` : "", t.condition_end ? `End: ${t.condition_end}` : ""].filter(Boolean).join(" | ") || "—",
       ]),
       headStyles: { fillColor: [89, 25, 32], textColor: 255 },
-      styles: { fontSize: 8, cellPadding: 2 },
+      styles: { fontSize: 8, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
     });
 
     const tripTotals = deptTrips.reduce(
