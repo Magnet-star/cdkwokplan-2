@@ -18,6 +18,7 @@ import { Banknote, Plus, Trash2, Download, Send, CheckCircle2, XCircle, RefreshC
 import { downloadFinanceRequestPDF, type FinanceRequestPDFData } from "@/lib/finance-request-pdf";
 import { downloadFinanceSummaryPDF } from "@/lib/finance-summary-pdf";
 import { FinanceApproverGate } from "@/components/FinanceApproverGate";
+import { notifyFinanceSubmission, notifyFinanceApproved, notifyFinanceAuthorized } from "@/lib/sms-notifications.functions";
 
 export const Route = createFileRoute("/_authenticated/finance-requests")({
   component: FinanceRequestsPage,
@@ -236,6 +237,9 @@ function FinanceRequestsPage() {
       if (mErr) console.warn("mpesa save failed", mErr);
     }
     setSubmitting(false);
+    if (inserted?.id) {
+      notifyFinanceSubmission({ data: { requestId: inserted.id } }).catch((e) => console.warn("SMS notify failed", e));
+    }
     toast.success("Finance request submitted to CDK Finance, Vicar General and Procurator");
     setItems([emptyItem(), emptyItem(), emptyItem(), emptyItem(), emptyItem()]);
     setSignature(""); setMpesa("");
@@ -993,6 +997,15 @@ function RequestCard({
     const { error } = await supabase.from("finance_requests").update(update as never).eq("id", r.id);
     setSaving(false);
     if (error) return toast.error(error.message);
+    if (dialog.decision === "approve") {
+      if (prefix === "finance_admin" || prefix === "procurator") {
+        notifyFinanceApproved({ data: { requestId: r.id, approverName: signName.trim() } })
+          .catch((e) => console.warn("SMS approved failed", e));
+      } else if (prefix === "vicar_general") {
+        notifyFinanceAuthorized({ data: { requestId: r.id, authorizerName: signName.trim() } })
+          .catch((e) => console.warn("SMS authorized failed", e));
+      }
+    }
     toast.success("Decision recorded");
     setDialog(null); setSignName(""); setAccountUsed(""); setNote(""); onChanged();
   };
