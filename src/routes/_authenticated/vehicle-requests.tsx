@@ -698,6 +698,7 @@ function DSWeeklyVehicleRequestsView() {
                             weekStart={w.weekStart}
                             items={w.items}
                             departments={departments}
+                            onDelete={handleDelete}
                             onDownload={() =>
                               setPrepare({
                                 weekStart: w.weekStart,
@@ -718,6 +719,7 @@ function DSWeeklyVehicleRequestsView() {
                           weekStart={w.weekStart}
                           items={w.items}
                           departments={departments}
+                            onDelete={handleDelete}
                           onDownload={() =>
                             setPrepare({
                               weekStart: w.weekStart,
@@ -755,6 +757,7 @@ function DSWeeklyVehicleRequestsView() {
                         weekStart={w.weekStart}
                         items={w.items}
                         departments={departments}
+                            onDelete={handleDelete}
                         onDownload={() =>
                           setPrepare({
                             weekStart: w.weekStart,
@@ -787,6 +790,7 @@ function DSWeeklyVehicleRequestsView() {
         weekEnd={prepare?.weekEnd ?? ""}
         items={prepare?.items ?? []}
         departments={departments}
+                            onDelete={handleDelete}
         vehicles={vehicles}
         drivers={drivers}
         existingPath={prepare?.existingPath}
