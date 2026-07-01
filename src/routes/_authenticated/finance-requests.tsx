@@ -64,7 +64,7 @@ interface CdkRecipients {
   accounts: SuperAdminOption | null;
 }
 
-const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "" });
+const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "", payment_method: "cash" });
 
 type Period = "day" | "week" | "month" | "year" | "all";
 
