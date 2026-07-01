@@ -790,7 +790,6 @@ function DSWeeklyVehicleRequestsView() {
         weekEnd={prepare?.weekEnd ?? ""}
         items={prepare?.items ?? []}
         departments={departments}
-                            onDelete={handleDelete}
         vehicles={vehicles}
         drivers={drivers}
         existingPath={prepare?.existingPath}
