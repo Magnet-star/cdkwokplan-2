@@ -669,7 +669,7 @@ function DSWeeklyVehicleRequestsView() {
           {!currentWeek || currentWeek.items.length === 0 ? (
             <p className="text-sm text-muted-foreground">No vehicle requests submitted for this week yet.</p>
           ) : (
-            <WeekBreakdown items={currentWeek.items} departments={departments} />
+            <WeekBreakdown items={currentWeek.items} departments={departments} onDelete={handleDelete} />
           )}
         </CardContent>
       </Card>
