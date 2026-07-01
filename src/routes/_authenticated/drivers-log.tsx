@@ -317,7 +317,10 @@ function DriversLogPage() {
     return { start: s, end: e, label: String(now.getFullYear()) };
   })();
 
+  const canViewStats = canViewAll || isHod;
+  const isDeptScopedStats = isHod && !canViewAll;
   const statsLogs = filteredLogs.filter((l) => {
+    if (isDeptScopedStats && l.department_id !== myDeptId) return false;
     try { return isWithinInterval(parseISO(l.log_date), { start: statsRange.start, end: statsRange.end }); }
     catch { return false; }
   });
