@@ -6,6 +6,7 @@ export interface FinanceItem {
   activity: string;
   amount: number | string;
   activity_date?: string | null;
+  payment_method?: string | null;
 }
 
 export interface FinanceRequestPDFData {
@@ -91,18 +92,19 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
       String(idx + 1),
       it.activity || "—",
       it.activity_date ? format(parseISO(it.activity_date), "PP") : "—",
+      (it.payment_method === "cheque" ? "Cheque" : "Cash"),
       fmtKES(Number(it.amount) || 0),
     ]);
 
   autoTable(doc, {
     startY: y + 2,
-    head: [["#", "Item / Activity", "Activity date", "Amount (KES)"]],
+    head: [["#", "Item / Activity", "Activity date", "Payment", "Amount (KES)"]],
     body,
-    foot: [["", "", "TOTAL", fmtKES(Number(data.total_amount) || 0)]],
+    foot: [["", "", "", "TOTAL", fmtKES(Number(data.total_amount) || 0)]],
     theme: "grid",
     headStyles: { fillColor: [102, 0, 0], textColor: 255, fontStyle: "bold" },
     footStyles: { fillColor: [240, 230, 230], textColor: 0, fontStyle: "bold" },
-    columnStyles: { 0: { cellWidth: 12, halign: "center" }, 2: { cellWidth: 32 }, 3: { cellWidth: 40, halign: "right" } },
+    columnStyles: { 0: { cellWidth: 12, halign: "center" }, 2: { cellWidth: 28 }, 3: { cellWidth: 22, halign: "center" }, 4: { cellWidth: 36, halign: "right" } },
     styles: { fontSize: 10, cellPadding: 3 },
   });
 

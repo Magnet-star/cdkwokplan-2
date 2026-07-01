@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/finance-requests")({
   component: FinanceRequestsPage,
 });
 
-interface ItemRow { activity: string; amount: string; activity_date: string; }
+interface ItemRow { activity: string; amount: string; activity_date: string; payment_method: "cash" | "cheque"; }
 type FRStatus = "pending" | "approved" | "rejected" | "adjustment_requested" | "cancelled";
 
 interface FRRow {
@@ -64,7 +64,7 @@ interface CdkRecipients {
   accounts: SuperAdminOption | null;
 }
 
-const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "" });
+const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "", payment_method: "cash" });
 
 type Period = "day" | "week" | "month" | "year" | "all";
 
@@ -197,7 +197,7 @@ function FinanceRequestsPage() {
   const addItem = () => setItems((p) => [...p, emptyItem()]);
   const removeItem = (i: number) => setItems((p) => p.filter((_, idx) => idx !== i));
   const updateItem = (i: number, field: keyof ItemRow, v: string) =>
-    setItems((p) => p.map((it, idx) => (idx === i ? { ...it, [field]: v } : it)));
+    setItems((p) => p.map((it, idx) => (idx === i ? { ...it, [field]: v } : it)) as ItemRow[]);
 
   const submitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,7 +214,7 @@ function FinanceRequestsPage() {
       mpesa_phone: mpesa.trim() || null,
       department_id: profile.department_id,
       department_name: departmentName || null,
-      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
+      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null, payment_method: i.payment_method || "cash" })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
       selected_super_admin_id: recipients.finance.id,
       selected_super_admin_name: recipients.finance.full_name,
@@ -318,6 +318,16 @@ function FinanceRequestsPage() {
                           placeholder="0.00"
                         />
                       </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Payment method</Label>
+                        <Select value={it.payment_method} onValueChange={(v) => updateItem(i, "payment_method", v as "cash" | "cheque")}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cash">Cash</SelectItem>
+                            <SelectItem value="cheque">Cheque</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   ))}
                   <div className="flex items-center justify-between rounded-md border bg-muted/40 p-3">
@@ -335,6 +345,7 @@ function FinanceRequestsPage() {
                         <th className="p-2 text-left">Item / Activity</th>
                         <th className="w-40 p-2 text-left">Activity date</th>
                         <th className="w-32 p-2 text-left">Amount (KES)</th>
+                        <th className="w-32 p-2 text-left">Payment</th>
                         <th className="w-10 p-2"></th>
                       </tr>
                     </thead>
@@ -367,6 +378,15 @@ function FinanceRequestsPage() {
                             />
                           </td>
                           <td className="p-2">
+                            <Select value={it.payment_method} onValueChange={(v) => updateItem(i, "payment_method", v as "cash" | "cheque")}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="cash">Cash</SelectItem>
+                                <SelectItem value="cheque">Cheque</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="p-2">
                             {items.length > 1 && (
                               <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(i)}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -378,6 +398,7 @@ function FinanceRequestsPage() {
                       <tr className="border-t bg-muted/40">
                         <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
                         <td className="p-2 font-bold">{fmtKES(total)}</td>
+                        <td></td>
                         <td></td>
                       </tr>
                     </tbody>
@@ -880,7 +901,7 @@ function RequestCard({
 
   // Edit & cancel
   const [editing, setEditing] = useState(false);
-  const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i: ItemRow) => ({ activity: i.activity, amount: String(i.amount), activity_date: i.activity_date ?? "" })));
+  const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i: ItemRow) => ({ activity: i.activity, amount: String(i.amount), activity_date: i.activity_date ?? "", payment_method: (i.payment_method === "cheque" ? "cheque" : "cash") })));
   const [editMpesa, setEditMpesa] = useState<string>(r.mpesa_phone ?? "");
   const [savingEdit, setSavingEdit] = useState(false);
   const editTotal = useMemo(() => editItems.reduce((s, i) => s + (Number(i.amount) || 0), 0), [editItems]);
@@ -972,7 +993,7 @@ function RequestCard({
     if (cleaned.length === 0) return toast.error("Add at least one item with an amount");
     setSavingEdit(true);
     const { error } = await supabase.from("finance_requests").update({
-      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
+      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null, payment_method: i.payment_method || "cash" })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
       mpesa_phone: editMpesa.trim() || null,
     } as never).eq("id", r.id);
@@ -1057,6 +1078,7 @@ function RequestCard({
                 <div className="break-words whitespace-pre-wrap">{it.activity}</div>
                 <div className="text-xs text-muted-foreground">
                   Date: <strong className="text-foreground">{it.activity_date ? format(new Date(it.activity_date), "PP") : "—"}</strong>
+                  {" · "}Payment: <strong className="text-foreground uppercase">{(it.payment_method === "cheque" ? "Cheque" : "Cash")}</strong>
                 </div>
               </div>
             ))}
@@ -1070,7 +1092,7 @@ function RequestCard({
           <div className="hidden overflow-x-auto sm:block">
             <table className="w-full">
               <thead className="bg-muted/50">
-                <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-left w-32">Date</th><th className="p-2 text-right w-32">Amount</th></tr>
+                <tr><th className="p-2 text-left w-10">#</th><th className="p-2 text-left">Item / Activity</th><th className="p-2 text-left w-32">Date</th><th className="p-2 text-left w-24">Payment</th><th className="p-2 text-right w-32">Amount</th></tr>
               </thead>
               <tbody>
                 {(r.items ?? []).map((it, i) => (
@@ -1078,11 +1100,12 @@ function RequestCard({
                     <td className="p-2">{i + 1}</td>
                     <td className="p-2 break-words">{it.activity}</td>
                     <td className="p-2">{it.activity_date ? format(new Date(it.activity_date), "PP") : "—"}</td>
+                    <td className="p-2 uppercase">{it.payment_method === "cheque" ? "Cheque" : "Cash"}</td>
                     <td className="p-2 text-right">{fmtKES(Number(it.amount))}</td>
                   </tr>
                 ))}
                 <tr className="border-t bg-muted/40">
-                  <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
+                  <td colSpan={4} className="p-2 text-right font-bold">TOTAL</td>
                   <td className="p-2 text-right font-bold">{fmtKES(Number(r.total_amount))}</td>
                 </tr>
               </tbody>
@@ -1188,6 +1211,7 @@ function RequestCard({
                     <th className="p-2 text-left">Item / Activity</th>
                     <th className="w-40 p-2 text-left">Activity date</th>
                     <th className="w-32 p-2 text-left">Amount</th>
+                    <th className="w-28 p-2 text-left">Payment</th>
                     <th className="w-10 p-2"></th>
                   </tr>
                 </thead>
@@ -1205,6 +1229,15 @@ function RequestCard({
                         <Input inputMode="decimal" value={it.amount} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, amount: e.target.value.replace(/[^0-9.]/g, "") } : x))} />
                       </td>
                       <td className="p-2">
+                        <Select value={it.payment_method} onValueChange={(v) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, payment_method: v as "cash" | "cheque" } : x))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cash">Cash</SelectItem>
+                            <SelectItem value="cheque">Cheque</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
                         {editItems.length > 1 && (
                           <Button type="button" variant="ghost" size="icon" onClick={() => setEditItems((p) => p.filter((_, idx) => idx !== i))}>
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -1216,6 +1249,7 @@ function RequestCard({
                   <tr className="border-t bg-muted/40">
                     <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
                     <td className="p-2 font-bold">{fmtKES(editTotal)}</td>
+                    <td></td>
                     <td></td>
                   </tr>
                 </tbody>
