@@ -90,9 +90,11 @@ export const notifyFinanceSubmission = createServerFn({ method: "POST" })
     if (ids.length === 0) return { ok: false };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: profs } = await supabaseAdmin.from("profiles").select("id, phone").in("id", ids);
-    const targets = (profs ?? [])
-      .map((p) => ({ msisdn: toMsisdn(p.phone), role: roleMap[p.id] ?? null }))
-      .filter((t): t is { msisdn: number; role: string | null } => t.msisdn !== null);
+    const targets: Array<{ msisdn: number; role: string | null }> = [];
+    for (const p of profs ?? []) {
+      const msisdn = toMsisdn(p.phone);
+      if (msisdn !== null) targets.push({ msisdn, role: roleMap[p.id] ?? null });
+    }
     const link = `${appUrl()}/finance-requests?id=${r.id}`;
     const msg = `You have a pending finance request to approve/authorize from ${r.requester_name} in the ${r.department_name ?? "department"} department. Click this link to review: ${link}`;
     await sendSms(supabase, targets, msg, "submission", `fr-sub-${r.id}`, r.id);
