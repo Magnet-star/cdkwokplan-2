@@ -5,6 +5,8 @@ import { format, parseISO } from "date-fns";
 export interface DSWeeklyVRRow {
   department: string;
   date_needed: string;
+  time_from?: string | null;
+  time_to?: string | null;
   from: string;
   destination: string;
   purpose?: string | null;
