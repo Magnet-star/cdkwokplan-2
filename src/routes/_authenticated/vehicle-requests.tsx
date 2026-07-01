@@ -1004,7 +1004,7 @@ function PrepareWeeklyPdfDialog({
   );
 }
 
-function WeekBreakdown({ items, departments }: { items: DSRow[]; departments: Record<string, string> }) {
+function WeekBreakdown({ items, departments, onDelete }: { items: DSRow[]; departments: Record<string, string>; onDelete?: (id: string) => void }) {
   // Group by date, then by department
   const byDate = new Map<string, DSRow[]>();
   for (const r of items) {
@@ -1039,10 +1039,23 @@ function WeekBreakdown({ items, departments }: { items: DSRow[]; departments: Re
                       {deptRows.map((r) => {
                         const { start, end } = splitRoute(r.destination);
                         return (
-                          <li key={r.id}>
-                            <span className="font-medium text-foreground">{start || "—"} → {end}</span>
-                            {r.purpose ? ` · ${r.purpose}` : ""} · Passengers: {r.passengers ?? 1}
-                            <Badge variant="outline" className="ml-2 text-[10px]">{r.status}</Badge>
+                          <li key={r.id} className="flex items-start justify-between gap-2">
+                            <span className="min-w-0 flex-1">
+                              <span className="font-medium text-foreground">{start || "—"} → {end}</span>
+                              {r.purpose ? ` · ${r.purpose}` : ""} · Passengers: {r.passengers ?? 1}
+                              <Badge variant="outline" className="ml-2 text-[10px]">{r.status}</Badge>
+                            </span>
+                            {onDelete && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                title="Delete this request"
+                                onClick={() => onDelete(r.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
                           </li>
                         );
                       })}
@@ -1056,6 +1069,7 @@ function WeekBreakdown({ items, departments }: { items: DSRow[]; departments: Re
     </div>
   );
 }
+
 
 function WeekFolder({
   weekStart,
