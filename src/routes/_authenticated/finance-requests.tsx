@@ -997,15 +997,8 @@ function RequestCard({
     const { error } = await supabase.from("finance_requests").update(update as never).eq("id", r.id);
     setSaving(false);
     if (error) return toast.error(error.message);
-    if (dialog.decision === "approve") {
-      if (prefix === "finance_admin" || prefix === "procurator") {
-        notifyFinanceApproved({ data: { requestId: r.id, approverName: signName.trim() } })
-          .catch((e) => console.warn("SMS approved failed", e));
-      } else if (prefix === "vicar_general") {
-        notifyFinanceAuthorized({ data: { requestId: r.id, authorizerName: signName.trim() } })
-          .catch((e) => console.warn("SMS authorized failed", e));
-      }
-    }
+    // SMS notifications temporarily disabled — gateway connection removed.
+
     toast.success("Decision recorded");
     setDialog(null); setSignName(""); setAccountUsed(""); setNote(""); onChanged();
   };
