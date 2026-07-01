@@ -1333,9 +1333,11 @@ function SavedWeeklyPdfs({ refreshKey, onEdit, allowDelete }: { refreshKey: numb
                       <Pencil className="mr-1 h-3.5 w-3.5" />Edit & update
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" disabled={busy === e.path} onClick={() => removePdf(e.path)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  {allowDelete && (
+                    <Button size="sm" variant="ghost" disabled={busy === e.path} onClick={() => removePdf(e.path)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
 
               </div>
