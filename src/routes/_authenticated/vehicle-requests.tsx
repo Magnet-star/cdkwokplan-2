@@ -427,6 +427,8 @@ interface DSRow {
   passengers: number | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
+  assigned_vehicle: string | null;
+  assigned_driver: string | null;
 }
 
 function splitRoute(value: string): { start: string; end: string } {
@@ -465,7 +467,7 @@ function DSWeeklyVehicleRequestsView() {
       const [{ data: vr }, { data: depts }, { data: veh }, { data: driverRoles }] = await Promise.all([
         supabase
           .from("vehicle_requests")
-          .select("id,user_id,department_id,week_start_date,date_needed,time_from,time_to,destination,purpose,passengers,status,created_at")
+          .select("id,user_id,department_id,week_start_date,date_needed,time_from,time_to,destination,purpose,passengers,status,created_at,assigned_vehicle,assigned_driver")
           .order("date_needed", { ascending: false }),
         supabase.from("departments").select("id,name"),
         supabase.from("vehicles").select("id,registration,make_model").eq("active", true).order("registration"),
@@ -487,7 +489,7 @@ function DSWeeklyVehicleRequestsView() {
       } else setDrivers([]);
       setLoading(false);
     })();
-  }, []);
+  }, [savedRefresh]);
 
   const todayWeekStart = useMemo(() => weekKey(new Date()), []);
   const [selectedWeekStart, setSelectedWeekStart] = useState<string>(todayWeekStart);
@@ -791,8 +793,16 @@ function PrepareWeeklyPdfDialog({
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (open) setAssignments({});
-  }, [open, weekStart]);
+    if (!open) return;
+    const initial: Record<string, { vehicle: string; driver: string }> = {};
+    for (const r of items) {
+      initial[r.id] = {
+        vehicle: r.assigned_vehicle ?? "",
+        driver: r.assigned_driver ?? "",
+      };
+    }
+    setAssignments(initial);
+  }, [open, weekStart, items]);
 
 
 
@@ -827,6 +837,23 @@ function PrepareWeeklyPdfDialog({
     });
     setUploading(true);
     try {
+      // Persist assignments so late-added requests keep others intact
+      const updates = sorted
+        .map((r) => {
+          const v = assignments[r.id]?.vehicle ?? "";
+          const d = assignments[r.id]?.driver ?? "";
+          const changed = (r.assigned_vehicle ?? "") !== v || (r.assigned_driver ?? "") !== d;
+          return changed ? { id: r.id, assigned_vehicle: v || null, assigned_driver: d || null } : null;
+        })
+        .filter((x): x is { id: string; assigned_vehicle: string | null; assigned_driver: string | null } => !!x);
+      for (const u of updates) {
+        const { error: upErr } = await supabase
+          .from("vehicle_requests")
+          .update({ assigned_vehicle: u.assigned_vehicle, assigned_driver: u.assigned_driver })
+          .eq("id", u.id);
+        if (upErr) toast.error(`Failed to save allocation: ${upErr.message}`);
+      }
+
       const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd);
       doc.save(filename);
       const blob = doc.output("blob");

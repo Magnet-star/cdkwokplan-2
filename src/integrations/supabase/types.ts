@@ -994,6 +994,8 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           approver_notes: string | null
+          assigned_driver: string | null
+          assigned_vehicle: string | null
           created_at: string
           date_needed: string
           department_id: string | null
@@ -1011,6 +1013,8 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           approver_notes?: string | null
+          assigned_driver?: string | null
+          assigned_vehicle?: string | null
           created_at?: string
           date_needed: string
           department_id?: string | null
@@ -1028,6 +1032,8 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           approver_notes?: string | null
+          assigned_driver?: string | null
+          assigned_vehicle?: string | null
           created_at?: string
           date_needed?: string
           department_id?: string | null
