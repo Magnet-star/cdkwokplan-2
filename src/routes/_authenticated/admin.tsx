@@ -48,7 +48,7 @@ function AdminPage() {
   const createUserFn = useServerFn(adminCreateUser);
   const deleteUserFn = useServerFn(adminDeleteUser);
   const updateUserFn = useServerFn(adminUpdateUser);
-  const [editUser, setEditUser] = useState<{ id: string; full_name: string; email: string; password: string } | null>(null);
+  const [editUser, setEditUser] = useState<{ id: string; full_name: string; email: string; phone: string; password: string } | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [depts, setDepts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -74,7 +74,7 @@ function AdminPage() {
   const load = async () => {
     const [{ data: d }, { data: u }, { data: r }, { data: v }, { data: f }, { data: l }, { data: p }, { data: ev }] = await Promise.all([
       supabase.from("departments").select("*").order("name"),
-      supabase.from("profiles").select("id,full_name,email,position,department_id").order("full_name"),
+      supabase.from("profiles").select("id,full_name,email,phone,position,department_id").order("full_name"),
       supabase.from("user_roles").select("user_id,role"),
       supabase.from("vehicle_requests").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("vehicles").select("*").order("registration"),
@@ -655,7 +655,7 @@ function AdminPage() {
                     </div>
                     {canEdit && !locked && (
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => setEditUser({ id: u.id, full_name: u.full_name ?? "", email: u.email ?? "", password: "" })}>
+                        <Button size="sm" variant="outline" onClick={() => setEditUser({ id: u.id, full_name: u.full_name ?? "", email: u.email ?? "", phone: u.phone ?? "", password: "" })}>
                           <Pencil className="mr-1 h-3.5 w-3.5" />Edit
                         </Button>
                         {!isSelf && (
@@ -705,6 +705,7 @@ function AdminPage() {
                 <div className="grid gap-3">
                   <div><Label>Full name</Label><Input value={editUser.full_name} onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })} /></div>
                   <div><Label>Email (login)</Label><Input type="email" value={editUser.email} onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} /></div>
+                  <div><Label>Phone (for phone sign-in)</Label><Input type="tel" value={editUser.phone} onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })} placeholder="e.g. +254712345678" /></div>
                   <div>
                     <Label>New password (optional, min 8 chars)</Label>
                     <Input type="text" value={editUser.password} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} placeholder="Leave blank to keep current" />
@@ -724,6 +725,7 @@ function AdminPage() {
                         userId: editUser.id,
                         fullName: editUser.full_name.trim(),
                         email: editUser.email.trim(),
+                        phone: editUser.phone.trim(),
                         password: editUser.password || undefined,
                       }});
                       toast.success("User updated");
