@@ -214,7 +214,7 @@ function FinanceRequestsPage() {
       mpesa_phone: mpesa.trim() || null,
       department_id: profile.department_id,
       department_name: departmentName || null,
-      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null })),
+      items: cleaned.map((i) => ({ activity: i.activity.trim(), amount: Number(i.amount) || 0, activity_date: i.activity_date || null, payment_method: i.payment_method || "cash" })),
       total_amount: cleaned.reduce((s, i) => s + (Number(i.amount) || 0), 0),
       selected_super_admin_id: recipients.finance.id,
       selected_super_admin_name: recipients.finance.full_name,
