@@ -197,7 +197,7 @@ function FinanceRequestsPage() {
   const addItem = () => setItems((p) => [...p, emptyItem()]);
   const removeItem = (i: number) => setItems((p) => p.filter((_, idx) => idx !== i));
   const updateItem = (i: number, field: keyof ItemRow, v: string) =>
-    setItems((p) => p.map((it, idx) => (idx === i ? { ...it, [field]: v } : it)));
+    setItems((p) => p.map((it, idx) => (idx === i ? { ...it, [field]: v } : it)) as ItemRow[]);
 
   const submitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
