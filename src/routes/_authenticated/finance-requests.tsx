@@ -1211,6 +1211,7 @@ function RequestCard({
                     <th className="p-2 text-left">Item / Activity</th>
                     <th className="w-40 p-2 text-left">Activity date</th>
                     <th className="w-32 p-2 text-left">Amount</th>
+                    <th className="w-28 p-2 text-left">Payment</th>
                     <th className="w-10 p-2"></th>
                   </tr>
                 </thead>
