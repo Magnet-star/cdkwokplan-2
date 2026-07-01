@@ -48,7 +48,7 @@ function AdminPage() {
   const createUserFn = useServerFn(adminCreateUser);
   const deleteUserFn = useServerFn(adminDeleteUser);
   const updateUserFn = useServerFn(adminUpdateUser);
-  const [editUser, setEditUser] = useState<{ id: string; full_name: string; email: string; password: string } | null>(null);
+  const [editUser, setEditUser] = useState<{ id: string; full_name: string; email: string; phone: string; password: string } | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [depts, setDepts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
