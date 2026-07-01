@@ -237,6 +237,9 @@ function FinanceRequestsPage() {
       if (mErr) console.warn("mpesa save failed", mErr);
     }
     setSubmitting(false);
+    if (inserted?.id) {
+      notifyFinanceSubmission({ data: { requestId: inserted.id } }).catch((e) => console.warn("SMS notify failed", e));
+    }
     toast.success("Finance request submitted to CDK Finance, Vicar General and Procurator");
     setItems([emptyItem(), emptyItem(), emptyItem(), emptyItem(), emptyItem()]);
     setSignature(""); setMpesa("");
