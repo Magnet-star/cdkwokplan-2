@@ -723,73 +723,90 @@ function bestDate(r: FRRow): Date {
 }
 
 function CompletedGrouped({ rows, children }: { rows: FRRow[]; children: (r: FRRow) => React.ReactNode }) {
-  const years = useMemo(() => {
-    const byYear = new Map<number, FRRow[]>();
-    rows.forEach((r) => {
-      const y = bestDate(r).getFullYear();
-      if (!byYear.has(y)) byYear.set(y, []);
-      byYear.get(y)!.push(r);
-    });
-    return Array.from(byYear.entries()).sort((a, b) => b[0] - a[0]);
+  const [monthFilter, setMonthFilter] = useState<string>("all"); // "all" or "YYYY-MM"
+  const [dateFilter, setDateFilter] = useState<string>(""); // "YYYY-MM-DD"
+
+  const monthOptions = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => set.add(format(bestDate(r), "yyyy-MM")));
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
   }, [rows]);
 
+  const filtered = useMemo(() => {
+    return rows.filter((r) => {
+      const d = bestDate(r);
+      if (monthFilter !== "all" && format(d, "yyyy-MM") !== monthFilter) return false;
+      if (dateFilter && format(d, "yyyy-MM-dd") !== dateFilter) return false;
+      return true;
+    });
+  }, [rows, monthFilter, dateFilter]);
+
+  const months = useMemo(() => {
+    const byMonth = new Map<string, FRRow[]>();
+    filtered.forEach((r) => {
+      const key = format(bestDate(r), "yyyy-MM");
+      if (!byMonth.has(key)) byMonth.set(key, []);
+      byMonth.get(key)!.push(r);
+    });
+    return Array.from(byMonth.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [filtered]);
+
   return (
-    <div className="space-y-2">
-      {years.map(([year, yearRows]) => {
-        const byMonth = new Map<number, FRRow[]>();
-        yearRows.forEach((r) => {
-          const m = bestDate(r).getMonth();
-          if (!byMonth.has(m)) byMonth.set(m, []);
-          byMonth.get(m)!.push(r);
-        });
-        const months = Array.from(byMonth.entries()).sort((a, b) => b[0] - a[0]);
-        return (
-          <Collapsible key={year} label={`${year} — ${yearRows.length}`} defaultOpen={false}>
-            <div className="space-y-2">
-              {months.map(([m, mRows]) => {
-                const byWeek = new Map<string, FRRow[]>();
-                mRows.forEach((r) => {
-                  const ws = startOfWeek(bestDate(r), { weekStartsOn: 1 });
-                  const key = format(ws, "yyyy-MM-dd");
-                  if (!byWeek.has(key)) byWeek.set(key, []);
-                  byWeek.get(key)!.push(r);
-                });
-                const weeks = Array.from(byWeek.entries()).sort((a, b) => b[0].localeCompare(a[0]));
-                const monthLabel = format(new Date(year, m, 1), "MMMM yyyy");
-                return (
-                  <Collapsible key={m} label={`${monthLabel} — ${mRows.length}`} defaultOpen={false}>
-                    <div className="space-y-2">
-                      {weeks.map(([wkKey, wRows]) => {
-                        const ws = new Date(wkKey);
-                        const we = endOfWeek(ws, { weekStartsOn: 1 });
-                        const wkLabel = `Week of ${format(ws, "MMM d")}–${format(we, "MMM d, yyyy")}`;
-                        const sorted = [...wRows].sort((x, y) => bestDate(y).getTime() - bestDate(x).getTime());
-                        return (
-                          <Collapsible key={wkKey} label={`${wkLabel} — ${wRows.length}`} defaultOpen={false}>
-                            <div className="space-y-3">
-                              {sorted.map((r) => (
-                                <div key={r.id} className="space-y-1">
-                                  <div className="text-xs font-mono text-muted-foreground">
-                                    {format(bestDate(r), "yyyy-MM-dd")}
-                                  </div>
-                                  {children(r)}
-                                </div>
-                              ))}
-                            </div>
-                          </Collapsible>
-                        );
-                      })}
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-end gap-3 rounded-md border bg-muted/30 p-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Filter by month</Label>
+          <Select value={monthFilter} onValueChange={setMonthFilter}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All months</SelectItem>
+              {monthOptions.map((m) => (
+                <SelectItem key={m} value={m}>{format(new Date(m + "-01"), "MMMM yyyy")}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Filter by date</Label>
+          <Input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="w-[180px]" />
+        </div>
+        {(monthFilter !== "all" || dateFilter) && (
+          <Button variant="ghost" size="sm" onClick={() => { setMonthFilter("all"); setDateFilter(""); }}>
+            Clear filters
+          </Button>
+        )}
+        <div className="ml-auto text-xs text-muted-foreground">{filtered.length} of {rows.length} shown</div>
+      </div>
+
+      {months.length === 0 ? (
+        <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">No requests match the filters.</p>
+      ) : (
+        months.map(([key, mRows]) => {
+          const label = format(new Date(key + "-01"), "MMMM yyyy");
+          const sorted = [...mRows].sort((x, y) => bestDate(y).getTime() - bestDate(x).getTime());
+          return (
+            <Collapsible key={key} label={`${label} — ${mRows.length}`} defaultOpen={false}>
+              <div className="space-y-3">
+                {sorted.map((r) => {
+                  const d = bestDate(r);
+                  return (
+                    <div key={r.id} className="space-y-1">
+                      <div className="text-xs font-mono text-muted-foreground">
+                        {format(d, "EEEE-dd-yyyy-HH:mm")}
+                      </div>
+                      {children(r)}
                     </div>
-                  </Collapsible>
-                );
-              })}
-            </div>
-          </Collapsible>
-        );
-      })}
+                  );
+                })}
+              </div>
+            </Collapsible>
+          );
+        })
+      )}
     </div>
   );
 }
+
 
 /* ===================== Bits ===================== */
 
