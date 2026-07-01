@@ -725,6 +725,7 @@ function AdminPage() {
                         userId: editUser.id,
                         fullName: editUser.full_name.trim(),
                         email: editUser.email.trim(),
+                        phone: editUser.phone.trim(),
                         password: editUser.password || undefined,
                       }});
                       toast.success("User updated");
