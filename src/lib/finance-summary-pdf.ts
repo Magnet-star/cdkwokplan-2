@@ -34,7 +34,7 @@ export function downloadFinanceSummaryPDF(opts: {
   doc.text(title, 14, 21);
 
   doc.setTextColor(40);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.text(`Period: ${periodLabel}`, 14, 36);
   doc.text(`Departments: ${departmentLabel}`, 14, 42);
@@ -70,7 +70,7 @@ export function downloadFinanceSummaryPDF(opts: {
     theme: "grid",
     headStyles: { fillColor: [102, 0, 0], textColor: 255 },
     footStyles: { fillColor: [240, 230, 230], textColor: 0, fontStyle: "bold" },
-    styles: { fontSize: 9, cellPadding: 2 },
+    styles: { fontSize: 9, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
     columnStyles: { 4: { halign: "right" } },
   });
 

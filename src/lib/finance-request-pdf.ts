@@ -57,14 +57,14 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
   doc.setFontSize(11);
   doc.text("Secretariat — Finance Request", 14, 22);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   let y = 40;
 
   const row = (label: string, value: string) => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text(label, 14, y);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     const lines = doc.splitTextToSize(value || "—", pageW - 80);
     doc.text(lines, 70, y);
     y += Math.max(6, lines.length * 5 + 1);
@@ -105,7 +105,7 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     headStyles: { fillColor: [102, 0, 0], textColor: 255, fontStyle: "bold" },
     footStyles: { fillColor: [240, 230, 230], textColor: 0, fontStyle: "bold" },
     columnStyles: { 0: { cellWidth: 12, halign: "center" }, 2: { cellWidth: 28 }, 3: { cellWidth: 22, halign: "center" }, 4: { cellWidth: 36, halign: "right" } },
-    styles: { fontSize: 10, cellPadding: 3 },
+    styles: { fontSize: 10, cellPadding: 3 , fontStyle: "bold", textColor: [0,0,0] },
   });
 
   // @ts-expect-error lastAutoTable injected by autotable
@@ -139,7 +139,7 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     doc.setFontSize(11);
     doc.text(title, 14, y);
     y += 5;
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text(`Name (e-signature): ${name ?? "— pending —"}`, 14, y);
     y += 5;
@@ -166,9 +166,9 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     doc.setDrawColor(150);
     doc.rect(sigBoxX, blockStartY, sigBoxW, blockEndY - blockStartY);
     doc.setFontSize(8);
-    doc.setTextColor(120);
+    doc.setTextColor(60);
     doc.text("Hand signature", sigBoxX + 2, blockStartY + 4);
-    doc.setTextColor(30, 30, 30);
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
 
     y = blockEndY + 6;

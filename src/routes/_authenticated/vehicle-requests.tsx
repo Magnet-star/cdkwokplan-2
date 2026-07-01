@@ -420,6 +420,8 @@ interface DSRow {
   department_id: string | null;
   week_start_date: string;
   date_needed: string;
+  time_from: string | null;
+  time_to: string | null;
   destination: string; // stored as "From -> To" or just To
   purpose: string;
   passengers: number | null;
@@ -463,7 +465,7 @@ function DSWeeklyVehicleRequestsView() {
       const [{ data: vr }, { data: depts }, { data: veh }, { data: driverRoles }] = await Promise.all([
         supabase
           .from("vehicle_requests")
-          .select("id,user_id,department_id,week_start_date,date_needed,destination,purpose,passengers,status,created_at")
+          .select("id,user_id,department_id,week_start_date,date_needed,time_from,time_to,destination,purpose,passengers,status,created_at")
           .order("date_needed", { ascending: false }),
         supabase.from("departments").select("id,name"),
         supabase.from("vehicles").select("id,registration,make_model").eq("active", true).order("registration"),
@@ -542,6 +544,8 @@ function DSWeeklyVehicleRequestsView() {
       return {
         department: departments[r.department_id ?? ""] ?? "—",
         date_needed: r.date_needed,
+        time_from: r.time_from,
+        time_to: r.time_to,
         from: start,
         destination: end,
         purpose: r.purpose,
@@ -811,6 +815,8 @@ function PrepareWeeklyPdfDialog({
       return {
         department: departments[r.department_id ?? ""] ?? "—",
         date_needed: r.date_needed,
+        time_from: r.time_from,
+        time_to: r.time_to,
         from: start,
         destination: end,
         purpose: r.purpose,

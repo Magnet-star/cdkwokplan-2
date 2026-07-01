@@ -112,7 +112,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   doc.setFont("helvetica", "bold");
   doc.text(label, 14, y);
   y += 6;
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.text(`Name: ${target.fullName}`, 14, y); y += 5;
   doc.text(`Department: ${target.departmentName ?? "—"}`, 14, y); y += 5;
   if (target.position) { doc.text(`Position: ${target.position}`, 14, y); y += 5; }
@@ -121,7 +121,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   doc.setFont("helvetica", "bold"); doc.setFontSize(12);
   doc.text("Summary", 14, y); y += 2;
   doc.setDrawColor(200); doc.line(14, y, pageW - 14, y); y += 5;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10);
   const totalActivities = items?.length ?? 0;
   const totalVehicles = vehicles?.length ?? 0;
   const approvedVehicles = (vehicles ?? []).filter((v: any) => v.status === "approved").length;
@@ -159,7 +159,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
     foot: totalActivities ? [["", "", "", "Total", totalMoney.toLocaleString()]] : undefined,
     headStyles: { fillColor: [89, 25, 32], textColor: 255 },
     footStyles: { fillColor: [240, 230, 215], textColor: 40, fontStyle: "bold" },
-    styles: { fontSize: 9, cellPadding: 2 },
+    styles: { fontSize: 9, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
@@ -183,7 +183,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
     ]] : undefined,
     headStyles: { fillColor: [89, 25, 32], textColor: 255 },
     footStyles: { fillColor: [240, 230, 215], textColor: 40, fontStyle: "bold" },
-    styles: { fontSize: 9, cellPadding: 2 },
+    styles: { fontSize: 9, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
@@ -198,7 +198,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
       head: [["Serial", "Submitted", "Items", "Status", "Amount (KES)"]],
       body: [["—", "—", "No finance requests in this period", "—", "—"]],
       headStyles: { fillColor: [89, 25, 32], textColor: 255 },
-      styles: { fontSize: 9, cellPadding: 2 },
+      styles: { fontSize: 9, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
     });
   } else {
     autoTable(doc, {
@@ -225,7 +225,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
       ]],
       headStyles: { fillColor: [89, 25, 32], textColor: 255 },
       footStyles: { fillColor: [240, 230, 215], textColor: 40, fontStyle: "bold" },
-      styles: { fontSize: 9, cellPadding: 2 },
+      styles: { fontSize: 9, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
     });
   }
   y = (doc as any).lastAutoTable.finalY + 10;
@@ -251,7 +251,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
         [t.condition_start ? `Start: ${t.condition_start}` : "", t.condition_end ? `End: ${t.condition_end}` : ""].filter(Boolean).join(" | ") || "—",
       ]),
       headStyles: { fillColor: [89, 25, 32], textColor: 255 },
-      styles: { fontSize: 8, cellPadding: 2 },
+      styles: { fontSize: 8, cellPadding: 2 , fontStyle: "bold", textColor: [0,0,0] },
     });
 
     const tripTotals = deptTrips.reduce(
@@ -276,12 +276,12 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   if (y > 240) { doc.addPage(); y = 20; }
   doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(40, 30, 30);
   doc.text("Daily Achievements & Challenges", 14, y); y += 4;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9);
   (logs ?? []).forEach((l: any) => {
     if (y > 270) { doc.addPage(); y = 20; }
     doc.setFont("helvetica", "bold");
     doc.text(format(parseISO(l.log_date), "EEEE, MMM d"), 14, y); y += 5;
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     if (l.achievements) { const lines = doc.splitTextToSize(`Achievements: ${l.achievements}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 1; }
     if (l.challenges) { const lines = doc.splitTextToSize(`Challenges: ${l.challenges}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 2; }
   });
@@ -295,14 +295,14 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   doc.setFont("helvetica", "bold"); doc.setFontSize(10);
   doc.text(target.hodName ?? "—", 14, sigY + 5);
   doc.text(DIOCESAN_SECRETARY, pageW - 90, sigY + 5);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(80);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(0);
   doc.text(`HOD — ${target.departmentName ?? "Department"}`, 14, sigY + 10);
   doc.text("Diocesan Secretary", pageW - 90, sigY + 10);
 
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
-    doc.setFontSize(8); doc.setTextColor(120);
+    doc.setFontSize(8); doc.setTextColor(60);
     doc.text(`Generated ${format(new Date(), "PPp")} — Page ${i} of ${pages}`, 14, doc.internal.pageSize.getHeight() - 8);
   }
 

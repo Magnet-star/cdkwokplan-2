@@ -36,20 +36,20 @@ export function buildAllDepartmentsWorkPlansPDF(
   doc.setFont("times", "normal"); doc.setFontSize(12);
   doc.text("Secretariat — Consolidated Weekly Work Plans", 14, 28);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold"); doc.setFontSize(14);
   doc.text("Week of:", 14, 60);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.text(`${format(weekStart, "EEEE, MMM d, yyyy")} — ${format(weekEnd, "EEEE, MMM d, yyyy")}`, 50, 60);
 
   doc.setFont("helvetica", "bold");
   doc.text("Departments:", 14, 72);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.text(String(plans.length), 50, 72);
 
   doc.setFont("helvetica", "bold");
   doc.text("Generated:", 14, 84);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.text(format(new Date(), "PPp"), 50, 84);
 
   // Table of contents
@@ -58,7 +58,7 @@ export function buildAllDepartmentsWorkPlansPDF(
   doc.setDrawColor(180); doc.line(14, 106, pageW - 14, 106);
   let tocY = 114;
   plans.forEach((p, idx) => {
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     doc.text(`${idx + 1}. ${p.departmentName}  —  HOD: ${p.hodName}`, 14, tocY);
     tocY += 6;
     if (tocY > pageH - 20) { doc.addPage(); tocY = 20; }
@@ -74,7 +74,7 @@ export function buildAllDepartmentsWorkPlansPDF(
   const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(120);
+    doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(60);
     doc.text(`${DIOCESE} — Consolidated Weekly Work Plans`, 14, pageH - 8);
     doc.text(`Page ${i} of ${pageCount}`, pageW - 14, pageH - 8, { align: "right" });
   }
@@ -113,7 +113,7 @@ function renderDepartmentSection(
   doc.setFont("times", "bold"); doc.setFontSize(14);
   doc.text(plan.departmentName, 14, 14);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   let y = 32;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(12);
@@ -123,7 +123,7 @@ function renderDepartmentSection(
   const row = (label: string, value: string) => {
     doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     doc.text(label, 14, y);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     const lines = doc.splitTextToSize(value || "—", pageW - 70);
     doc.text(lines, 60, y);
     y += Math.max(6, lines.length * 5 + 1);
@@ -171,7 +171,7 @@ function renderDepartmentSection(
     startY: y,
     head: [["Day & Date", "Activity / Activities", "Location", "Vehicle Required", "Funds Required", "Notes"]],
     body: tableRows,
-    styles: { fontSize: 9, cellPadding: 3, valign: "top", overflow: "linebreak" },
+    styles: { fontSize: 9, cellPadding: 3, valign: "top", overflow: "linebreak" , fontStyle: "bold", textColor: [0,0,0] },
     headStyles: { fillColor: [102, 0, 0], textColor: 255, fontStyle: "bold" },
     columnStyles: {
       0: { cellWidth: 28, fontStyle: "bold" },
@@ -200,7 +200,7 @@ function renderDepartmentSection(
   const sigBlock = (x: number, title: string, nameLabel: string, nameValue: string) => {
     doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     doc.text(title, x, afterY);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9);
     let ly = afterY + 7;
     doc.text(`${nameLabel}: ${nameValue || "______________________"}`, x, ly); ly += 9;
     doc.text("Signature: ______________________", x, ly); ly += 9;
