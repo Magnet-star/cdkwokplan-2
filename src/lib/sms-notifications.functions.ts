@@ -79,14 +79,20 @@ export const notifyFinanceSubmission = createServerFn({ method: "POST" })
       .eq("id", data.requestId)
       .maybeSingle();
     if (!r) return { ok: false };
-    const ids = [r.selected_super_admin_id, r.vicar_super_admin_id, r.procurator_super_admin_id].filter(Boolean) as string[];
+    const roleMap: Record<string, string> = {};
+    if (r.selected_super_admin_id) roleMap[r.selected_super_admin_id] = "finance_admin";
+    if (r.vicar_super_admin_id) roleMap[r.vicar_super_admin_id] = "vicar_general";
+    if (r.procurator_super_admin_id) roleMap[r.procurator_super_admin_id] = "procurator";
+    const ids = Object.keys(roleMap);
     if (ids.length === 0) return { ok: false };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: profs } = await supabaseAdmin.from("profiles").select("id, phone").in("id", ids);
-    const phones = (profs ?? []).map((p) => toMsisdn(p.phone)).filter((x): x is number => x !== null);
+    const targets = (profs ?? [])
+      .map((p) => ({ msisdn: toMsisdn(p.phone), role: roleMap[p.id] ?? null }))
+      .filter((t): t is { msisdn: number; role: string | null } => t.msisdn !== null);
     const link = `${appUrl()}/finance-requests?id=${r.id}`;
     const msg = `You have a pending finance request to approve/authorize from ${r.requester_name} in the ${r.department_name ?? "department"} department. Click this link to review: ${link}`;
-    await sendSms(phones, msg, `fr-sub-${r.id}`);
+    await sendSms(supabase, targets, msg, "submission", `fr-sub-${r.id}`, r.id);
     return { ok: true };
   });
 
