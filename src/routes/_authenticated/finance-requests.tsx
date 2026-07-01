@@ -1078,6 +1078,7 @@ function RequestCard({
                 <div className="break-words whitespace-pre-wrap">{it.activity}</div>
                 <div className="text-xs text-muted-foreground">
                   Date: <strong className="text-foreground">{it.activity_date ? format(new Date(it.activity_date), "PP") : "—"}</strong>
+                  {" · "}Payment: <strong className="text-foreground uppercase">{(it.payment_method === "cheque" ? "Cheque" : "Cash")}</strong>
                 </div>
               </div>
             ))}
