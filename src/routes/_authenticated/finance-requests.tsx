@@ -318,6 +318,16 @@ function FinanceRequestsPage() {
                           placeholder="0.00"
                         />
                       </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Payment method</Label>
+                        <Select value={it.payment_method} onValueChange={(v) => updateItem(i, "payment_method", v as "cash" | "cheque")}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cash">Cash</SelectItem>
+                            <SelectItem value="cheque">Cheque</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   ))}
                   <div className="flex items-center justify-between rounded-md border bg-muted/40 p-3">
