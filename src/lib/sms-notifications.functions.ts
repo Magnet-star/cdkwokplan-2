@@ -117,7 +117,7 @@ export const notifyFinanceApproved = createServerFn({ method: "POST" })
     const msisdn = toMsisdn(phone ?? null);
     if (!msisdn) return { ok: false, reason: "no_phone" };
     const msg = `Your request has been approved by ${data.approverName}. Current status: Pending final authorization.`;
-    await sendSms([msisdn], msg, `fr-app-${r.id}`);
+    await sendSms(supabase, [{ msisdn, role: "requester" }], msg, "approved", `fr-app-${r.id}`, r.id);
     return { ok: true };
   });
 
