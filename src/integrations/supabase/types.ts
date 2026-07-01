@@ -552,6 +552,35 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_request_mpesa: {
+        Row: {
+          created_at: string
+          finance_request_id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          finance_request_id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          finance_request_id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_request_mpesa_finance_request_id_fkey"
+            columns: ["finance_request_id"]
+            isOneToOne: true
+            referencedRelation: "finance_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       finance_requests: {
         Row: {
           accounts_disbursement_at: string | null
@@ -569,7 +598,6 @@ export type Database = {
           finance_admin_note: string | null
           id: string
           items: Json
-          mpesa_phone: string | null
           procurator_at: string | null
           procurator_decision: string | null
           procurator_id: string | null
@@ -611,7 +639,6 @@ export type Database = {
           finance_admin_note?: string | null
           id?: string
           items?: Json
-          mpesa_phone?: string | null
           procurator_at?: string | null
           procurator_decision?: string | null
           procurator_id?: string | null
@@ -653,7 +680,6 @@ export type Database = {
           finance_admin_note?: string | null
           id?: string
           items?: Json
-          mpesa_phone?: string | null
           procurator_at?: string | null
           procurator_decision?: string | null
           procurator_id?: string | null
