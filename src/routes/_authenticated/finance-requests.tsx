@@ -399,6 +399,7 @@ function FinanceRequestsPage() {
                         <td colSpan={3} className="p-2 text-right font-bold">TOTAL</td>
                         <td className="p-2 font-bold">{fmtKES(total)}</td>
                         <td></td>
+                        <td></td>
                       </tr>
                     </tbody>
                   </table>
