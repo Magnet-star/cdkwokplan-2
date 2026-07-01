@@ -86,6 +86,7 @@ const UpdateUserSchema = z.object({
   userId: z.string().uuid(),
   fullName: z.string().trim().min(1).max(120).optional(),
   email: z.string().trim().email().max(255).optional(),
+  phone: z.string().trim().max(40).optional().or(z.literal("")),
   password: z.string().min(8).max(72).optional().or(z.literal("")),
 });
 
@@ -114,9 +115,10 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
 
-    const profileUpdate: { full_name?: string; email?: string } = {};
+    const profileUpdate: { full_name?: string; email?: string; phone?: string | null } = {};
     if (data.fullName) profileUpdate.full_name = data.fullName;
     if (data.email) profileUpdate.email = data.email;
+    if (data.phone !== undefined) profileUpdate.phone = data.phone.trim() ? data.phone.trim() : null;
     if (Object.keys(profileUpdate).length > 0) {
       const { error } = await supabaseAdmin.from("profiles").update(profileUpdate).eq("id", data.userId);
       if (error) throw new Error(error.message);
