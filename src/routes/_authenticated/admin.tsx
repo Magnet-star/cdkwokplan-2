@@ -23,6 +23,7 @@ import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
 import { TimeGroupedList } from "@/components/TimeGroupedList";
 import { StorageUsagePanel } from "@/components/StorageUsagePanel";
 import { UsersLogPanel } from "@/components/UsersLogPanel";
+import { SmsTrackerPanel } from "@/components/SmsTrackerPanel";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   validateSearch: (search: Record<string, unknown>) => ({
