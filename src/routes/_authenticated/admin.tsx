@@ -655,7 +655,7 @@ function AdminPage() {
                     </div>
                     {canEdit && !locked && (
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => setEditUser({ id: u.id, full_name: u.full_name ?? "", email: u.email ?? "", password: "" })}>
+                        <Button size="sm" variant="outline" onClick={() => setEditUser({ id: u.id, full_name: u.full_name ?? "", email: u.email ?? "", phone: u.phone ?? "", password: "" })}>
                           <Pencil className="mr-1 h-3.5 w-3.5" />Edit
                         </Button>
                         {!isSelf && (
