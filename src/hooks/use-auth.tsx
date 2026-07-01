@@ -125,18 +125,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     if (typeof window !== "undefined") window.addEventListener("beforeunload", beforeUnload);
 
+    let lastLoadedFor: string | null = null;
+    const loadOnce = (uid: string) => {
+      if (lastLoadedFor === uid) return;
+      lastLoadedFor = uid;
+      loadProfile(uid);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((evt, sess) => {
       setSession(sess);
       setUser(sess?.user ?? null);
       if (sess?.user) {
-        // Token refreshes shouldn't trigger a refetch — keep current roles
-        // in place so super admins don't briefly drop to staff defaults.
-        if (evt === "TOKEN_REFRESHED" || evt === "USER_UPDATED") return;
+        // Token refreshes/updates shouldn't trigger a refetch — keep current
+        // roles in place so super admins don't briefly drop to staff defaults.
+        if (evt === "TOKEN_REFRESHED" || evt === "USER_UPDATED" || evt === "INITIAL_SESSION") return;
         hydrateFromCache(sess.user.id);
-        setTimeout(() => { loadProfile(sess.user.id); }, 0);
+        setTimeout(() => { loadOnce(sess.user.id); }, 0);
         if (evt === "SIGNED_IN") startTracking(sess.user.id);
       } else if (evt === "SIGNED_OUT") {
         stopTracking();
+        lastLoadedFor = null;
         setProfile(null);
         setRoles([]);
         setRolesLoaded(false);
@@ -149,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       if (sess?.user) {
         hydrateFromCache(sess.user.id);
-        loadProfile(sess.user.id);
+        loadOnce(sess.user.id);
         startTracking(sess.user.id);
       }
     });
