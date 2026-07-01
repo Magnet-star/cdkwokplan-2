@@ -47,7 +47,7 @@ async function sendSms(
   const path = nums.length === 1 ? "/mobile/single" : "/mobile/multi";
   const body = nums.length === 1
     ? { sender: "CDK", recipient: nums[0], message, reference }
-    : { sender: "CDK", messages: nums.map((r) => ({ recipient: r, message, reference })) };
+    : { messages: nums.map((r) => ({ sender: "CDK", recipient: r, message, reference })) };
   const res = await fetch(`https://connector-gateway.lovable.dev/gatewayapi${path}`, {
     method: "POST",
     headers: {
