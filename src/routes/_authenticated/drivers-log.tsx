@@ -694,10 +694,13 @@ function DriversLogPage() {
             </div>
           </div>
 
+          {canViewStats && (
           <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="text-xs font-medium uppercase text-muted-foreground">Vehicle usage statistics</p>
+                <p className="text-xs font-medium uppercase text-muted-foreground">
+                  Vehicle usage statistics{isDeptScopedStats ? " — your department" : ""}
+                </p>
                 <p className="text-xs text-muted-foreground">{statsRange.label}</p>
               </div>
               <div className="flex flex-wrap items-end gap-2">
@@ -721,11 +724,13 @@ function DriversLogPage() {
                 )}
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-md border bg-background p-3">
-                <p className="text-xs text-muted-foreground">No. of departments</p>
-                <p className="font-serif text-2xl">{statsTotals.departments}</p>
-              </div>
+            <div className={`grid gap-3 ${isDeptScopedStats ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+              {!isDeptScopedStats && (
+                <div className="rounded-md border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">No. of departments</p>
+                  <p className="font-serif text-2xl">{statsTotals.departments}</p>
+                </div>
+              )}
               <div className="rounded-md border bg-background p-3">
                 <p className="text-xs text-muted-foreground">Total kilometers covered</p>
                 <p className="font-serif text-2xl">{statsTotals.km.toFixed(1)} km</p>
@@ -735,7 +740,7 @@ function DriversLogPage() {
                 <p className="font-serif text-2xl">{statsTotals.money.toLocaleString()}</p>
               </div>
             </div>
-            {statsDeptSpending.length > 0 && (
+            {!isDeptScopedStats && statsDeptSpending.length > 0 && (
               <div className="rounded-md border bg-background p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex flex-1 items-center justify-between gap-3 text-left">
@@ -772,6 +777,7 @@ function DriversLogPage() {
               </div>
             )}
           </div>
+          )}
 
           {filteredLogs.length === 0 && <p className="text-sm text-muted-foreground">No logs match the current filter.</p>}
 
