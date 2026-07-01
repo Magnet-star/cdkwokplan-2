@@ -544,6 +544,8 @@ function DSWeeklyVehicleRequestsView() {
       return {
         department: departments[r.department_id ?? ""] ?? "—",
         date_needed: r.date_needed,
+        time_from: r.time_from,
+        time_to: r.time_to,
         from: start,
         destination: end,
         purpose: r.purpose,
