@@ -1229,6 +1229,15 @@ function RequestCard({
                         <Input inputMode="decimal" value={it.amount} onChange={(e) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, amount: e.target.value.replace(/[^0-9.]/g, "") } : x))} />
                       </td>
                       <td className="p-2">
+                        <Select value={it.payment_method} onValueChange={(v) => setEditItems((p) => p.map((x, idx) => idx === i ? { ...x, payment_method: v as "cash" | "cheque" } : x))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cash">Cash</SelectItem>
+                            <SelectItem value="cheque">Cheque</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
                         {editItems.length > 1 && (
                           <Button type="button" variant="ghost" size="icon" onClick={() => setEditItems((p) => p.filter((_, idx) => idx !== i))}>
                             <Trash2 className="h-4 w-4 text-destructive" />
