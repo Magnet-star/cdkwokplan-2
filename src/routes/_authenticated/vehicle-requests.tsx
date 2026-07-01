@@ -467,7 +467,7 @@ function DSWeeklyVehicleRequestsView() {
       const [{ data: vr }, { data: depts }, { data: veh }, { data: driverRoles }] = await Promise.all([
         supabase
           .from("vehicle_requests")
-          .select("id,user_id,department_id,week_start_date,date_needed,time_from,time_to,destination,purpose,passengers,status,created_at")
+          .select("id,user_id,department_id,week_start_date,date_needed,time_from,time_to,destination,purpose,passengers,status,created_at,assigned_vehicle,assigned_driver")
           .order("date_needed", { ascending: false }),
         supabase.from("departments").select("id,name"),
         supabase.from("vehicles").select("id,registration,make_model").eq("active", true).order("registration"),
