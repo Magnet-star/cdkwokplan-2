@@ -1102,17 +1102,18 @@ function WeekBreakdown({ items, departments, onEdit }: { items: DSRow[]; departm
                               {r.purpose ? ` · ${r.purpose}` : ""} · Passengers: {r.passengers ?? 1}
                               <Badge variant="outline" className="ml-2 text-[10px]">{r.status}</Badge>
                             </span>
-                            {onDelete && (
+                            {onEdit && (
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                                title="Delete this request"
-                                onClick={() => onDelete(r.id)}
+                                className="h-6 w-6 p-0"
+                                title="Edit this request"
+                                onClick={() => onEdit(r)}
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Pencil className="h-3.5 w-3.5" />
                               </Button>
                             )}
+
                           </li>
                         );
                       })}
