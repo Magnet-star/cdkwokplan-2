@@ -830,6 +830,7 @@ function statusBadge(s: FRStatus) {
 }
 
 function ApprovalTracker({ r }: { r: FRRow }) {
+  const { user } = useAuth();
   if (r.status === "cancelled" || r.status === "rejected") return null;
   const stages: { key: string; label: string; decision: string | null; name: string | null; at: string | null; isAuthorize: boolean }[] = [
     { key: "fin", label: "Finance Administrator", decision: r.finance_admin_decision, name: r.finance_admin_name, at: r.finance_admin_at, isAuthorize: false },
@@ -837,6 +838,7 @@ function ApprovalTracker({ r }: { r: FRRow }) {
     { key: "vg", label: "Vicar General", decision: r.vicar_general_decision, name: r.vicar_general_name, at: r.vicar_general_at, isAuthorize: true },
   ];
   const allApproved = stages.every((s) => s.decision === "approved");
+  const isRequester = user?.id === r.requester_id;
   return (
     <div className="mt-2">
       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Approval tracker</p>
@@ -867,13 +869,14 @@ function ApprovalTracker({ r }: { r: FRRow }) {
       </div>
       {allApproved && (
         <p className="mt-2 text-xs font-semibold text-emerald-800">
-          ✓ YOUR REQUEST HAS BEEN APPROVED &amp; AUTHORIZED
+          ✓ {isRequester ? "YOUR REQUEST HAS BEEN APPROVED & AUTHORIZED" : "THIS REQUEST HAS BEEN APPROVED & AUTHORIZED"}
         </p>
       )}
       <DisbursementNotice r={r} />
     </div>
   );
 }
+
 
 function DisbursementNotice({ r }: { r: FRRow }) {
   const { user } = useAuth();
