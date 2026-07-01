@@ -880,7 +880,7 @@ function RequestCard({
 
   // Edit & cancel
   const [editing, setEditing] = useState(false);
-  const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i: ItemRow) => ({ activity: i.activity, amount: String(i.amount), activity_date: i.activity_date ?? "" })));
+  const [editItems, setEditItems] = useState<ItemRow[]>(() => (r.items ?? []).map((i: ItemRow) => ({ activity: i.activity, amount: String(i.amount), activity_date: i.activity_date ?? "", payment_method: (i.payment_method === "cheque" ? "cheque" : "cash") })));
   const [editMpesa, setEditMpesa] = useState<string>(r.mpesa_phone ?? "");
   const [savingEdit, setSavingEdit] = useState(false);
   const editTotal = useMemo(() => editItems.reduce((s, i) => s + (Number(i.amount) || 0), 0), [editItems]);
