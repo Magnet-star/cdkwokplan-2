@@ -18,7 +18,7 @@ import { Banknote, Plus, Trash2, Download, Send, CheckCircle2, XCircle, RefreshC
 import { downloadFinanceRequestPDF, type FinanceRequestPDFData } from "@/lib/finance-request-pdf";
 import { downloadFinanceSummaryPDF } from "@/lib/finance-summary-pdf";
 import { FinanceApproverGate } from "@/components/FinanceApproverGate";
-import { notifyFinanceSubmission, notifyFinanceApproved, notifyFinanceAuthorized } from "@/lib/sms-notifications.functions";
+// SMS notifications temporarily disabled — gateway connection removed.
 
 export const Route = createFileRoute("/_authenticated/finance-requests")({
   component: FinanceRequestsPage,
