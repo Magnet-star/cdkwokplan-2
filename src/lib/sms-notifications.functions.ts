@@ -14,19 +14,40 @@ function toMsisdn(raw: string | null | undefined): number | null {
   return Number.isFinite(n) && d.length >= 11 ? n : null;
 }
 
-async function sendSms(recipients: number[], message: string, reference?: string) {
-  const uniq = Array.from(new Set(recipients.filter((n) => n && Number.isFinite(n))));
+async function logSms(
+  supabase: unknown,
+  entries: Array<{ kind: string; request_id?: string | null; recipient_msisdn: number; recipient_role?: string | null; message: string; reference?: string | null; status: string; error?: string | null }>,
+) {
+  if (entries.length === 0) return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("sms_logs").insert(entries);
+  } catch (e) { console.error("[sms] log failed", e); }
+}
+
+async function sendSms(
+  supabase: unknown,
+  targets: Array<{ msisdn: number; role?: string | null }>,
+  message: string,
+  kind: string,
+  reference?: string,
+  requestId?: string | null,
+) {
+  const seen = new Set<number>();
+  const uniq = targets.filter((t) => t.msisdn && Number.isFinite(t.msisdn) && !seen.has(t.msisdn) && (seen.add(t.msisdn), true));
   if (uniq.length === 0) return { skipped: true as const };
   const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
   const GATEWAYAPI_API_KEY = process.env.GATEWAYAPI_API_KEY;
+  const nums = uniq.map((u) => u.msisdn);
   if (!LOVABLE_API_KEY || !GATEWAYAPI_API_KEY) {
     console.error("[sms] missing API keys");
+    await logSms(supabase, uniq.map((t) => ({ kind, request_id: requestId ?? null, recipient_msisdn: t.msisdn, recipient_role: t.role ?? null, message, reference: reference ?? null, status: "skipped", error: "missing_keys" })));
     return { skipped: true as const };
   }
-  const path = uniq.length === 1 ? "/mobile/single" : "/mobile/multi";
-  const body = uniq.length === 1
-    ? { sender: "CDK", recipient: uniq[0], message, reference }
-    : { sender: "CDK", messages: uniq.map((r) => ({ recipient: r, message, reference })) };
+  const path = nums.length === 1 ? "/mobile/single" : "/mobile/multi";
+  const body = nums.length === 1
+    ? { sender: "CDK", recipient: nums[0], message, reference }
+    : { sender: "CDK", messages: nums.map((r) => ({ recipient: r, message, reference })) };
   const res = await fetch(`https://connector-gateway.lovable.dev/gatewayapi${path}`, {
     method: "POST",
     headers: {
@@ -39,8 +60,10 @@ async function sendSms(recipients: number[], message: string, reference?: string
   if (!res.ok) {
     const t = await res.text().catch(() => "");
     console.error("[sms] gateway failed", res.status, t);
+    await logSms(supabase, uniq.map((tg) => ({ kind, request_id: requestId ?? null, recipient_msisdn: tg.msisdn, recipient_role: tg.role ?? null, message, reference: reference ?? null, status: "failed", error: `${res.status}: ${t.slice(0, 200)}` })));
     return { skipped: true as const, error: `${res.status}` };
   }
+  await logSms(supabase, uniq.map((tg) => ({ kind, request_id: requestId ?? null, recipient_msisdn: tg.msisdn, recipient_role: tg.role ?? null, message, reference: reference ?? null, status: "sent", error: null })));
   return { ok: true as const };
 }
 
@@ -59,14 +82,22 @@ export const notifyFinanceSubmission = createServerFn({ method: "POST" })
       .eq("id", data.requestId)
       .maybeSingle();
     if (!r) return { ok: false };
-    const ids = [r.selected_super_admin_id, r.vicar_super_admin_id, r.procurator_super_admin_id].filter(Boolean) as string[];
+    const roleMap: Record<string, string> = {};
+    if (r.selected_super_admin_id) roleMap[r.selected_super_admin_id] = "finance_admin";
+    if (r.vicar_super_admin_id) roleMap[r.vicar_super_admin_id] = "vicar_general";
+    if (r.procurator_super_admin_id) roleMap[r.procurator_super_admin_id] = "procurator";
+    const ids = Object.keys(roleMap);
     if (ids.length === 0) return { ok: false };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: profs } = await supabaseAdmin.from("profiles").select("id, phone").in("id", ids);
-    const phones = (profs ?? []).map((p) => toMsisdn(p.phone)).filter((x): x is number => x !== null);
+    const targets: Array<{ msisdn: number; role: string | null }> = [];
+    for (const p of profs ?? []) {
+      const msisdn = toMsisdn(p.phone);
+      if (msisdn !== null) targets.push({ msisdn, role: roleMap[p.id] ?? null });
+    }
     const link = `${appUrl()}/finance-requests?id=${r.id}`;
     const msg = `You have a pending finance request to approve/authorize from ${r.requester_name} in the ${r.department_name ?? "department"} department. Click this link to review: ${link}`;
-    await sendSms(phones, msg, `fr-sub-${r.id}`);
+    await sendSms(supabase, targets, msg, "submission", `fr-sub-${r.id}`, r.id);
     return { ok: true };
   });
 
@@ -86,7 +117,7 @@ export const notifyFinanceApproved = createServerFn({ method: "POST" })
     const msisdn = toMsisdn(phone ?? null);
     if (!msisdn) return { ok: false, reason: "no_phone" };
     const msg = `Your request has been approved by ${data.approverName}. Current status: Pending final authorization.`;
-    await sendSms([msisdn], msg, `fr-app-${r.id}`);
+    await sendSms(supabase, [{ msisdn, role: "requester" }], msg, "approved", `fr-app-${r.id}`, r.id);
     return { ok: true };
   });
 
@@ -106,6 +137,6 @@ export const notifyFinanceAuthorized = createServerFn({ method: "POST" })
     const msisdn = toMsisdn(phone ?? null);
     if (!msisdn) return { ok: false, reason: "no_phone" };
     const msg = `Your finance request has been successfully authorized by ${data.authorizerName}. The workflow is complete.`;
-    await sendSms([msisdn], msg, `fr-auth-${r.id}`);
+    await sendSms(supabase, [{ msisdn, role: "requester" }], msg, "authorized", `fr-auth-${r.id}`, r.id);
     return { ok: true };
   });
