@@ -1076,11 +1076,13 @@ function WeekFolder({
   items,
   departments,
   onDownload,
+  onDelete,
 }: {
   weekStart: string;
   items: DSRow[];
   departments: Record<string, string>;
   onDownload: () => void;
+  onDelete?: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -1100,12 +1102,13 @@ function WeekFolder({
       </div>
       {open && (
         <div className="border-t border-border p-3">
-          <WeekBreakdown items={items} departments={departments} />
+          <WeekBreakdown items={items} departments={departments} onDelete={onDelete} />
         </div>
       )}
     </div>
   );
 }
+
 
 function CollapsibleFolder({
   label,
