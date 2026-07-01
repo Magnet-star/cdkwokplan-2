@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/finance-requests")({
   component: FinanceRequestsPage,
 });
 
-interface ItemRow { activity: string; amount: string; activity_date: string; }
+interface ItemRow { activity: string; amount: string; activity_date: string; payment_method: "cash" | "cheque"; }
 type FRStatus = "pending" | "approved" | "rejected" | "adjustment_requested" | "cancelled";
 
 interface FRRow {
