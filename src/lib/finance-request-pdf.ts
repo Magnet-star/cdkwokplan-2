@@ -57,7 +57,7 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
   doc.setFontSize(11);
   doc.text("Secretariat — Finance Request", 14, 22);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   let y = 40;
 
   const row = (label: string, value: string) => {
@@ -166,9 +166,9 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     doc.setDrawColor(150);
     doc.rect(sigBoxX, blockStartY, sigBoxW, blockEndY - blockStartY);
     doc.setFontSize(8);
-    doc.setTextColor(120);
+    doc.setTextColor(60);
     doc.text("Hand signature", sigBoxX + 2, blockStartY + 4);
-    doc.setTextColor(30, 30, 30);
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
 
     y = blockEndY + 6;

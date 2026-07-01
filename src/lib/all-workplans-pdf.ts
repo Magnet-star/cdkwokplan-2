@@ -36,7 +36,7 @@ export function buildAllDepartmentsWorkPlansPDF(
   doc.setFont("times", "normal"); doc.setFontSize(12);
   doc.text("Secretariat — Consolidated Weekly Work Plans", 14, 28);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold"); doc.setFontSize(14);
   doc.text("Week of:", 14, 60);
   doc.setFont("helvetica", "normal");
@@ -74,7 +74,7 @@ export function buildAllDepartmentsWorkPlansPDF(
   const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(120);
+    doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(60);
     doc.text(`${DIOCESE} — Consolidated Weekly Work Plans`, 14, pageH - 8);
     doc.text(`Page ${i} of ${pageCount}`, pageW - 14, pageH - 8, { align: "right" });
   }
@@ -113,7 +113,7 @@ function renderDepartmentSection(
   doc.setFont("times", "bold"); doc.setFontSize(14);
   doc.text(plan.departmentName, 14, 14);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   let y = 32;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(12);

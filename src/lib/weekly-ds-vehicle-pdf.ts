@@ -42,7 +42,7 @@ export function buildDSWeeklyVehicleRequestsPDF(
   doc.setFont("times", "normal"); doc.setFontSize(11);
   doc.text("Office of the Diocesan Secretary - Weekly Vehicle Requests", 14, 22);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   let y = 40;
   doc.setFont("helvetica", "bold"); doc.setFontSize(12);
   doc.text(
@@ -96,15 +96,15 @@ export function buildDSWeeklyVehicleRequestsPDF(
   doc.line(14, signY, 110, signY);
   doc.setFont("helvetica", "bold"); doc.setFontSize(10);
   doc.text("REV. FR. JAMES ORANGA", 14, signY + 5);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(0);
   doc.text("Diocesan Secretary - Authorized", 14, signY + 10);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "normal"); doc.setFontSize(9);
   doc.text("Signature: ____________________________", pageW - 110, signY + 5);
   doc.text("Date: ____________________________", pageW - 110, signY + 15);
 
-  doc.setFontSize(8); doc.setTextColor(120);
+  doc.setFontSize(8); doc.setTextColor(60);
   doc.text(`Generated ${format(new Date(), "PPp")}`, 14, pageH - 8);
 
   const filename = `Weekly_Vehicle_Requests_${weekStartISO}_to_${weekEndISO}.pdf`;

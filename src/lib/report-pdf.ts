@@ -295,14 +295,14 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   doc.setFont("helvetica", "bold"); doc.setFontSize(10);
   doc.text(target.hodName ?? "—", 14, sigY + 5);
   doc.text(DIOCESAN_SECRETARY, pageW - 90, sigY + 5);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(80);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(0);
   doc.text(`HOD — ${target.departmentName ?? "Department"}`, 14, sigY + 10);
   doc.text("Diocesan Secretary", pageW - 90, sigY + 10);
 
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
-    doc.setFontSize(8); doc.setTextColor(120);
+    doc.setFontSize(8); doc.setTextColor(60);
     doc.text(`Generated ${format(new Date(), "PPp")} — Page ${i} of ${pages}`, 14, doc.internal.pageSize.getHeight() - 8);
   }
 

@@ -42,7 +42,7 @@ export function downloadWorkPlanPDF(plan: WorkPlanPDFData) {
   doc.setFontSize(11);
   doc.text("Secretariat — Weekly Work Plan", 14, 22);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   let y = 40;
 
   const weekStart = parseISO(plan.weekStartDate);
@@ -156,7 +156,7 @@ export function downloadWorkPlanPDF(plan: WorkPlanPDFData) {
   const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(120);
+    doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(60);
     doc.text(`${DIOCESE} — Weekly Work Plan`, 14, pageH - 8);
     doc.text(`Page ${i} of ${pageCount}`, pageW - 14, pageH - 8, { align: "right" });
   }

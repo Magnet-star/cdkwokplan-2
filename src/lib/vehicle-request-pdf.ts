@@ -61,7 +61,7 @@ export function downloadVehicleRequestPDF(req: VehicleRequestPDF, requester: Veh
   doc.setFontSize(11);
   doc.text("Secretariat - Vehicle Request Form", 14, 22);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   let y = 44;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(13);
@@ -112,11 +112,11 @@ export function downloadVehicleRequestPDF(req: VehicleRequestPDF, requester: Veh
   doc.setFont("helvetica", "bold"); doc.setFontSize(9);
   doc.text(sanitize(requester.hodName ?? "-"), 14, y + 5);
   doc.text(DIOCESAN_SECRETARY, pageW - 90, y + 5);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(80);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(0);
   doc.text(`HOD - ${requester.departmentName ?? "Department"}`, 14, y + 10);
   doc.text("Diocesan Secretary", pageW - 90, y + 10);
 
-  doc.setFontSize(8); doc.setTextColor(120);
+  doc.setFontSize(8); doc.setTextColor(60);
   doc.text(`Generated ${format(new Date(), "PPp")}`, 14, doc.internal.pageSize.getHeight() - 8);
 
   const filename = `Vehicle_Request_${format(parseISO(req.date_needed), "yyyy-MM-dd")}_${requester.fullName.replace(/\s+/g, "_")}.pdf`;
@@ -144,7 +144,7 @@ export function downloadWeeklyVehicleRequestPDF(
   doc.setFont("times", "normal"); doc.setFontSize(11);
   doc.text("Secretariat - Weekly Vehicle Request Form", 14, 22);
 
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   let y = 44;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(13);
@@ -228,11 +228,11 @@ export function downloadWeeklyVehicleRequestPDF(
   doc.setFont("helvetica", "bold"); doc.setFontSize(9);
   doc.text(sanitize(requester.hodName ?? "-"), 14, signY + 5);
   doc.text(DIOCESAN_SECRETARY, pageW - 90, signY + 5);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(80);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(0);
   doc.text(`HOD - ${requester.departmentName ?? "Department"}`, 14, signY + 10);
   doc.text("Diocesan Secretary", pageW - 90, signY + 10);
 
-  doc.setFontSize(8); doc.setTextColor(120);
+  doc.setFontSize(8); doc.setTextColor(60);
   doc.text(`Generated ${format(new Date(), "PPp")}`, 14, pageH - 8);
 
   const filename = `Vehicle_Request_Week_${format(parseISO(weekStartISO), "yyyy-MM-dd")}_${requester.fullName.replace(/\s+/g, "_")}.pdf`;
