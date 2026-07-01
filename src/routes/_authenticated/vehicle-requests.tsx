@@ -489,7 +489,7 @@ function DSWeeklyVehicleRequestsView() {
       } else setDrivers([]);
       setLoading(false);
     })();
-  }, []);
+  }, [savedRefresh]);
 
   const todayWeekStart = useMemo(() => weekKey(new Date()), []);
   const [selectedWeekStart, setSelectedWeekStart] = useState<string>(todayWeekStart);
