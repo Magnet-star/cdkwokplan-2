@@ -599,6 +599,17 @@ function DSWeeklyVehicleRequestsView() {
       };
     });
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this vehicle request? It will disappear from the requester's account and all views.")) return;
+    const { error } = await supabase.from("vehicle_requests").delete().eq("id", id);
+    if (error) {
+      toast.error(`Failed to delete: ${error.message}`);
+      return;
+    }
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    toast.success("Vehicle request deleted");
+  };
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
