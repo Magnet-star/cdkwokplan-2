@@ -51,6 +51,7 @@ function AuthLayout() {
     { to: "/admin", search: { tab: "allplans" }, label: "Work plans" },
     { to: "/admin", search: { tab: "cleanup" }, label: "Logs & plans" },
     { to: "/admin", search: { tab: "attendance" }, label: "Office attendance" },
+    { to: "/admin", search: { tab: "sms" }, label: "SMS tracker" },
   ];
 
   const isAdminActive = location.pathname === "/admin" || location.pathname.startsWith("/admin/");
