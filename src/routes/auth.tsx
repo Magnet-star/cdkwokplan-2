@@ -29,7 +29,11 @@ function AuthPage() {
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    let email = identifier.trim();
+    // Normalize inputs: many browsers/keyboards add trailing spaces or
+    // capitalize the first letter of the email on autofill, which causes
+    // "Invalid login credentials" even when the password is correct.
+    let email = identifier.trim().toLowerCase();
+    const pwd = password.replace(/^\s+|\s+$/g, "");
     const looksLikeEmail = email.includes("@");
     if (!looksLikeEmail) {
       // Phone sign-in: resolve to the account's email via server function, then password-auth
@@ -40,16 +44,23 @@ function AuthPage() {
           toast.error("No account found with that phone number");
           return;
         }
-        email = foundEmail;
+        email = foundEmail.toLowerCase();
       } catch {
         setBusy(false);
         toast.error("No account found with that phone number");
         return;
       }
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    // Clear any stale session artifacts from prior browsers/tabs before signing in
+    try { await supabase.auth.signOut({ scope: "local" } as never); } catch {}
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pwd });
     setBusy(false);
-    if (error) toast.error(error.message);
+    if (error) {
+      const msg = /invalid login credentials/i.test(error.message)
+        ? "Invalid email/phone or password. Check for typos, extra spaces, or caps lock."
+        : error.message;
+      toast.error(msg);
+    }
     else { toast.success("Welcome back"); navigate({ to: "/dashboard" }); }
   };
 
