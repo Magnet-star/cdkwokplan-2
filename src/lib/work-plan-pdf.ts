@@ -55,7 +55,7 @@ export function downloadWorkPlanPDF(plan: WorkPlanPDFData) {
   const row = (label: string, value: string) => {
     doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     doc.text(label, 14, y);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     const lines = doc.splitTextToSize(value || "—", pageW - 70);
     doc.text(lines, 60, y);
     y += Math.max(6, lines.length * 5 + 1);
@@ -142,7 +142,7 @@ export function downloadWorkPlanPDF(plan: WorkPlanPDFData) {
   const sigBlock = (x: number, title: string, nameLabel: string, nameValue: string) => {
     doc.setFont("helvetica", "bold"); doc.setFontSize(11);
     doc.text(title, x, afterY);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     let ly = afterY + 8;
     doc.text(`${nameLabel}: ${nameValue || "______________________"}`, x, ly); ly += 10;
     doc.text("Signature: ______________________", x, ly); ly += 10;

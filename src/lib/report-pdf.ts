@@ -112,7 +112,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   doc.setFont("helvetica", "bold");
   doc.text(label, 14, y);
   y += 6;
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.text(`Name: ${target.fullName}`, 14, y); y += 5;
   doc.text(`Department: ${target.departmentName ?? "—"}`, 14, y); y += 5;
   if (target.position) { doc.text(`Position: ${target.position}`, 14, y); y += 5; }
@@ -121,7 +121,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   doc.setFont("helvetica", "bold"); doc.setFontSize(12);
   doc.text("Summary", 14, y); y += 2;
   doc.setDrawColor(200); doc.line(14, y, pageW - 14, y); y += 5;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10);
   const totalActivities = items?.length ?? 0;
   const totalVehicles = vehicles?.length ?? 0;
   const approvedVehicles = (vehicles ?? []).filter((v: any) => v.status === "approved").length;
@@ -276,12 +276,12 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   if (y > 240) { doc.addPage(); y = 20; }
   doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(40, 30, 30);
   doc.text("Daily Achievements & Challenges", 14, y); y += 4;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9);
   (logs ?? []).forEach((l: any) => {
     if (y > 270) { doc.addPage(); y = 20; }
     doc.setFont("helvetica", "bold");
     doc.text(format(parseISO(l.log_date), "EEEE, MMM d"), 14, y); y += 5;
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     if (l.achievements) { const lines = doc.splitTextToSize(`Achievements: ${l.achievements}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 1; }
     if (l.challenges) { const lines = doc.splitTextToSize(`Challenges: ${l.challenges}`, pageW - 28); doc.text(lines, 14, y); y += lines.length * 4 + 2; }
   });
@@ -295,7 +295,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   doc.setFont("helvetica", "bold"); doc.setFontSize(10);
   doc.text(target.hodName ?? "—", 14, sigY + 5);
   doc.text(DIOCESAN_SECRETARY, pageW - 90, sigY + 5);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(0);
   doc.text(`HOD — ${target.departmentName ?? "Department"}`, 14, sigY + 10);
   doc.text("Diocesan Secretary", pageW - 90, sigY + 10);
 

@@ -64,7 +64,7 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text(label, 14, y);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     const lines = doc.splitTextToSize(value || "—", pageW - 80);
     doc.text(lines, 70, y);
     y += Math.max(6, lines.length * 5 + 1);
@@ -139,7 +139,7 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     doc.setFontSize(11);
     doc.text(title, 14, y);
     y += 5;
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text(`Name (e-signature): ${name ?? "— pending —"}`, 14, y);
     y += 5;

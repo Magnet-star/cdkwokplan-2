@@ -96,11 +96,11 @@ export function buildDSWeeklyVehicleRequestsPDF(
   doc.line(14, signY, 110, signY);
   doc.setFont("helvetica", "bold"); doc.setFontSize(10);
   doc.text("REV. FR. JAMES ORANGA", 14, signY + 5);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(0);
   doc.text("Diocesan Secretary - Authorized", 14, signY + 10);
 
   doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9);
   doc.text("Signature: ____________________________", pageW - 110, signY + 5);
   doc.text("Date: ____________________________", pageW - 110, signY + 15);
 

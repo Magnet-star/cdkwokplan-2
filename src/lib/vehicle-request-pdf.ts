@@ -71,7 +71,7 @@ export function downloadVehicleRequestPDF(req: VehicleRequestPDF, requester: Veh
   const row = (label: string, value: string) => {
     doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     doc.text(label, 14, y);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     const lines = doc.splitTextToSize(sanitize(value || "-"), pageW - 70);
     doc.text(lines, 60, y);
     y += Math.max(7, lines.length * 5 + 2);
@@ -112,7 +112,7 @@ export function downloadVehicleRequestPDF(req: VehicleRequestPDF, requester: Veh
   doc.setFont("helvetica", "bold"); doc.setFontSize(9);
   doc.text(sanitize(requester.hodName ?? "-"), 14, y + 5);
   doc.text(DIOCESAN_SECRETARY, pageW - 90, y + 5);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(0);
   doc.text(`HOD - ${requester.departmentName ?? "Department"}`, 14, y + 10);
   doc.text("Diocesan Secretary", pageW - 90, y + 10);
 
@@ -154,7 +154,7 @@ export function downloadWeeklyVehicleRequestPDF(
   const row = (label: string, value: string) => {
     doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     doc.text(label, 14, y);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     const lines = doc.splitTextToSize(sanitize(value || "-"), pageW - 70);
     doc.text(lines, 60, y);
     y += Math.max(7, lines.length * 5 + 2);
@@ -209,7 +209,7 @@ export function downloadWeeklyVehicleRequestPDF(
   if (notes.length > 0) {
     doc.setFont("helvetica", "bold"); doc.setFontSize(11);
     doc.text("Secretary's note(s):", 14, y); y += 6;
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     notes.forEach((n) => {
       const lines = doc.splitTextToSize(`* ${sanitize(n)}`, pageW - 28);
       doc.text(lines, 14, y);
@@ -228,7 +228,7 @@ export function downloadWeeklyVehicleRequestPDF(
   doc.setFont("helvetica", "bold"); doc.setFontSize(9);
   doc.text(sanitize(requester.hodName ?? "-"), 14, signY + 5);
   doc.text(DIOCESAN_SECRETARY, pageW - 90, signY + 5);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(0);
   doc.text(`HOD - ${requester.departmentName ?? "Department"}`, 14, signY + 10);
   doc.text("Diocesan Secretary", pageW - 90, signY + 10);
 

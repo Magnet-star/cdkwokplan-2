@@ -34,7 +34,7 @@ export function downloadFinanceSummaryPDF(opts: {
   doc.text(title, 14, 21);
 
   doc.setTextColor(40);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.text(`Period: ${periodLabel}`, 14, 36);
   doc.text(`Departments: ${departmentLabel}`, 14, 42);
