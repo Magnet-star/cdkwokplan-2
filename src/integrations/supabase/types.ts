@@ -905,6 +905,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_logs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          message: string
+          recipient_msisdn: number
+          recipient_role: string | null
+          reference: string | null
+          request_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind: string
+          message: string
+          recipient_msisdn: number
+          recipient_role?: string | null
+          reference?: string | null
+          request_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          message?: string
+          recipient_msisdn?: number
+          recipient_role?: string | null
+          reference?: string | null
+          request_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       uploaded_reports: {
         Row: {
           department_id: string | null
