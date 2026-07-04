@@ -282,6 +282,9 @@ function DriversLogPage() {
   const [allocOpen, setAllocOpen] = useState(true);
   const [allocTripDraft, setAllocTripDraft] = useState<Record<string, string>>({});
   const [allocSaving, setAllocSaving] = useState<string | null>(null);
+  const [openSections, setOpenSections] = useState<{ newEntry: boolean; stats: boolean; allLogs: boolean; unapproved: boolean }>({ newEntry: false, stats: false, allLogs: true, unapproved: true });
+  const toggleSection = (k: "newEntry" | "stats" | "allLogs" | "unapproved") =>
+    setOpenSections((s) => ({ ...s, [k]: !s[k] }));
 
   const saveAllocTrip = async (logId: string) => {
     const value = (allocTripDraft[logId] ?? "").trim();
@@ -540,12 +543,61 @@ function DriversLogPage() {
         )}
       </div>
 
+      {(isSuperAdmin || isAdministrator) && (() => {
+        const today = format(new Date(), "yyyy-MM-dd");
+        const active = logs.filter((l) => l.log_date === today && l.closing_km == null && l.status !== "rejected");
+        return (
+          <Card className="border-2 border-primary/60 shadow-lg">
+            <CardHeader className="bg-primary/5">
+              <CardTitle className="font-serif flex items-center gap-3 text-3xl md:text-4xl">
+                <Truck className="h-8 w-8 md:h-10 md:w-10" />
+                Vehicles currently out
+                <Badge className="ml-2 bg-green-600 hover:bg-green-600 text-base px-3 py-1">{active.length}</Badge>
+              </CardTitle>
+              <CardDescription className="text-base">Live status for today. Auto-clears at the start of the next day. A vehicle stays active until the HOD closes the trip.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {active.length === 0 ? (
+                <p className="text-base text-muted-foreground">No vehicles currently out.</p>
+              ) : (
+                <ul className="divide-y divide-border rounded-md border-2">
+                  {active.map((l) => {
+                    const v = vehicles.find((x) => x.id === l.vehicle_id);
+                    const d = depts.find((x) => x.id === l.department_id);
+                    return (
+                      <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 p-4 text-base">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="font-mono text-lg font-bold">{v?.registration ?? "—"}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span className="font-medium">{d?.name ?? "—"}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span>Driver: <span className="font-semibold">{drivers[l.user_id]?.full_name ?? "—"}</span></span>
+                          <span className="text-muted-foreground">·</span>
+                          <span>{l.start_point} → {l.destination}</span>
+                        </div>
+                        <Badge className="bg-green-600 hover:bg-green-600 text-sm">Active</Badge>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {rolesLoaded && (isDriver || isSuperAdmin) && (
         <Card>
-          <CardHeader>
-            <CardTitle className="font-serif flex items-center gap-2"><Truck className="h-5 w-5" /> New journey entry</CardTitle>
-            <CardDescription>Submit a trip — the HOD of the department using the vehicle will approve it.</CardDescription>
-          </CardHeader>
+          <button type="button" onClick={() => toggleSection("newEntry")} className="w-full text-left">
+            <CardHeader className="hover:bg-muted/40 transition-colors">
+              <CardTitle className="font-serif flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2"><Truck className="h-5 w-5" /> New journey entry</span>
+                {openSections.newEntry ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+              <CardDescription>Submit a trip — the HOD of the department using the vehicle will approve it.</CardDescription>
+            </CardHeader>
+          </button>
+          {openSections.newEntry && (
           <CardContent>
             <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
               <div>
@@ -610,54 +662,119 @@ function DriversLogPage() {
               </div>
             </form>
           </CardContent>
+          )}
         </Card>
       )}
 
-      {(isSuperAdmin || isAdministrator) && (() => {
-        const today = format(new Date(), "yyyy-MM-dd");
-        const active = logs.filter((l) => l.log_date === today && l.closing_km == null && l.status !== "rejected");
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-serif flex items-center gap-2"><Truck className="h-5 w-5" />Vehicles currently out</CardTitle>
-              <CardDescription>Live status for today. Auto-clears at the start of the next day. A vehicle stays active until the HOD closes the trip.</CardDescription>
+      {canViewStats && (
+        <Card>
+          <button type="button" onClick={() => toggleSection("stats")} className="w-full text-left">
+            <CardHeader className="hover:bg-muted/40 transition-colors">
+              <CardTitle className="font-serif flex items-center justify-between gap-2">
+                <span className="uppercase tracking-wide">Vehicle Usage Statistics{isDeptScopedStats ? " — your department" : ""}</span>
+                {openSections.stats ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+              <CardDescription>{statsRange.label}</CardDescription>
             </CardHeader>
+          </button>
+          {openSections.stats && (
             <CardContent>
-              {active.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No vehicles currently out.</p>
-              ) : (
-                <ul className="divide-y divide-border rounded-md border">
-                  {active.map((l) => {
-                    const v = vehicles.find((x) => x.id === l.vehicle_id);
-                    const d = depts.find((x) => x.id === l.department_id);
-                    return (
-                      <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                          <span className="font-mono font-semibold">{v?.registration ?? "—"}</span>
-                          <span className="text-muted-foreground">·</span>
-                          <span>{d?.name ?? "—"}</span>
-                          <span className="text-muted-foreground">·</span>
-                          <span>Driver: <span className="font-medium">{drivers[l.user_id]?.full_name ?? "—"}</span></span>
-                          <span className="text-muted-foreground">·</span>
-                          <span>{l.start_point} → {l.destination}</span>
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium uppercase text-muted-foreground">Period</p>
+                    <p className="text-xs text-muted-foreground">{statsRange.label}</p>
+                  </div>
+                  <div className="flex flex-wrap items-end gap-2">
+                    <div>
+                      <Label className="text-xs">Period</Label>
+                      <Select value={statsPeriod} onValueChange={(v) => setStatsPeriod(v as any)}>
+                        <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="day">Day</SelectItem>
+                          <SelectItem value="week">Week</SelectItem>
+                          <SelectItem value="month">Month</SelectItem>
+                          <SelectItem value="year">Year</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {statsPeriod === "week" && (
+                      <div>
+                        <Label className="text-xs">Week starting (Mon)</Label>
+                        <Input type="date" className="h-9" value={statsWeekStart} onChange={(e) => setStatsWeekStart(e.target.value)} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className={`grid gap-3 ${isDeptScopedStats ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+                  {!isDeptScopedStats && (
+                    <div className="rounded-md border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">No. of departments</p>
+                      <p className="font-serif text-2xl">{statsTotals.departments}</p>
+                    </div>
+                  )}
+                  <div className="rounded-md border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Total kilometers covered</p>
+                    <p className="font-serif text-2xl">{statsTotals.km.toFixed(1)} km</p>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Total money spent (KES)</p>
+                    <p className="font-serif text-2xl">{statsTotals.money.toLocaleString()}</p>
+                  </div>
+                </div>
+                {!isDeptScopedStats && statsDeptSpending.length > 0 && (
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex flex-1 items-center justify-between gap-3 text-left">
+                        <span className="text-xs font-medium uppercase text-muted-foreground">Departmental fuel spending</span>
+                        <span className="text-xs text-primary">{showRanking ? "Hide full ranking" : "Show full ranking"}</span>
+                      </button>
+                      <Button size="sm" variant="outline" onClick={downloadRankingPdf}>
+                        <Download className="mr-1 h-4 w-4" /> Download ranking PDF
+                      </Button>
+                    </div>
+                    {!showRanking ? (
+                      <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                        <div className="flex justify-between gap-3">
+                          <span className="text-muted-foreground">Highest spender</span>
+                          <span className="font-medium">{statsDeptSpending[0].name} · KES {statsDeptSpending[0].money.toLocaleString()}</span>
                         </div>
-                        <Badge className="bg-green-600 hover:bg-green-600">Active</Badge>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+                        {statsDeptSpending.length > 1 && (
+                          <div className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">Lowest spender</span>
+                            <span className="font-medium">{statsDeptSpending[statsDeptSpending.length - 1].name} · KES {statsDeptSpending[statsDeptSpending.length - 1].money.toLocaleString()}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <ol className="mt-2 space-y-1 text-sm">
+                        {statsDeptSpending.map((s, i) => (
+                          <li key={s.name} className="flex justify-between gap-3 border-b border-border/50 py-1 last:border-0">
+                            <span><span className="text-muted-foreground">{i + 1}.</span> {s.name}</span>
+                            <span className="text-muted-foreground">KES {s.money.toLocaleString()} · {s.km.toFixed(1)} km · {s.trips} trip{s.trips === 1 ? "" : "s"}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
+                )}
+              </div>
             </CardContent>
-          </Card>
-        );
-      })()}
+          )}
+        </Card>
+      )}
 
       <Card>
-
-        <CardHeader>
-          <CardTitle className="font-serif">All driver logs</CardTitle>
-          <CardDescription>{canViewAll ? "Showing all logs across the diocese." : isHod ? "You can approve logs assigned to your department." : "Read-only view."}</CardDescription>
-        </CardHeader>
+        <button type="button" onClick={() => toggleSection("allLogs")} className="w-full text-left">
+          <CardHeader className="hover:bg-muted/40 transition-colors">
+            <CardTitle className="font-serif flex items-center justify-between gap-2">
+              <span>All driver logs</span>
+              {openSections.allLogs ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </CardTitle>
+            <CardDescription>{canViewAll ? "Showing all logs across the diocese." : isHod ? "You can approve logs assigned to your department." : "Read-only view."}</CardDescription>
+          </CardHeader>
+        </button>
+        {openSections.allLogs && (
         <CardContent className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr,1fr,auto]">
             <div>
@@ -694,90 +811,7 @@ function DriversLogPage() {
             </div>
           </div>
 
-          {canViewStats && (
-          <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium uppercase text-muted-foreground">
-                  Vehicle usage statistics{isDeptScopedStats ? " — your department" : ""}
-                </p>
-                <p className="text-xs text-muted-foreground">{statsRange.label}</p>
-              </div>
-              <div className="flex flex-wrap items-end gap-2">
-                <div>
-                  <Label className="text-xs">Period</Label>
-                  <Select value={statsPeriod} onValueChange={(v) => setStatsPeriod(v as any)}>
-                    <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="day">Day</SelectItem>
-                      <SelectItem value="week">Week</SelectItem>
-                      <SelectItem value="month">Month</SelectItem>
-                      <SelectItem value="year">Year</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {statsPeriod === "week" && (
-                  <div>
-                    <Label className="text-xs">Week starting (Mon)</Label>
-                    <Input type="date" className="h-9" value={statsWeekStart} onChange={(e) => setStatsWeekStart(e.target.value)} />
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className={`grid gap-3 ${isDeptScopedStats ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
-              {!isDeptScopedStats && (
-                <div className="rounded-md border bg-background p-3">
-                  <p className="text-xs text-muted-foreground">No. of departments</p>
-                  <p className="font-serif text-2xl">{statsTotals.departments}</p>
-                </div>
-              )}
-              <div className="rounded-md border bg-background p-3">
-                <p className="text-xs text-muted-foreground">Total kilometers covered</p>
-                <p className="font-serif text-2xl">{statsTotals.km.toFixed(1)} km</p>
-              </div>
-              <div className="rounded-md border bg-background p-3">
-                <p className="text-xs text-muted-foreground">Total money spent (KES)</p>
-                <p className="font-serif text-2xl">{statsTotals.money.toLocaleString()}</p>
-              </div>
-            </div>
-            {!isDeptScopedStats && statsDeptSpending.length > 0 && (
-              <div className="rounded-md border bg-background p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex flex-1 items-center justify-between gap-3 text-left">
-                    <span className="text-xs font-medium uppercase text-muted-foreground">Departmental fuel spending</span>
-                    <span className="text-xs text-primary">{showRanking ? "Hide full ranking" : "Show full ranking"}</span>
-                  </button>
-                  <Button size="sm" variant="outline" onClick={downloadRankingPdf}>
-                    <Download className="mr-1 h-4 w-4" /> Download ranking PDF
-                  </Button>
-                </div>
-                {!showRanking ? (
-                  <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
-                    <div className="flex justify-between gap-3">
-                      <span className="text-muted-foreground">Highest spender</span>
-                      <span className="font-medium">{statsDeptSpending[0].name} · KES {statsDeptSpending[0].money.toLocaleString()}</span>
-                    </div>
-                    {statsDeptSpending.length > 1 && (
-                      <div className="flex justify-between gap-3">
-                        <span className="text-muted-foreground">Lowest spender</span>
-                        <span className="font-medium">{statsDeptSpending[statsDeptSpending.length - 1].name} · KES {statsDeptSpending[statsDeptSpending.length - 1].money.toLocaleString()}</span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <ol className="mt-2 space-y-1 text-sm">
-                    {statsDeptSpending.map((s, i) => (
-                      <li key={s.name} className="flex justify-between gap-3 border-b border-border/50 py-1 last:border-0">
-                        <span><span className="text-muted-foreground">{i + 1}.</span> {s.name}</span>
-                        <span className="text-muted-foreground">KES {s.money.toLocaleString()} · {s.km.toFixed(1)} km · {s.trips} trip{s.trips === 1 ? "" : "s"}</span>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </div>
-            )}
-          </div>
-          )}
+
 
           {filteredLogs.length === 0 && <p className="text-sm text-muted-foreground">No logs match the current filter.</p>}
 
@@ -982,13 +1016,47 @@ function DriversLogPage() {
             const totalAllocCount = visibleAlloc.reduce((s, g) => s + g.items.length, 0);
             const totalAllocKm = visibleAlloc.reduce((s, g) => s + g.total, 0);
 
+            const unapprovedLogs = openLogs.filter((l) => l.status === "pending" || l.status === "rejected");
+            const awaitingClosing = openLogs.filter((l) => l.status === "approved" && l.closing_km == null);
+
             const logsView = (
               <div className="space-y-4">
-                {openLogs.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Open trips (pending approval or awaiting closing details)</h3>
-                    {openLogs.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
-                  </div>
+                {isSuperAdmin ? (
+                  <>
+                    {unapprovedLogs.length > 0 && (
+                      <div className="rounded-md border-2 border-amber-400 bg-amber-50/40 dark:bg-amber-950/20">
+                        <button
+                          type="button"
+                          onClick={() => toggleSection("unapproved")}
+                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-amber-100/60 dark:hover:bg-amber-900/30"
+                        >
+                          <span className="flex items-center gap-2 font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+                            <AlertTriangle className="h-4 w-4" /> UNAPPROVED
+                            <Badge variant="secondary" className="ml-1">{unapprovedLogs.length}</Badge>
+                          </span>
+                          {openSections.unapproved ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+                        {openSections.unapproved && (
+                          <div className="space-y-3 border-t border-amber-300/60 p-3">
+                            {unapprovedLogs.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {awaitingClosing.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Awaiting closing details</h3>
+                        {awaitingClosing.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  openLogs.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Open trips (pending approval or awaiting closing details)</h3>
+                      {openLogs.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+                    </div>
+                  )
                 )}
                 {archivedLogs.length > 0 && (
                   <div className="space-y-2">
@@ -998,6 +1066,8 @@ function DriversLogPage() {
                 )}
               </div>
             );
+
+
 
             if (!showAllocTab) return logsView;
 
@@ -1137,7 +1207,9 @@ function DriversLogPage() {
           })()}
 
         </CardContent>
+        )}
       </Card>
+
     </div>
   );
 }
