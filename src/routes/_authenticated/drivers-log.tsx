@@ -1016,13 +1016,47 @@ function DriversLogPage() {
             const totalAllocCount = visibleAlloc.reduce((s, g) => s + g.items.length, 0);
             const totalAllocKm = visibleAlloc.reduce((s, g) => s + g.total, 0);
 
+            const unapprovedLogs = openLogs.filter((l) => l.status === "pending" || l.status === "rejected");
+            const awaitingClosing = openLogs.filter((l) => l.status === "approved" && l.closing_km == null);
+
             const logsView = (
               <div className="space-y-4">
-                {openLogs.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Open trips (pending approval or awaiting closing details)</h3>
-                    {openLogs.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
-                  </div>
+                {isSuperAdmin ? (
+                  <>
+                    {unapprovedLogs.length > 0 && (
+                      <div className="rounded-md border-2 border-amber-400 bg-amber-50/40 dark:bg-amber-950/20">
+                        <button
+                          type="button"
+                          onClick={() => toggleSection("unapproved")}
+                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-amber-100/60 dark:hover:bg-amber-900/30"
+                        >
+                          <span className="flex items-center gap-2 font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+                            <AlertTriangle className="h-4 w-4" /> UNAPPROVED
+                            <Badge variant="secondary" className="ml-1">{unapprovedLogs.length}</Badge>
+                          </span>
+                          {openSections.unapproved ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+                        {openSections.unapproved && (
+                          <div className="space-y-3 border-t border-amber-300/60 p-3">
+                            {unapprovedLogs.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {awaitingClosing.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Awaiting closing details</h3>
+                        {awaitingClosing.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  openLogs.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Open trips (pending approval or awaiting closing details)</h3>
+                      {openLogs.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+                    </div>
+                  )
                 )}
                 {archivedLogs.length > 0 && (
                   <div className="space-y-2">
@@ -1032,6 +1066,8 @@ function DriversLogPage() {
                 )}
               </div>
             );
+
+
 
             if (!showAllocTab) return logsView;
 
