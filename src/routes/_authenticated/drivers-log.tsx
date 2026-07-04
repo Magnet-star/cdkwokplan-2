@@ -1171,7 +1171,9 @@ function DriversLogPage() {
           })()}
 
         </CardContent>
+        )}
       </Card>
+
     </div>
   );
 }
