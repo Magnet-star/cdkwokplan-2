@@ -666,13 +666,115 @@ function DriversLogPage() {
         </Card>
       )}
 
+      {canViewStats && (
+        <Card>
+          <button type="button" onClick={() => toggleSection("stats")} className="w-full text-left">
+            <CardHeader className="hover:bg-muted/40 transition-colors">
+              <CardTitle className="font-serif flex items-center justify-between gap-2">
+                <span className="uppercase tracking-wide">Vehicle Usage Statistics{isDeptScopedStats ? " — your department" : ""}</span>
+                {openSections.stats ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+              <CardDescription>{statsRange.label}</CardDescription>
+            </CardHeader>
+          </button>
+          {openSections.stats && (
+            <CardContent>
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium uppercase text-muted-foreground">Period</p>
+                    <p className="text-xs text-muted-foreground">{statsRange.label}</p>
+                  </div>
+                  <div className="flex flex-wrap items-end gap-2">
+                    <div>
+                      <Label className="text-xs">Period</Label>
+                      <Select value={statsPeriod} onValueChange={(v) => setStatsPeriod(v as any)}>
+                        <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="day">Day</SelectItem>
+                          <SelectItem value="week">Week</SelectItem>
+                          <SelectItem value="month">Month</SelectItem>
+                          <SelectItem value="year">Year</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {statsPeriod === "week" && (
+                      <div>
+                        <Label className="text-xs">Week starting (Mon)</Label>
+                        <Input type="date" className="h-9" value={statsWeekStart} onChange={(e) => setStatsWeekStart(e.target.value)} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className={`grid gap-3 ${isDeptScopedStats ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+                  {!isDeptScopedStats && (
+                    <div className="rounded-md border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">No. of departments</p>
+                      <p className="font-serif text-2xl">{statsTotals.departments}</p>
+                    </div>
+                  )}
+                  <div className="rounded-md border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Total kilometers covered</p>
+                    <p className="font-serif text-2xl">{statsTotals.km.toFixed(1)} km</p>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Total money spent (KES)</p>
+                    <p className="font-serif text-2xl">{statsTotals.money.toLocaleString()}</p>
+                  </div>
+                </div>
+                {!isDeptScopedStats && statsDeptSpending.length > 0 && (
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex flex-1 items-center justify-between gap-3 text-left">
+                        <span className="text-xs font-medium uppercase text-muted-foreground">Departmental fuel spending</span>
+                        <span className="text-xs text-primary">{showRanking ? "Hide full ranking" : "Show full ranking"}</span>
+                      </button>
+                      <Button size="sm" variant="outline" onClick={downloadRankingPdf}>
+                        <Download className="mr-1 h-4 w-4" /> Download ranking PDF
+                      </Button>
+                    </div>
+                    {!showRanking ? (
+                      <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                        <div className="flex justify-between gap-3">
+                          <span className="text-muted-foreground">Highest spender</span>
+                          <span className="font-medium">{statsDeptSpending[0].name} · KES {statsDeptSpending[0].money.toLocaleString()}</span>
+                        </div>
+                        {statsDeptSpending.length > 1 && (
+                          <div className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">Lowest spender</span>
+                            <span className="font-medium">{statsDeptSpending[statsDeptSpending.length - 1].name} · KES {statsDeptSpending[statsDeptSpending.length - 1].money.toLocaleString()}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <ol className="mt-2 space-y-1 text-sm">
+                        {statsDeptSpending.map((s, i) => (
+                          <li key={s.name} className="flex justify-between gap-3 border-b border-border/50 py-1 last:border-0">
+                            <span><span className="text-muted-foreground">{i + 1}.</span> {s.name}</span>
+                            <span className="text-muted-foreground">KES {s.money.toLocaleString()} · {s.km.toFixed(1)} km · {s.trips} trip{s.trips === 1 ? "" : "s"}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
       <Card>
-
-
-        <CardHeader>
-          <CardTitle className="font-serif">All driver logs</CardTitle>
-          <CardDescription>{canViewAll ? "Showing all logs across the diocese." : isHod ? "You can approve logs assigned to your department." : "Read-only view."}</CardDescription>
-        </CardHeader>
+        <button type="button" onClick={() => toggleSection("allLogs")} className="w-full text-left">
+          <CardHeader className="hover:bg-muted/40 transition-colors">
+            <CardTitle className="font-serif flex items-center justify-between gap-2">
+              <span>All driver logs</span>
+              {openSections.allLogs ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </CardTitle>
+            <CardDescription>{canViewAll ? "Showing all logs across the diocese." : isHod ? "You can approve logs assigned to your department." : "Read-only view."}</CardDescription>
+          </CardHeader>
+        </button>
+        {openSections.allLogs && (
         <CardContent className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr,1fr,auto]">
             <div>
@@ -709,90 +811,7 @@ function DriversLogPage() {
             </div>
           </div>
 
-          {canViewStats && (
-          <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium uppercase text-muted-foreground">
-                  Vehicle usage statistics{isDeptScopedStats ? " — your department" : ""}
-                </p>
-                <p className="text-xs text-muted-foreground">{statsRange.label}</p>
-              </div>
-              <div className="flex flex-wrap items-end gap-2">
-                <div>
-                  <Label className="text-xs">Period</Label>
-                  <Select value={statsPeriod} onValueChange={(v) => setStatsPeriod(v as any)}>
-                    <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="day">Day</SelectItem>
-                      <SelectItem value="week">Week</SelectItem>
-                      <SelectItem value="month">Month</SelectItem>
-                      <SelectItem value="year">Year</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {statsPeriod === "week" && (
-                  <div>
-                    <Label className="text-xs">Week starting (Mon)</Label>
-                    <Input type="date" className="h-9" value={statsWeekStart} onChange={(e) => setStatsWeekStart(e.target.value)} />
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className={`grid gap-3 ${isDeptScopedStats ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
-              {!isDeptScopedStats && (
-                <div className="rounded-md border bg-background p-3">
-                  <p className="text-xs text-muted-foreground">No. of departments</p>
-                  <p className="font-serif text-2xl">{statsTotals.departments}</p>
-                </div>
-              )}
-              <div className="rounded-md border bg-background p-3">
-                <p className="text-xs text-muted-foreground">Total kilometers covered</p>
-                <p className="font-serif text-2xl">{statsTotals.km.toFixed(1)} km</p>
-              </div>
-              <div className="rounded-md border bg-background p-3">
-                <p className="text-xs text-muted-foreground">Total money spent (KES)</p>
-                <p className="font-serif text-2xl">{statsTotals.money.toLocaleString()}</p>
-              </div>
-            </div>
-            {!isDeptScopedStats && statsDeptSpending.length > 0 && (
-              <div className="rounded-md border bg-background p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <button type="button" onClick={() => setShowRanking((v) => !v)} className="flex flex-1 items-center justify-between gap-3 text-left">
-                    <span className="text-xs font-medium uppercase text-muted-foreground">Departmental fuel spending</span>
-                    <span className="text-xs text-primary">{showRanking ? "Hide full ranking" : "Show full ranking"}</span>
-                  </button>
-                  <Button size="sm" variant="outline" onClick={downloadRankingPdf}>
-                    <Download className="mr-1 h-4 w-4" /> Download ranking PDF
-                  </Button>
-                </div>
-                {!showRanking ? (
-                  <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
-                    <div className="flex justify-between gap-3">
-                      <span className="text-muted-foreground">Highest spender</span>
-                      <span className="font-medium">{statsDeptSpending[0].name} · KES {statsDeptSpending[0].money.toLocaleString()}</span>
-                    </div>
-                    {statsDeptSpending.length > 1 && (
-                      <div className="flex justify-between gap-3">
-                        <span className="text-muted-foreground">Lowest spender</span>
-                        <span className="font-medium">{statsDeptSpending[statsDeptSpending.length - 1].name} · KES {statsDeptSpending[statsDeptSpending.length - 1].money.toLocaleString()}</span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <ol className="mt-2 space-y-1 text-sm">
-                    {statsDeptSpending.map((s, i) => (
-                      <li key={s.name} className="flex justify-between gap-3 border-b border-border/50 py-1 last:border-0">
-                        <span><span className="text-muted-foreground">{i + 1}.</span> {s.name}</span>
-                        <span className="text-muted-foreground">KES {s.money.toLocaleString()} · {s.km.toFixed(1)} km · {s.trips} trip{s.trips === 1 ? "" : "s"}</span>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </div>
-            )}
-          </div>
-          )}
+
 
           {filteredLogs.length === 0 && <p className="text-sm text-muted-foreground">No logs match the current filter.</p>}
 
