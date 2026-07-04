@@ -1044,9 +1044,23 @@ function DriversLogPage() {
                       </div>
                     )}
                     {awaitingClosing.length > 0 && (
-                      <div className="space-y-3">
-                        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Awaiting closing details</h3>
-                        {awaitingClosing.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+                      <div className="rounded-md border-2 border-sky-400 bg-sky-50/40 dark:bg-sky-950/20">
+                        <button
+                          type="button"
+                          onClick={() => toggleSection("awaitingClosing")}
+                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-sky-100/60 dark:hover:bg-sky-900/30"
+                        >
+                          <span className="flex items-center gap-2 font-semibold uppercase tracking-wide text-sky-800 dark:text-sky-300">
+                            <Truck className="h-4 w-4" /> Awaiting closing details
+                            <Badge variant="secondary" className="ml-1">{awaitingClosing.length}</Badge>
+                          </span>
+                          {openSections.awaitingClosing ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+                        {openSections.awaitingClosing && (
+                          <div className="space-y-3 border-t border-sky-300/60 p-3">
+                            {awaitingClosing.map((l) => <div key={l.id}>{renderLog(l)}</div>)}
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
