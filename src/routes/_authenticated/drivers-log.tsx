@@ -283,7 +283,7 @@ function DriversLogPage() {
   const [allocTripDraft, setAllocTripDraft] = useState<Record<string, string>>({});
   const [allocSaving, setAllocSaving] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState<{ newEntry: boolean; stats: boolean; allLogs: boolean; unapproved: boolean; awaitingClosing: boolean }>({ newEntry: false, stats: false, allLogs: true, unapproved: true, awaitingClosing: true });
-  const toggleSection = (k: "newEntry" | "stats" | "allLogs" | "unapproved") =>
+  const toggleSection = (k: "newEntry" | "stats" | "allLogs" | "unapproved" | "awaitingClosing") =>
     setOpenSections((s) => ({ ...s, [k]: !s[k] }));
 
   const saveAllocTrip = async (logId: string) => {
