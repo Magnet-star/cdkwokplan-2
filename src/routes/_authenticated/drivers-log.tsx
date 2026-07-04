@@ -543,12 +543,61 @@ function DriversLogPage() {
         )}
       </div>
 
+      {(isSuperAdmin || isAdministrator) && (() => {
+        const today = format(new Date(), "yyyy-MM-dd");
+        const active = logs.filter((l) => l.log_date === today && l.closing_km == null && l.status !== "rejected");
+        return (
+          <Card className="border-2 border-primary/60 shadow-lg">
+            <CardHeader className="bg-primary/5">
+              <CardTitle className="font-serif flex items-center gap-3 text-3xl md:text-4xl">
+                <Truck className="h-8 w-8 md:h-10 md:w-10" />
+                Vehicles currently out
+                <Badge className="ml-2 bg-green-600 hover:bg-green-600 text-base px-3 py-1">{active.length}</Badge>
+              </CardTitle>
+              <CardDescription className="text-base">Live status for today. Auto-clears at the start of the next day. A vehicle stays active until the HOD closes the trip.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {active.length === 0 ? (
+                <p className="text-base text-muted-foreground">No vehicles currently out.</p>
+              ) : (
+                <ul className="divide-y divide-border rounded-md border-2">
+                  {active.map((l) => {
+                    const v = vehicles.find((x) => x.id === l.vehicle_id);
+                    const d = depts.find((x) => x.id === l.department_id);
+                    return (
+                      <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 p-4 text-base">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="font-mono text-lg font-bold">{v?.registration ?? "—"}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span className="font-medium">{d?.name ?? "—"}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span>Driver: <span className="font-semibold">{drivers[l.user_id]?.full_name ?? "—"}</span></span>
+                          <span className="text-muted-foreground">·</span>
+                          <span>{l.start_point} → {l.destination}</span>
+                        </div>
+                        <Badge className="bg-green-600 hover:bg-green-600 text-sm">Active</Badge>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {rolesLoaded && (isDriver || isSuperAdmin) && (
         <Card>
-          <CardHeader>
-            <CardTitle className="font-serif flex items-center gap-2"><Truck className="h-5 w-5" /> New journey entry</CardTitle>
-            <CardDescription>Submit a trip — the HOD of the department using the vehicle will approve it.</CardDescription>
-          </CardHeader>
+          <button type="button" onClick={() => toggleSection("newEntry")} className="w-full text-left">
+            <CardHeader className="hover:bg-muted/40 transition-colors">
+              <CardTitle className="font-serif flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2"><Truck className="h-5 w-5" /> New journey entry</span>
+                {openSections.newEntry ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+              <CardDescription>Submit a trip — the HOD of the department using the vehicle will approve it.</CardDescription>
+            </CardHeader>
+          </button>
+          {openSections.newEntry && (
           <CardContent>
             <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
               <div>
@@ -613,49 +662,12 @@ function DriversLogPage() {
               </div>
             </form>
           </CardContent>
+          )}
         </Card>
       )}
 
-      {(isSuperAdmin || isAdministrator) && (() => {
-        const today = format(new Date(), "yyyy-MM-dd");
-        const active = logs.filter((l) => l.log_date === today && l.closing_km == null && l.status !== "rejected");
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-serif flex items-center gap-2"><Truck className="h-5 w-5" />Vehicles currently out</CardTitle>
-              <CardDescription>Live status for today. Auto-clears at the start of the next day. A vehicle stays active until the HOD closes the trip.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {active.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No vehicles currently out.</p>
-              ) : (
-                <ul className="divide-y divide-border rounded-md border">
-                  {active.map((l) => {
-                    const v = vehicles.find((x) => x.id === l.vehicle_id);
-                    const d = depts.find((x) => x.id === l.department_id);
-                    return (
-                      <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                          <span className="font-mono font-semibold">{v?.registration ?? "—"}</span>
-                          <span className="text-muted-foreground">·</span>
-                          <span>{d?.name ?? "—"}</span>
-                          <span className="text-muted-foreground">·</span>
-                          <span>Driver: <span className="font-medium">{drivers[l.user_id]?.full_name ?? "—"}</span></span>
-                          <span className="text-muted-foreground">·</span>
-                          <span>{l.start_point} → {l.destination}</span>
-                        </div>
-                        <Badge className="bg-green-600 hover:bg-green-600">Active</Badge>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })()}
-
       <Card>
+
 
         <CardHeader>
           <CardTitle className="font-serif">All driver logs</CardTitle>
