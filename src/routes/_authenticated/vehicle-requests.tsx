@@ -1175,6 +1175,19 @@ function WeekBreakdown({ items, departments, onEdit, onDelete }: { items: DSRow[
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
                             )}
+                            {onDelete && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                title="Delete this request"
+                                onClick={() => onDelete(r)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+
+
 
                           </li>
                         );
