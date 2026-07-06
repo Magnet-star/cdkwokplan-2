@@ -663,6 +663,29 @@ function DSWeeklyVehicleRequestsView() {
     setEditRowForm(null);
   };
 
+  const deleteRow = async (r: DSRow) => {
+    if (!isSuperAdmin) return;
+    const { start, end } = splitRoute(r.destination);
+    if (!confirm(`Delete this vehicle request?\n\n${format(parseISO(r.date_needed), "EEE, MMM d")} · ${start || "—"} → ${end}\n\nThis cannot be undone.`)) return;
+    const { error } = await supabase.from("vehicle_requests").delete().eq("id", r.id);
+    if (error) { toast.error(`Failed to delete: ${error.message}`); return; }
+    setRows((prev) => prev.filter((x) => x.id !== r.id));
+    toast.success("Vehicle request deleted");
+  };
+
+  const deleteWeek = async (weekStart: string, items: DSRow[]) => {
+    if (!isSuperAdmin) return;
+    if (items.length === 0) return;
+    if (!confirm(`Delete ALL ${items.length} vehicle request${items.length > 1 ? "s" : ""} for the week of ${format(parseISO(weekStart), "MMM d, yyyy")}?\n\nThis cannot be undone.`)) return;
+    const ids = items.map((i) => i.id);
+    const { error } = await supabase.from("vehicle_requests").delete().in("id", ids);
+    if (error) { toast.error(`Failed to delete: ${error.message}`); return; }
+    setRows((prev) => prev.filter((x) => !ids.includes(x.id)));
+    toast.success(`${ids.length} vehicle request${ids.length > 1 ? "s" : ""} deleted`);
+  };
+
+
+
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -716,6 +739,17 @@ function DSWeeklyVehicleRequestsView() {
               >
                 <Download className="mr-1 h-4 w-4" />Download weekly PDF
               </Button>
+              {isSuperAdmin && currentWeek && currentWeek.items.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => deleteWeek(currentWeekStart, currentWeek.items)}
+                  title="Delete all requests for this week"
+                >
+                  <Trash2 className="mr-1 h-4 w-4" />Delete week
+                </Button>
+              )}
+
             </div>
           </div>
         </CardHeader>
@@ -723,7 +757,7 @@ function DSWeeklyVehicleRequestsView() {
           {!currentWeek || currentWeek.items.length === 0 ? (
             <p className="text-sm text-muted-foreground">No vehicle requests submitted for this week yet.</p>
           ) : (
-            <WeekBreakdown items={currentWeek.items} departments={departments} onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} />
+            <WeekBreakdown items={currentWeek.items} departments={departments} onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} onDelete={isSuperAdmin ? deleteRow : undefined} />
           )}
         </CardContent>
       </Card>
@@ -752,7 +786,7 @@ function DSWeeklyVehicleRequestsView() {
                             weekStart={w.weekStart}
                             items={w.items}
                             departments={departments}
-                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined}
+                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} onDelete={isSuperAdmin ? deleteRow : undefined} onDeleteWeek={isSuperAdmin ? deleteWeek : undefined}
                             onDownload={() =>
                               setPrepare({
                                 weekStart: w.weekStart,
@@ -773,7 +807,7 @@ function DSWeeklyVehicleRequestsView() {
                           weekStart={w.weekStart}
                           items={w.items}
                           departments={departments}
-                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined}
+                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} onDelete={isSuperAdmin ? deleteRow : undefined} onDeleteWeek={isSuperAdmin ? deleteWeek : undefined}
                           onDownload={() =>
                             setPrepare({
                               weekStart: w.weekStart,
@@ -811,7 +845,7 @@ function DSWeeklyVehicleRequestsView() {
                         weekStart={w.weekStart}
                         items={w.items}
                         departments={departments}
-                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined}
+                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} onDelete={isSuperAdmin ? deleteRow : undefined} onDeleteWeek={isSuperAdmin ? deleteWeek : undefined}
                         onDownload={() =>
                           setPrepare({
                             weekStart: w.weekStart,
@@ -1089,7 +1123,7 @@ function PrepareWeeklyPdfDialog({
   );
 }
 
-function WeekBreakdown({ items, departments, onEdit }: { items: DSRow[]; departments: Record<string, string>; onEdit?: (row: DSRow) => void }) {
+function WeekBreakdown({ items, departments, onEdit, onDelete }: { items: DSRow[]; departments: Record<string, string>; onEdit?: (row: DSRow) => void; onDelete?: (row: DSRow) => void }) {
   // Group by date, then by department
   const byDate = new Map<string, DSRow[]>();
   for (const r of items) {
@@ -1141,6 +1175,19 @@ function WeekBreakdown({ items, departments, onEdit }: { items: DSRow[]; departm
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
                             )}
+                            {onDelete && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                title="Delete this request"
+                                onClick={() => onDelete(r)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+
+
 
                           </li>
                         );
@@ -1163,12 +1210,16 @@ function WeekFolder({
   departments,
   onDownload,
   onEdit,
+  onDelete,
+  onDeleteWeek,
 }: {
   weekStart: string;
   items: DSRow[];
   departments: Record<string, string>;
   onDownload: () => void;
   onEdit?: (row: DSRow) => void;
+  onDelete?: (row: DSRow) => void;
+  onDeleteWeek?: (weekStart: string, items: DSRow[]) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -1182,18 +1233,24 @@ function WeekFolder({
         <Button size="sm" variant="outline" onClick={onDownload}>
           <Download className="mr-1 h-3.5 w-3.5" />PDF
         </Button>
+        {onDeleteWeek && (
+          <Button size="sm" variant="destructive" onClick={() => onDeleteWeek(weekStart, items)} title="Delete all requests for this week">
+            <Trash2 className="mr-1 h-3.5 w-3.5" />Delete week
+          </Button>
+        )}
         <button type="button" onClick={() => setOpen((o) => !o)}>
           {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </button>
       </div>
       {open && (
         <div className="border-t border-border p-3">
-          <WeekBreakdown items={items} departments={departments} onEdit={onEdit} />
+          <WeekBreakdown items={items} departments={departments} onEdit={onEdit} onDelete={onDelete} />
         </div>
       )}
     </div>
   );
 }
+
 
 
 
