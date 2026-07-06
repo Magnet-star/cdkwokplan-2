@@ -757,7 +757,7 @@ function DSWeeklyVehicleRequestsView() {
           {!currentWeek || currentWeek.items.length === 0 ? (
             <p className="text-sm text-muted-foreground">No vehicle requests submitted for this week yet.</p>
           ) : (
-            <WeekBreakdown items={currentWeek.items} departments={departments} onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} />
+            <WeekBreakdown items={currentWeek.items} departments={departments} onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} onDelete={isSuperAdmin ? deleteRow : undefined} onDeleteWeek={isSuperAdmin ? deleteWeek : undefined} />
           )}
         </CardContent>
       </Card>
@@ -786,7 +786,7 @@ function DSWeeklyVehicleRequestsView() {
                             weekStart={w.weekStart}
                             items={w.items}
                             departments={departments}
-                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined}
+                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} onDelete={isSuperAdmin ? deleteRow : undefined} onDeleteWeek={isSuperAdmin ? deleteWeek : undefined}
                             onDownload={() =>
                               setPrepare({
                                 weekStart: w.weekStart,
@@ -807,7 +807,7 @@ function DSWeeklyVehicleRequestsView() {
                           weekStart={w.weekStart}
                           items={w.items}
                           departments={departments}
-                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined}
+                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} onDelete={isSuperAdmin ? deleteRow : undefined} onDeleteWeek={isSuperAdmin ? deleteWeek : undefined}
                           onDownload={() =>
                             setPrepare({
                               weekStart: w.weekStart,
@@ -845,7 +845,7 @@ function DSWeeklyVehicleRequestsView() {
                         weekStart={w.weekStart}
                         items={w.items}
                         departments={departments}
-                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined}
+                            onEdit={isSuperAdmin ? openConsolidatedEdit : undefined} onDelete={isSuperAdmin ? deleteRow : undefined} onDeleteWeek={isSuperAdmin ? deleteWeek : undefined}
                         onDownload={() =>
                           setPrepare({
                             weekStart: w.weekStart,
