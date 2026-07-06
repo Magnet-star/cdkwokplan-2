@@ -739,6 +739,17 @@ function DSWeeklyVehicleRequestsView() {
               >
                 <Download className="mr-1 h-4 w-4" />Download weekly PDF
               </Button>
+              {isSuperAdmin && currentWeek && currentWeek.items.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => deleteWeek(currentWeekStart, currentWeek.items)}
+                  title="Delete all requests for this week"
+                >
+                  <Trash2 className="mr-1 h-4 w-4" />Delete week
+                </Button>
+              )}
+
             </div>
           </div>
         </CardHeader>
