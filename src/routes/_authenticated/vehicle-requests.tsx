@@ -663,6 +663,29 @@ function DSWeeklyVehicleRequestsView() {
     setEditRowForm(null);
   };
 
+  const deleteRow = async (r: DSRow) => {
+    if (!isSuperAdmin) return;
+    const { start, end } = splitRoute(r.destination);
+    if (!confirm(`Delete this vehicle request?\n\n${format(parseISO(r.date_needed), "EEE, MMM d")} · ${start || "—"} → ${end}\n\nThis cannot be undone.`)) return;
+    const { error } = await supabase.from("vehicle_requests").delete().eq("id", r.id);
+    if (error) { toast.error(`Failed to delete: ${error.message}`); return; }
+    setRows((prev) => prev.filter((x) => x.id !== r.id));
+    toast.success("Vehicle request deleted");
+  };
+
+  const deleteWeek = async (weekStart: string, items: DSRow[]) => {
+    if (!isSuperAdmin) return;
+    if (items.length === 0) return;
+    if (!confirm(`Delete ALL ${items.length} vehicle request${items.length > 1 ? "s" : ""} for the week of ${format(parseISO(weekStart), "MMM d, yyyy")}?\n\nThis cannot be undone.`)) return;
+    const ids = items.map((i) => i.id);
+    const { error } = await supabase.from("vehicle_requests").delete().in("id", ids);
+    if (error) { toast.error(`Failed to delete: ${error.message}`); return; }
+    setRows((prev) => prev.filter((x) => !ids.includes(x.id)));
+    toast.success(`${ids.length} vehicle request${ids.length > 1 ? "s" : ""} deleted`);
+  };
+
+
+
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
