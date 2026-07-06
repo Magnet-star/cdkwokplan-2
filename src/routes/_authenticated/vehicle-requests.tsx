@@ -1210,12 +1210,16 @@ function WeekFolder({
   departments,
   onDownload,
   onEdit,
+  onDelete,
+  onDeleteWeek,
 }: {
   weekStart: string;
   items: DSRow[];
   departments: Record<string, string>;
   onDownload: () => void;
   onEdit?: (row: DSRow) => void;
+  onDelete?: (row: DSRow) => void;
+  onDeleteWeek?: (weekStart: string, items: DSRow[]) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -1229,18 +1233,24 @@ function WeekFolder({
         <Button size="sm" variant="outline" onClick={onDownload}>
           <Download className="mr-1 h-3.5 w-3.5" />PDF
         </Button>
+        {onDeleteWeek && (
+          <Button size="sm" variant="destructive" onClick={() => onDeleteWeek(weekStart, items)} title="Delete all requests for this week">
+            <Trash2 className="mr-1 h-3.5 w-3.5" />Delete week
+          </Button>
+        )}
         <button type="button" onClick={() => setOpen((o) => !o)}>
           {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </button>
       </div>
       {open && (
         <div className="border-t border-border p-3">
-          <WeekBreakdown items={items} departments={departments} onEdit={onEdit} />
+          <WeekBreakdown items={items} departments={departments} onEdit={onEdit} onDelete={onDelete} />
         </div>
       )}
     </div>
   );
 }
+
 
 
 
