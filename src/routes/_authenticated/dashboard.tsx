@@ -150,7 +150,7 @@ function Dashboard() {
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-green-700">
               <CalendarDays className="h-4 w-4" />
             </div>
-            <CardTitle className="font-serif text-white font-bold uppercase">Upcoming Diocesan Events</CardTitle>
+            <CardTitle className="font-serif font-bold uppercase !text-white">Upcoming Diocesan Events</CardTitle>
           </div>
           <CardDescription className="text-white/90">Events happening within the next one week.</CardDescription>
         </CardHeader>
