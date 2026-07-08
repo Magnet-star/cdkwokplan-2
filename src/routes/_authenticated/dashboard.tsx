@@ -143,34 +143,34 @@ function Dashboard() {
 
   const dashboardBody = (
     <div className="space-y-6">
-      {/* Upcoming Events - Maroon themed */}
-      <Card className="border-l-4 border-l-red-700 bg-red-50 dark:bg-red-950/30">
+      {/* Upcoming Events - Green themed */}
+      <Card className="border-l-4 border-l-green-800 bg-green-700 dark:bg-green-950">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-green-700">
               <CalendarDays className="h-4 w-4" />
             </div>
-            <CardTitle className="font-serif text-primary">Upcoming Diocesan Events</CardTitle>
+            <CardTitle className="font-serif text-white font-bold">Upcoming Diocesan Events</CardTitle>
           </div>
-          <CardDescription>Events happening within the next one week.</CardDescription>
+          <CardDescription className="text-white/90">Events happening within the next one week.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
 
           {thisWeekEvents.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No events in the next one week.</p>
+            <p className="text-sm text-white/80">No events in the next one week.</p>
           ) : (
             thisWeekEvents.map((ev) => (
-              <div key={ev.id} className="overflow-hidden rounded-lg border border-red-300 dark:border-red-900 bg-red-100 dark:bg-red-900/40 p-3">
+              <div key={ev.id} className="overflow-hidden rounded-lg border border-green-300 dark:border-green-900 bg-green-100 dark:bg-green-900/40 p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <p className="break-words font-medium text-foreground">{ev.title}</p>
                     <p className="break-words text-xs text-muted-foreground">
                       {format(new Date(ev.event_date), "EEEE, MMM d, yyyy")}
-                      {ev.department_id && eventDepts[ev.department_id] && <> · Spearheaded by <span className="font-semibold text-accent">{eventDepts[ev.department_id]}</span></>}
-                      {ev.venue && <> · <span className="text-primary/80">{ev.venue}</span></>}
+                      {ev.department_id && eventDepts[ev.department_id] && <> · Spearheaded by <span className="font-semibold text-green-700 dark:text-green-300">{eventDepts[ev.department_id]}</span></>}
+                      {ev.venue && <> · <span className="text-green-700/80 dark:text-green-300/80">{ev.venue}</span></>}
                     </p>
                   </div>
-                  <Badge className="shrink-0 self-start bg-primary/10 text-primary border-primary/20">{format(new Date(ev.event_date), "MMM d")}</Badge>
+                  <Badge className="shrink-0 self-start bg-white/90 text-green-800 border-green-200 dark:bg-green-900/80 dark:text-green-100 dark:border-green-800">{format(new Date(ev.event_date), "MMM d")}</Badge>
                 </div>
                 {ev.notes && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted-foreground">{ev.notes}</p>}
               </div>
@@ -178,8 +178,8 @@ function Dashboard() {
           )}
 
           {events.length > 0 && (
-            <Collapsible className="rounded-lg border border-border/60 bg-card/40">
-              <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-medium text-primary hover:bg-muted/40 [&[data-state=open]>svg]:rotate-180">
+            <Collapsible className="rounded-lg border border-green-200/60 bg-white/80 dark:border-green-800/60 dark:bg-green-950/40">
+              <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-medium text-green-800 hover:bg-green-100/50 dark:text-green-100 dark:hover:bg-green-900/50 [&[data-state=open]>svg]:rotate-180">
                 <span>All upcoming events ({events.length}){laterEvents.length > 0 && <> · {laterEvents.length} beyond this week</>}</span>
                 <ChevronDown className="h-4 w-4 shrink-0 transition-transform" />
               </CollapsibleTrigger>
