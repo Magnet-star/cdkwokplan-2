@@ -167,11 +167,12 @@ function Dashboard() {
                     <p className="break-words font-medium text-foreground">{ev.title}</p>
                     <p className="break-words text-xs text-muted-foreground">
                       {format(new Date(ev.event_date), "EEEE, MMM d, yyyy")}
-                      {ev.department_id && eventDepts[ev.department_id] && <> · Spearheaded by <span className="font-semibold text-green-700 dark:text-green-300">{eventDepts[ev.department_id]}</span></>}
-                      {ev.venue && <> · <span className="text-green-700/80 dark:text-green-300/80">{ev.venue}</span></>}
+                      {ev.department_id && eventDepts[ev.department_id] && <> · Spearheaded by <span className="font-semibold text-[#800020] dark:text-red-300">{eventDepts[ev.department_id]}</span></>}
+                      {ev.venue && <> · <span className="text-[#800020]/80 dark:text-red-300/80">{ev.venue}</span></>}
                     </p>
                   </div>
-                  <Badge className="shrink-0 self-start bg-white/90 text-green-800 border-green-200 dark:bg-green-900/80 dark:text-green-100 dark:border-green-800">{format(new Date(ev.event_date), "MMM d")}</Badge>
+                  <Badge className="shrink-0 self-start bg-white/90 text-[#800020] border-red-200 dark:bg-red-900/80 dark:text-red-100 dark:border-red-800">{format(new Date(ev.event_date), "MMM d")}</Badge>
+
                 </div>
                 {ev.notes && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted-foreground">{ev.notes}</p>}
               </div>
