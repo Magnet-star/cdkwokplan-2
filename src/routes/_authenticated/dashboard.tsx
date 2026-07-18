@@ -144,17 +144,16 @@ function Dashboard() {
   const dashboardBody = (
     <div className="space-y-6">
       {/* Upcoming Events - Light Red themed */}
-      <Card className="border-l-4 border-l-red-700 bg-red-500 dark:bg-red-700">
+      <Card className="border-l-4 border-l-[#800020] bg-[#C97B84] dark:bg-[#7a3b44]">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-red-500">
-
-
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#800020]">
               <CalendarDays className="h-4 w-4" />
             </div>
-            <CardTitle className="font-serif font-bold uppercase !text-white">Upcoming Diocesan Events</CardTitle>
+            <CardTitle className="font-serif font-bold uppercase !text-black">Upcoming Diocesan Events</CardTitle>
           </div>
-          <CardDescription className="text-white/90">Events happening within the next one week.</CardDescription>
+          <CardDescription className="font-bold text-black/90">Events happening within the next one week.</CardDescription>
+
         </CardHeader>
         <CardContent className="space-y-3">
 
