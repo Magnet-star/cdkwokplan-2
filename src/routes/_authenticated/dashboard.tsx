@@ -143,11 +143,12 @@ function Dashboard() {
 
   const dashboardBody = (
     <div className="space-y-6">
-      {/* Upcoming Events - Orange themed */}
-      <Card className="border-l-4 border-l-orange-600 bg-orange-500 dark:bg-orange-700">
+      {/* Upcoming Events - Light Red themed */}
+      <Card className="border-l-4 border-l-red-400 bg-red-300 dark:bg-red-800">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-orange-600">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-red-500">
+
 
               <CalendarDays className="h-4 w-4" />
             </div>
