@@ -180,8 +180,9 @@ function Dashboard() {
           )}
 
           {events.length > 0 && (
-            <Collapsible className="rounded-lg border border-green-200/60 bg-white/80 dark:border-green-800/60 dark:bg-green-950/40">
-              <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-medium text-green-800 hover:bg-green-100/50 dark:text-green-100 dark:hover:bg-green-900/50 [&[data-state=open]>svg]:rotate-180">
+            <Collapsible className="rounded-lg border border-red-200/60 bg-white/80 dark:border-red-800/60 dark:bg-red-950/40">
+              <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-medium text-[#800020] hover:bg-red-100/50 dark:text-red-100 dark:hover:bg-red-900/50 [&[data-state=open]>svg]:rotate-180">
+
                 <span>All upcoming events ({events.length}){laterEvents.length > 0 && <> · {laterEvents.length} beyond this week</>}</span>
                 <ChevronDown className="h-4 w-4 shrink-0 transition-transform" />
               </CollapsibleTrigger>
