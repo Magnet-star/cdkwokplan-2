@@ -144,7 +144,7 @@ function Dashboard() {
   const dashboardBody = (
     <div className="space-y-6">
       {/* Upcoming Events - Light Red themed */}
-      <Card className="border-l-4 border-l-red-400 bg-red-300 dark:bg-red-800">
+      <Card className="border-l-4 border-l-red-700 bg-red-500 dark:bg-red-700">
         <CardHeader>
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-red-500">
