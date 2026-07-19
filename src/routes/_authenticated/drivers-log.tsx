@@ -511,15 +511,15 @@ function DriversLogPage() {
     if (period === "daily") {
       start = new Date(now); start.setHours(0,0,0,0);
       end = new Date(now); end.setHours(23,59,59,999);
-      label = `Daily — ${format(now, "PPP")}`;
+      label = `Daily - ${format(now, "PPP")}`;
     } else if (period === "weekly") {
       start = startOfWeek(now, { weekStartsOn: 1 });
       end = endOfWeek(now, { weekStartsOn: 1 });
-      label = `Weekly — ${format(start, "PP")} to ${format(end, "PP")}`;
+      label = `Weekly - ${format(start, "PP")} to ${format(end, "PP")}`;
     } else {
       start = startOfMonth(now);
       end = endOfMonth(now);
-      label = `Monthly — ${format(now, "MMMM yyyy")}`;
+      label = `Monthly - ${format(now, "MMMM yyyy")}`;
     }
     const inRange = filteredLogs.filter((l) => {
       if (!isWithinInterval(parseISO(l.log_date), { start, end })) return false;
@@ -538,7 +538,7 @@ function DriversLogPage() {
     if (filterDept !== "all") { doc.text(`Department filter: ${deptName(filterDept)}`, 14, yPos); yPos += 6; }
     if (filterVehicle !== "all") { doc.text(`Vehicle filter: ${vehicleLabel(filterVehicle)}`, 14, yPos); yPos += 6; }
     doc.setFontSize(9);
-    doc.text(`${inRange.length} condition entr${inRange.length === 1 ? "y" : "ies"} — review to recommend action.`, 14, yPos);
+    doc.text(`${inRange.length} condition entr${inRange.length === 1 ? "y" : "ies"} - review to recommend action.`, 14, yPos);
     yPos += 4;
 
     autoTable(doc, {
@@ -548,11 +548,12 @@ function DriversLogPage() {
         format(parseISO(l.log_date), "yyyy-MM-dd"),
         vehicleLabel(l.vehicle_id),
         deptName(l.department_id),
-        drivers[l.user_id]?.full_name ?? "—",
-        `${l.start_point} → ${l.destination}`,
-        l.condition_start ?? "—",
-        l.condition_end ?? "—",
+        drivers[l.user_id]?.full_name ?? "-",
+        `${l.start_point ?? ""} to ${l.destination ?? ""}`,
+        l.condition_start ?? "-",
+        l.condition_end ?? "-",
       ]),
+
       headStyles: { fillColor: [89, 25, 32], textColor: 255, fontStyle: "bold" },
       styles: { fontSize: 9, cellPadding: 2, fontStyle: "bold", textColor: [0, 0, 0], valign: "top" },
       columnStyles: {
@@ -571,7 +572,7 @@ function DriversLogPage() {
       const bits: string[] = [];
       if (l.condition_start) bits.push(`start: ${l.condition_start}`);
       if (l.condition_end) bits.push(`end: ${l.condition_end}`);
-      if (bits.length) cur.recent.push(`${format(parseISO(l.log_date), "MMM d")} — ${bits.join(" | ")}`);
+      if (bits.length) cur.recent.push(`${format(parseISO(l.log_date), "MMM d")} - ${bits.join(" | ")}`);
       byVehicle.set(key, cur);
     });
     if (byVehicle.size > 0) {
@@ -581,7 +582,8 @@ function DriversLogPage() {
       autoTable(doc, {
         startY: afterY + 4,
         head: [["Vehicle", "Entries", "Recorded conditions"]],
-        body: Array.from(byVehicle.values()).map((v) => [v.name, String(v.entries), v.recent.join("\n") || "—"]),
+        body: Array.from(byVehicle.values()).map((v) => [v.name, String(v.entries), v.recent.join("\n") || "-"]),
+
         headStyles: { fillColor: [89, 25, 32], textColor: 255, fontStyle: "bold" },
         styles: { fontSize: 9, cellPadding: 2, fontStyle: "bold", textColor: [0, 0, 0], valign: "top" },
         columnStyles: { 2: { cellWidth: 180 } },
