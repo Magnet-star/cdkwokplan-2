@@ -572,7 +572,7 @@ function DriversLogPage() {
       const bits: string[] = [];
       if (l.condition_start) bits.push(`start: ${l.condition_start}`);
       if (l.condition_end) bits.push(`end: ${l.condition_end}`);
-      if (bits.length) cur.recent.push(`${format(parseISO(l.log_date), "MMM d")} — ${bits.join(" | ")}`);
+      if (bits.length) cur.recent.push(`${format(parseISO(l.log_date), "MMM d")} - ${bits.join(" | ")}`);
       byVehicle.set(key, cur);
     });
     if (byVehicle.size > 0) {
@@ -582,7 +582,8 @@ function DriversLogPage() {
       autoTable(doc, {
         startY: afterY + 4,
         head: [["Vehicle", "Entries", "Recorded conditions"]],
-        body: Array.from(byVehicle.values()).map((v) => [v.name, String(v.entries), v.recent.join("\n") || "—"]),
+        body: Array.from(byVehicle.values()).map((v) => [v.name, String(v.entries), v.recent.join("\n") || "-"]),
+
         headStyles: { fillColor: [89, 25, 32], textColor: 255, fontStyle: "bold" },
         styles: { fontSize: 9, cellPadding: 2, fontStyle: "bold", textColor: [0, 0, 0], valign: "top" },
         columnStyles: { 2: { cellWidth: 180 } },
