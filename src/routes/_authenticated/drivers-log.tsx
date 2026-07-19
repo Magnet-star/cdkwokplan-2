@@ -895,6 +895,14 @@ function DriversLogPage() {
               <Button size="sm" variant="outline" onClick={() => downloadPdf("weekly")}><Download className="mr-1 h-4 w-4" />Weekly</Button>
               <Button size="sm" variant="outline" onClick={() => downloadPdf("monthly")}><Download className="mr-1 h-4 w-4" />Monthly</Button>
             </div>
+            {isSuperAdmin && (
+              <div className="flex flex-wrap items-end gap-2 sm:col-span-2 md:col-span-5">
+                <div className="w-full text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vehicle condition report (super admin only)</div>
+                <Button size="sm" variant="outline" onClick={() => downloadConditionPdf("daily")}><Download className="mr-1 h-4 w-4" />Condition — Daily</Button>
+                <Button size="sm" variant="outline" onClick={() => downloadConditionPdf("weekly")}><Download className="mr-1 h-4 w-4" />Condition — Weekly</Button>
+                <Button size="sm" variant="outline" onClick={() => downloadConditionPdf("monthly")}><Download className="mr-1 h-4 w-4" />Condition — Monthly</Button>
+              </div>
+            )}
           </div>
 
 
