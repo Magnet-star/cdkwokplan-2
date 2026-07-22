@@ -34,7 +34,7 @@ interface Stats {
 interface Submission { kind: "plan" | "log" | "vehicle"; id: string; user: string; when: string; label: string; status?: string }
 
 function Dashboard() {
-  const { profile, user, isSuperAdmin, isAdministrator, isHod } = useAuth();
+  const { profile, user, isSuperAdmin, isHod } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [dept, setDept] = useState<string | null>(null);
   const [feed, setFeed] = useState<Submission[]>([]);
@@ -99,35 +99,17 @@ function Dashboard() {
   }, [user, profile?.department_id, isSuperAdmin]);
 
   useEffect(() => {
-    if (!user || !(isSuperAdmin || isAdministrator)) return;
+    if (!user) return;
     let cancelled = false;
     const load = async () => {
-      const today = format(new Date(), "yyyy-MM-dd");
-      const { data: logs } = await supabase
-        .from("driver_logs")
-        .select("id,vehicle_id,department_id,user_id,start_point,destination,closing_km,status,log_date")
-        .eq("log_date", today)
-        .is("closing_km", null)
-        .neq("status", "rejected");
-      const rows = (logs as any[]) ?? [];
-      if (rows.length === 0) { if (!cancelled) setVehiclesOut([]); return; }
-      const vIds = Array.from(new Set(rows.map((r) => r.vehicle_id).filter(Boolean)));
-      const dIds = Array.from(new Set(rows.map((r) => r.department_id).filter(Boolean)));
-      const uIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
-      const [{ data: vs }, { data: ds }, { data: ps }] = await Promise.all([
-        vIds.length ? supabase.from("vehicles").select("id,registration").in("id", vIds) : Promise.resolve({ data: [] as any[] }),
-        dIds.length ? supabase.from("departments").select("id,name").in("id", dIds) : Promise.resolve({ data: [] as any[] }),
-        uIds.length ? supabase.from("profiles").select("id,full_name").in("id", uIds) : Promise.resolve({ data: [] as any[] }),
-      ]);
-      const vMap = new Map((vs as any[] ?? []).map((v) => [v.id, v.registration]));
-      const dMap = new Map((ds as any[] ?? []).map((d) => [d.id, d.name]));
-      const pMap = new Map((ps as any[] ?? []).map((p) => [p.id, p.full_name]));
-      if (cancelled) return;
+      const { data, error } = await supabase.rpc("get_vehicles_out_now" as any);
+      if (error || cancelled) return;
+      const rows = (data as any[]) ?? [];
       setVehiclesOut(rows.map((r) => ({
         id: r.id,
-        registration: vMap.get(r.vehicle_id) ?? "—",
-        department: dMap.get(r.department_id) ?? "—",
-        driver: pMap.get(r.user_id) ?? "—",
+        registration: r.vehicle_registration ?? "—",
+        department: r.department_name ?? "—",
+        driver: r.driver_name ?? "—",
         start_point: r.start_point ?? "",
         destination: r.destination ?? "",
       })));
@@ -135,7 +117,7 @@ function Dashboard() {
     load();
     const iv = setInterval(load, 60000);
     return () => { cancelled = true; clearInterval(iv); };
-  }, [user, isSuperAdmin, isAdministrator]);
+  }, [user]);
 
   const weekLabel = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "MMMM d, yyyy");
 
@@ -183,7 +165,7 @@ function Dashboard() {
 
   const dashboardBody = (
     <div className="space-y-6">
-      {(isSuperAdmin || isAdministrator) && (
+      {(
         <Card className="border-2 border-primary/60 shadow-lg overflow-hidden">
           <CardHeader className="bg-primary/5 py-3">
             <CardTitle className="font-serif flex items-center gap-3 text-xl md:text-2xl">
