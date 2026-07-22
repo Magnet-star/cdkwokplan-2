@@ -166,7 +166,7 @@ function Dashboard() {
   const dashboardBody = (
     <div className="space-y-6">
       {(
-        <Card className="border-2 border-primary/60 shadow-lg overflow-hidden">
+        <Card className="border-2 border-primary/60 shadow-lg overflow-hidden w-full md:w-1/2">
           <CardHeader className="bg-primary/5 py-3">
             <CardTitle className="font-serif flex items-center gap-3 text-xl md:text-2xl">
               <Truck className="h-6 w-6" />
