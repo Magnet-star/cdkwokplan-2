@@ -12,7 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, startOfWeek } from "date-fns";
-import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays, ChevronDown, Download, Pencil } from "lucide-react";
+import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays, ChevronDown, Download, Pencil, Truck } from "lucide-react";
 import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,7 +34,7 @@ interface Stats {
 interface Submission { kind: "plan" | "log" | "vehicle"; id: string; user: string; when: string; label: string; status?: string }
 
 function Dashboard() {
-  const { profile, user, isSuperAdmin, isHod } = useAuth();
+  const { profile, user, isSuperAdmin, isAdministrator, isHod } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [dept, setDept] = useState<string | null>(null);
   const [feed, setFeed] = useState<Submission[]>([]);
@@ -43,6 +43,7 @@ function Dashboard() {
   const [depts, setDepts] = useState<any[]>([]);
   const [editEvent, setEditEvent] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [vehiclesOut, setVehiclesOut] = useState<Array<{ id: string; registration: string; department: string; driver: string; start_point: string; destination: string }>>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -97,6 +98,45 @@ function Dashboard() {
     })();
   }, [user, profile?.department_id, isSuperAdmin]);
 
+  useEffect(() => {
+    if (!user || !(isSuperAdmin || isAdministrator)) return;
+    let cancelled = false;
+    const load = async () => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { data: logs } = await supabase
+        .from("driver_logs")
+        .select("id,vehicle_id,department_id,user_id,start_point,destination,closing_km,status,log_date")
+        .eq("log_date", today)
+        .is("closing_km", null)
+        .neq("status", "rejected");
+      const rows = (logs as any[]) ?? [];
+      if (rows.length === 0) { if (!cancelled) setVehiclesOut([]); return; }
+      const vIds = Array.from(new Set(rows.map((r) => r.vehicle_id).filter(Boolean)));
+      const dIds = Array.from(new Set(rows.map((r) => r.department_id).filter(Boolean)));
+      const uIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
+      const [{ data: vs }, { data: ds }, { data: ps }] = await Promise.all([
+        vIds.length ? supabase.from("vehicles").select("id,registration").in("id", vIds) : Promise.resolve({ data: [] as any[] }),
+        dIds.length ? supabase.from("departments").select("id,name").in("id", dIds) : Promise.resolve({ data: [] as any[] }),
+        uIds.length ? supabase.from("profiles").select("id,full_name").in("id", uIds) : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const vMap = new Map((vs as any[] ?? []).map((v) => [v.id, v.registration]));
+      const dMap = new Map((ds as any[] ?? []).map((d) => [d.id, d.name]));
+      const pMap = new Map((ps as any[] ?? []).map((p) => [p.id, p.full_name]));
+      if (cancelled) return;
+      setVehiclesOut(rows.map((r) => ({
+        id: r.id,
+        registration: vMap.get(r.vehicle_id) ?? "—",
+        department: dMap.get(r.department_id) ?? "—",
+        driver: pMap.get(r.user_id) ?? "—",
+        start_point: r.start_point ?? "",
+        destination: r.destination ?? "",
+      })));
+    };
+    load();
+    const iv = setInterval(load, 60000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [user, isSuperAdmin, isAdministrator]);
+
   const weekLabel = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "MMMM d, yyyy");
 
   const oneWeekAheadMs = Date.now() + 7 * 24 * 60 * 60 * 1000;
@@ -143,6 +183,45 @@ function Dashboard() {
 
   const dashboardBody = (
     <div className="space-y-6">
+      {(isSuperAdmin || isAdministrator) && (
+        <Card className="border-2 border-primary/60 shadow-lg overflow-hidden">
+          <CardHeader className="bg-primary/5 py-3">
+            <CardTitle className="font-serif flex items-center gap-3 text-xl md:text-2xl">
+              <Truck className="h-6 w-6" />
+              VEHICLES OUT NOW
+              <Badge className="ml-1 bg-green-600 hover:bg-green-600 text-sm px-2.5 py-0.5">{vehiclesOut.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {vehiclesOut.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-muted-foreground">No vehicles currently out.</p>
+            ) : (
+              <div className="group relative w-full overflow-hidden bg-primary/[0.03] py-3">
+                <div
+                  className="flex w-max gap-8 whitespace-nowrap"
+                  style={{ animation: `vehicles-marquee ${Math.max(20, vehiclesOut.length * 8)}s linear infinite` }}
+                >
+                  {[...vehiclesOut, ...vehiclesOut].map((v, i) => (
+                    <div key={`${v.id}-${i}`} className="flex items-center gap-2 text-sm md:text-base">
+                      <Truck className="h-4 w-4 text-primary" />
+                      <span className="font-mono font-bold">{v.registration}</span>
+                      <span className="text-muted-foreground">·</span>
+                      <span className="font-medium">{v.department}</span>
+                      <span className="text-muted-foreground">·</span>
+                      <span>Driver: <span className="font-semibold">{v.driver}</span></span>
+                      <span className="text-muted-foreground">·</span>
+                      <span>{v.start_point} → {v.destination}</span>
+                      <Badge className="ml-2 bg-green-600 hover:bg-green-600 text-xs">Active</Badge>
+                    </div>
+                  ))}
+                </div>
+                <style>{`@keyframes vehicles-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Upcoming Events - Light Red themed */}
       <Card className="border-l-4 border-l-[#800020] bg-[#C97B84] dark:bg-[#7a3b44]">
         <CardHeader>
