@@ -183,6 +183,45 @@ function Dashboard() {
 
   const dashboardBody = (
     <div className="space-y-6">
+      {(isSuperAdmin || isAdministrator) && (
+        <Card className="border-2 border-primary/60 shadow-lg overflow-hidden">
+          <CardHeader className="bg-primary/5 py-3">
+            <CardTitle className="font-serif flex items-center gap-3 text-xl md:text-2xl">
+              <Truck className="h-6 w-6" />
+              VEHICLES OUT NOW
+              <Badge className="ml-1 bg-green-600 hover:bg-green-600 text-sm px-2.5 py-0.5">{vehiclesOut.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {vehiclesOut.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-muted-foreground">No vehicles currently out.</p>
+            ) : (
+              <div className="group relative w-full overflow-hidden bg-primary/[0.03] py-3">
+                <div
+                  className="flex w-max gap-8 whitespace-nowrap"
+                  style={{ animation: `vehicles-marquee ${Math.max(20, vehiclesOut.length * 8)}s linear infinite` }}
+                >
+                  {[...vehiclesOut, ...vehiclesOut].map((v, i) => (
+                    <div key={`${v.id}-${i}`} className="flex items-center gap-2 text-sm md:text-base">
+                      <Truck className="h-4 w-4 text-primary" />
+                      <span className="font-mono font-bold">{v.registration}</span>
+                      <span className="text-muted-foreground">·</span>
+                      <span className="font-medium">{v.department}</span>
+                      <span className="text-muted-foreground">·</span>
+                      <span>Driver: <span className="font-semibold">{v.driver}</span></span>
+                      <span className="text-muted-foreground">·</span>
+                      <span>{v.start_point} → {v.destination}</span>
+                      <Badge className="ml-2 bg-green-600 hover:bg-green-600 text-xs">Active</Badge>
+                    </div>
+                  ))}
+                </div>
+                <style>{`@keyframes vehicles-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Upcoming Events - Light Red themed */}
       <Card className="border-l-4 border-l-[#800020] bg-[#C97B84] dark:bg-[#7a3b44]">
         <CardHeader>
