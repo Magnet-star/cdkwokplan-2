@@ -98,6 +98,45 @@ function Dashboard() {
     })();
   }, [user, profile?.department_id, isSuperAdmin]);
 
+  useEffect(() => {
+    if (!user || !(isSuperAdmin || isAdministrator)) return;
+    let cancelled = false;
+    const load = async () => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { data: logs } = await supabase
+        .from("driver_logs")
+        .select("id,vehicle_id,department_id,user_id,start_point,destination,closing_km,status,log_date")
+        .eq("log_date", today)
+        .is("closing_km", null)
+        .neq("status", "rejected");
+      const rows = (logs as any[]) ?? [];
+      if (rows.length === 0) { if (!cancelled) setVehiclesOut([]); return; }
+      const vIds = Array.from(new Set(rows.map((r) => r.vehicle_id).filter(Boolean)));
+      const dIds = Array.from(new Set(rows.map((r) => r.department_id).filter(Boolean)));
+      const uIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
+      const [{ data: vs }, { data: ds }, { data: ps }] = await Promise.all([
+        vIds.length ? supabase.from("vehicles").select("id,registration").in("id", vIds) : Promise.resolve({ data: [] as any[] }),
+        dIds.length ? supabase.from("departments").select("id,name").in("id", dIds) : Promise.resolve({ data: [] as any[] }),
+        uIds.length ? supabase.from("profiles").select("id,full_name").in("id", uIds) : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const vMap = new Map((vs as any[] ?? []).map((v) => [v.id, v.registration]));
+      const dMap = new Map((ds as any[] ?? []).map((d) => [d.id, d.name]));
+      const pMap = new Map((ps as any[] ?? []).map((p) => [p.id, p.full_name]));
+      if (cancelled) return;
+      setVehiclesOut(rows.map((r) => ({
+        id: r.id,
+        registration: vMap.get(r.vehicle_id) ?? "—",
+        department: dMap.get(r.department_id) ?? "—",
+        driver: pMap.get(r.user_id) ?? "—",
+        start_point: r.start_point ?? "",
+        destination: r.destination ?? "",
+      })));
+    };
+    load();
+    const iv = setInterval(load, 60000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [user, isSuperAdmin, isAdministrator]);
+
   const weekLabel = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "MMMM d, yyyy");
 
   const oneWeekAheadMs = Date.now() + 7 * 24 * 60 * 60 * 1000;
