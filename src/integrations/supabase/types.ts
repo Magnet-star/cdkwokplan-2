@@ -1292,6 +1292,17 @@ export type Database = {
         }[]
       }
       get_user_department: { Args: { _user_id: string }; Returns: string }
+      get_vehicles_out_now: {
+        Args: never
+        Returns: {
+          department_name: string
+          destination: string
+          driver_name: string
+          id: string
+          start_point: string
+          vehicle_registration: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
