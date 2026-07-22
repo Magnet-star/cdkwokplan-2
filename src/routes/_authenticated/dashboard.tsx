@@ -12,7 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, startOfWeek } from "date-fns";
-import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays, ChevronDown, Download, Pencil } from "lucide-react";
+import { ClipboardList, Car, BookText, FileBarChart, ArrowRight, CalendarDays, ChevronDown, Download, Pencil, Truck } from "lucide-react";
 import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
