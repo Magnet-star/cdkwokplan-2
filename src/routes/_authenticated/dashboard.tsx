@@ -34,7 +34,7 @@ interface Stats {
 interface Submission { kind: "plan" | "log" | "vehicle"; id: string; user: string; when: string; label: string; status?: string }
 
 function Dashboard() {
-  const { profile, user, isSuperAdmin, isHod } = useAuth();
+  const { profile, user, isSuperAdmin, isAdministrator, isHod } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [dept, setDept] = useState<string | null>(null);
   const [feed, setFeed] = useState<Submission[]>([]);
@@ -43,6 +43,7 @@ function Dashboard() {
   const [depts, setDepts] = useState<any[]>([]);
   const [editEvent, setEditEvent] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [vehiclesOut, setVehiclesOut] = useState<Array<{ id: string; registration: string; department: string; driver: string; start_point: string; destination: string }>>([]);
 
   useEffect(() => {
     if (!user) return;
