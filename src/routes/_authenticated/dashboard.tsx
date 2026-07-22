@@ -165,7 +165,7 @@ function Dashboard() {
 
   const dashboardBody = (
     <div className="space-y-6">
-      {(isSuperAdmin || isAdministrator) && (
+      {(
         <Card className="border-2 border-primary/60 shadow-lg overflow-hidden">
           <CardHeader className="bg-primary/5 py-3">
             <CardTitle className="font-serif flex items-center gap-3 text-xl md:text-2xl">
