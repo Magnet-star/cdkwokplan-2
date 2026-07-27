@@ -633,13 +633,23 @@ function AdminPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <Label>Roles</Label>
                     <div className="flex flex-wrap gap-3 pt-2">
-                      {(["staff","driver","hod","administrator","super_admin","finance_admin","vicar_general","procurator"] as Role[]).map((r) => (
+                      {BASE_ROLES.map((r) => (
                         <label key={r} className="flex items-center gap-2 text-sm">
                           <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
-                          {r.replace("_", " ")}
+                          {ROLE_LABEL[r]}
+                        </label>
+                      ))}
+                    </div>
+                    <Label className="mt-3 block">Finance role (optional)</Label>
+                    <p className="text-xs text-muted-foreground">Giving any finance role automatically adds this account to the finance request recipients card.</p>
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      {FINANCE_ROLES.map((r) => (
+                        <label key={r} className="flex items-center gap-2 text-sm">
+                          <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
+                          {ROLE_LABEL[r]}
                         </label>
                       ))}
                     </div>
