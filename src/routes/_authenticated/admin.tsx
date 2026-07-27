@@ -672,7 +672,7 @@ function AdminPage() {
                       </p>
                       <p className="text-xs text-muted-foreground">{u.email}</p>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {userRoles.map((r) => <Badge key={r} variant="secondary">{r.replace("_", " ")}</Badge>)}
+                        {userRoles.map((r) => <Badge key={r} variant="secondary">{ROLE_LABEL[r] ?? r.replace("_", " ")}</Badge>)}
                       </div>
                       {locked && <p className="mt-2 text-xs text-muted-foreground">This account is protected and can only be edited by the owner.</p>}
                     </div>
