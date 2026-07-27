@@ -68,12 +68,12 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
 
   const row = (label: string, value: string) => {
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.text(label, 14, y);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("helvetica", "normal");
     const lines = doc.splitTextToSize(value || "—", pageW - 80);
     doc.text(lines, 70, y);
-    y += Math.max(6, lines.length * 5 + 1);
+    y += Math.max(5.5, lines.length * 4.5 + 1);
   };
 
   if (data.serial_number) row("Serial No.:", data.serial_number);
