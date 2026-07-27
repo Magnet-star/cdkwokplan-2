@@ -64,6 +64,12 @@ interface CdkRecipients {
   procurator: SuperAdminOption | null;
   accounts: SuperAdminOption | null;
 }
+interface FinanceRoleRecipient {
+  id: string;
+  full_name: string;
+  department_name: string | null;
+  role: "finance_admin" | "procurator" | "vicar_general";
+}
 
 const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "", payment_method: "cash" });
 
@@ -102,6 +108,7 @@ function FinanceRequestsPage() {
   const [requests, setRequests] = useState<FRRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [recipients, setRecipients] = useState<CdkRecipients>({ finance: null, vicar: null, procurator: null, accounts: null });
+  const [roleRecipients, setRoleRecipients] = useState<FinanceRoleRecipient[]>([]);
   const [departmentName, setDepartmentName] = useState<string>("");
 
   // form state
@@ -185,6 +192,22 @@ function FinanceRequestsPage() {
       const fin = financePool.find((row) => /finance/i.test(row.full_name || ""))
         ?? financePool.find((row) => /finance/i.test(row.department_name || ""));
       next.finance = fin ? { id: fin.id, full_name: fin.full_name } : null;
+
+      // Anyone explicitly granted a finance role (Finance Administrator /
+      // Procurator approval privilege, or Vicar General authorizer privilege)
+      // automatically becomes a recipient and takes precedence over name matching.
+      const { data: finRoleRows, error: finRoleErr } = await supabase.rpc("get_finance_role_recipients");
+      if (finRoleErr) console.warn("get_finance_role_recipients failed", finRoleErr);
+      const roleRows = ((finRoleRows ?? []) as FinanceRoleRecipient[]);
+      setRoleRecipients(roleRows);
+      const firstWithRole = (role: FinanceRoleRecipient["role"]) => {
+        const r = roleRows.find((row) => row.role === role);
+        return r ? { id: r.id, full_name: r.full_name } : null;
+      };
+      next.finance = firstWithRole("finance_admin") ?? next.finance;
+      next.procurator = firstWithRole("procurator") ?? next.procurator;
+      next.vicar = firstWithRole("vicar_general") ?? next.vicar;
+
       // CDK Accounts (administrator role) — fetched from a separate RPC since
       // they are not super admins. Picked first by name match, then dept.
       const { data: accRows } = await supabase.rpc("get_accounts_recipients");
@@ -439,11 +462,32 @@ function FinanceRequestsPage() {
                   <div>
                     <Label>Recipients (auto)</Label>
                     <div className="rounded-md border p-2 text-xs space-y-1">
-                      <div>CDK Finance: <strong>{recipients.finance?.full_name ?? "— not configured —"}</strong></div>
-                      <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
-                      <div>CDK Procurator: <strong>{recipients.procurator?.full_name ?? "— not configured —"}</strong></div>
+                      <div className="font-medium">Approval privilege</div>
+                      {roleRecipients.filter((x) => x.role === "finance_admin" || x.role === "procurator").length > 0 ? (
+                        roleRecipients
+                          .filter((x) => x.role === "finance_admin" || x.role === "procurator")
+                          .map((x) => (
+                            <div key={`${x.id}-${x.role}`}>
+                              {x.role === "finance_admin" ? "Finance Administrator" : "Procurator"}: <strong>{x.full_name}</strong>
+                            </div>
+                          ))
+                      ) : (
+                        <>
+                          <div>CDK Finance: <strong>{recipients.finance?.full_name ?? "— not configured —"}</strong></div>
+                          <div>CDK Procurator: <strong>{recipients.procurator?.full_name ?? "— not configured —"}</strong></div>
+                        </>
+                      )}
+                      <div className="font-medium pt-1">Authorizer</div>
+                      {roleRecipients.filter((x) => x.role === "vicar_general").length > 0 ? (
+                        roleRecipients
+                          .filter((x) => x.role === "vicar_general")
+                          .map((x) => <div key={x.id}>Vicar General: <strong>{x.full_name}</strong></div>)
+                      ) : (
+                        <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
+                      )}
+                      <div className="font-medium pt-1">Disbursement</div>
                       <div>CDK Accounts: <strong>{recipients.accounts?.full_name ?? "— not configured —"}</strong></div>
-                      <p className="text-muted-foreground pt-1">All four will see the request. Either CDK Finance Administrator OR CDK Procurator approval marks it Approved; Vicar General authorizes; CDK Accounts handles disbursement.</p>
+                      <p className="text-muted-foreground pt-1">Everyone listed will see the request. Either a Finance Administrator OR a Procurator approval marks it Approved; the Vicar General authorizes; CDK Accounts handles disbursement.</p>
                     </div>
                   </div>
                 </div>

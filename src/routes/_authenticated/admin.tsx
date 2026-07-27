@@ -34,6 +34,19 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator";
 
+const BASE_ROLES: Role[] = ["staff", "driver", "hod", "administrator", "super_admin"];
+const FINANCE_ROLES: Role[] = ["finance_admin", "procurator", "vicar_general"];
+const ROLE_LABEL: Record<Role, string> = {
+  super_admin: "super admin",
+  administrator: "administrator",
+  hod: "hod",
+  staff: "staff",
+  driver: "driver",
+  finance_admin: "Finance Approval — Finance Administrator",
+  procurator: "Finance Approval — Procurator",
+  vicar_general: "Finance Authorizer — Vicar General",
+};
+
 function AdminPage() {
   const { isSuperAdmin, isProtectedSuperAdmin, isAdministrator, user } = useAuth();
   const canEdit = isSuperAdmin;
@@ -620,13 +633,23 @@ function AdminPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <Label>Roles</Label>
                     <div className="flex flex-wrap gap-3 pt-2">
-                      {(["staff","driver","hod","administrator","super_admin","finance_admin","vicar_general","procurator"] as Role[]).map((r) => (
+                      {BASE_ROLES.map((r) => (
                         <label key={r} className="flex items-center gap-2 text-sm">
                           <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
-                          {r.replace("_", " ")}
+                          {ROLE_LABEL[r]}
+                        </label>
+                      ))}
+                    </div>
+                    <Label className="mt-3 block">Finance role (optional)</Label>
+                    <p className="text-xs text-muted-foreground">Giving any finance role automatically adds this account to the finance request recipients card.</p>
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      {FINANCE_ROLES.map((r) => (
+                        <label key={r} className="flex items-center gap-2 text-sm">
+                          <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
+                          {ROLE_LABEL[r]}
                         </label>
                       ))}
                     </div>
@@ -659,7 +682,7 @@ function AdminPage() {
                       </p>
                       <p className="text-xs text-muted-foreground">{u.email}</p>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {userRoles.map((r) => <Badge key={r} variant="secondary">{r.replace("_", " ")}</Badge>)}
+                        {userRoles.map((r) => <Badge key={r} variant="secondary">{ROLE_LABEL[r] ?? r.replace("_", " ")}</Badge>)}
                       </div>
                       {locked && <p className="mt-2 text-xs text-muted-foreground">This account is protected and can only be edited by the owner.</p>}
                     </div>
@@ -688,13 +711,26 @@ function AdminPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex flex-wrap items-end gap-2">
-                        {(["super_admin","administrator","hod","staff","driver","finance_admin","vicar_general","procurator"] as Role[]).map((r) => (
-                          <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
-                            {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
-                            {r.replace("_", " ")}
-                          </Button>
-                        ))}
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-end gap-2">
+                          {BASE_ROLES.map((r) => (
+                            <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
+                              {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
+                              {ROLE_LABEL[r]}
+                            </Button>
+                          ))}
+                        </div>
+                        <div>
+                          <Label className="text-xs">Finance role (auto-listed as a finance request recipient)</Label>
+                          <div className="flex flex-wrap items-end gap-2 pt-1">
+                            {FINANCE_ROLES.map((r) => (
+                              <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
+                                {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
+                                {ROLE_LABEL[r]}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ) : (
