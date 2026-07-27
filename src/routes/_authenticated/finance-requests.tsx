@@ -280,6 +280,10 @@ function FinanceRequestsPage() {
     finance_admin_name: r.finance_admin_name, finance_admin_decision: r.finance_admin_decision, finance_admin_note: r.finance_admin_note, finance_admin_at: r.finance_admin_at,
     vicar_general_name: r.vicar_general_name, vicar_general_decision: r.vicar_general_decision, vicar_general_note: r.vicar_general_note, vicar_general_at: r.vicar_general_at,
     procurator_name: r.procurator_name, procurator_decision: r.procurator_decision, procurator_note: r.procurator_note, procurator_at: r.procurator_at,
+    finance_admin_accounts: officeAccounts("finance_admin", recipients.finance?.full_name),
+    procurator_accounts: officeAccounts("procurator", recipients.procurator?.full_name),
+    vicar_general_accounts: officeAccounts("vicar_general", recipients.vicar?.full_name),
+    bishop_accounts: officeAccounts("bishop"),
   });
 
   const myRequests = requests.filter((r) => r.requester_id === user?.id);
