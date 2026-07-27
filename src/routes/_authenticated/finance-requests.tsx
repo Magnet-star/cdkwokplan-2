@@ -185,6 +185,22 @@ function FinanceRequestsPage() {
       const fin = financePool.find((row) => /finance/i.test(row.full_name || ""))
         ?? financePool.find((row) => /finance/i.test(row.department_name || ""));
       next.finance = fin ? { id: fin.id, full_name: fin.full_name } : null;
+
+      // Anyone explicitly granted a finance role (Finance Administrator /
+      // Procurator approval privilege, or Vicar General authorizer privilege)
+      // automatically becomes a recipient and takes precedence over name matching.
+      const { data: finRoleRows, error: finRoleErr } = await supabase.rpc("get_finance_role_recipients");
+      if (finRoleErr) console.warn("get_finance_role_recipients failed", finRoleErr);
+      const roleRows = ((finRoleRows ?? []) as FinanceRoleRecipient[]);
+      setRoleRecipients(roleRows);
+      const firstWithRole = (role: FinanceRoleRecipient["role"]) => {
+        const r = roleRows.find((row) => row.role === role);
+        return r ? { id: r.id, full_name: r.full_name } : null;
+      };
+      next.finance = firstWithRole("finance_admin") ?? next.finance;
+      next.procurator = firstWithRole("procurator") ?? next.procurator;
+      next.vicar = firstWithRole("vicar_general") ?? next.vicar;
+
       // CDK Accounts (administrator role) — fetched from a separate RPC since
       // they are not super admins. Picked first by name match, then dept.
       const { data: accRows } = await supabase.rpc("get_accounts_recipients");
