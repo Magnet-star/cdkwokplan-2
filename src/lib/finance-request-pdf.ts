@@ -36,6 +36,12 @@ export interface FinanceRequestPDFData {
   procurator_decision?: string | null;
   procurator_note?: string | null;
   procurator_at?: string | null;
+
+  // Configured office accounts (names) shown on the PDF
+  finance_admin_accounts?: string[];
+  procurator_accounts?: string[];
+  vicar_general_accounts?: string[];
+  bishop_accounts?: string[];
 }
 
 const DIOCESE = "Catholic Diocese of Kitale";
@@ -62,12 +68,12 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
 
   const row = (label: string, value: string) => {
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.text(label, 14, y);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("helvetica", "normal");
     const lines = doc.splitTextToSize(value || "—", pageW - 80);
     doc.text(lines, 70, y);
-    y += Math.max(6, lines.length * 5 + 1);
+    y += Math.max(5.5, lines.length * 4.5 + 1);
   };
 
   if (data.serial_number) row("Serial No.:", data.serial_number);
@@ -105,7 +111,7 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
     headStyles: { fillColor: [102, 0, 0], textColor: 255, fontStyle: "bold" },
     footStyles: { fillColor: [240, 230, 230], textColor: 0, fontStyle: "bold" },
     columnStyles: { 0: { cellWidth: 12, halign: "center" }, 2: { cellWidth: 28 }, 3: { cellWidth: 22, halign: "center" }, 4: { cellWidth: 36, halign: "right" } },
-    styles: { fontSize: 10, cellPadding: 3 , fontStyle: "bold", textColor: [0,0,0] },
+    styles: { fontSize: 9.5, cellPadding: 2.5, fontStyle: "normal", textColor: [0,0,0] },
   });
 
   // @ts-expect-error lastAutoTable injected by autotable
@@ -128,54 +134,75 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
   y += 2;
   doc.line(14, y, pageW - 14, y);
   y += 4;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text("Rule: either of the two approvers may approve.", 14, y);
+  y += 5;
 
-  const drawApproval = (title: string, name?: string | null, decision?: string | null, when?: string | null, note?: string | null, approvedWord: string = "APPROVED") => {
+  const drawApproval = (
+    title: string,
+    name?: string | null,
+    decision?: string | null,
+    when?: string | null,
+    note?: string | null,
+    approvedWord: string = "APPROVED",
+    accounts?: string[],
+  ) => {
     if (y > 240) { doc.addPage(); y = 20; }
     const blockStartY = y;
     const sigBoxX = pageW - 84;
     const sigBoxW = 70;
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.text(title, 14, y);
     y += 5;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    if (accounts && accounts.length) {
+      const lines = doc.splitTextToSize(`Account(s): ${accounts.join(", ")}`, sigBoxX - 18);
+      doc.text(lines, 14, y);
+      y += lines.length * 4.5;
+    }
     doc.text(`Name (e-signature): ${name ?? "— pending —"}`, 14, y);
-    y += 5;
+    y += 4.5;
     let decisionLine: string;
     if (decision === "approved") {
       decisionLine = approvedWord === "AUTHORIZED"
         ? `Authorized by: ${name ?? "—"}`
-        : `Decision: APPROVED — ${name ?? "—"}`;
+        : `Decision: APPROVED - ${name ?? "—"}`;
     } else {
       const txt = decision ? decision.replace("_", " ").toUpperCase() : "— pending —";
       decisionLine = approvedWord === "AUTHORIZED" ? `Authorized by: ${txt}` : `Decision: ${txt}`;
     }
     doc.text(decisionLine, 14, y);
-    y += 5;
+    y += 4.5;
     doc.text(`Date: ${when ? format(parseISO(when), "PPpp") : "—"}`, 14, y);
-    y += 5;
+    y += 4.5;
     if (note) {
       const lines = doc.splitTextToSize(`Note: ${note}`, sigBoxX - 18);
       doc.text(lines, 14, y);
-      y += lines.length * 5;
+      y += lines.length * 4.5;
     }
 
-    const blockEndY = Math.max(y, blockStartY + 24);
+    const blockEndY = Math.max(y, blockStartY + 20);
     doc.setDrawColor(150);
     doc.rect(sigBoxX, blockStartY, sigBoxW, blockEndY - blockStartY);
     doc.setFontSize(8);
     doc.setTextColor(60);
     doc.text("Hand signature", sigBoxX + 2, blockStartY + 4);
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
+    doc.setFontSize(9);
 
-    y = blockEndY + 6;
+    y = blockEndY + 5;
   };
 
-  drawApproval("Finance Administrator", data.finance_admin_name, data.finance_admin_decision, data.finance_admin_at, data.finance_admin_note);
-  drawApproval("Procurator", data.procurator_name, data.procurator_decision, data.procurator_at, data.procurator_note);
+  const signedBishop = /bishop/i.test(
+    `${data.vicar_general_name ?? ""} ${data.vicar_general_note ?? ""}`,
+  );
+
+  drawApproval("Finance Administrator", data.finance_admin_name, data.finance_admin_decision, data.finance_admin_at, data.finance_admin_note, "APPROVED", data.finance_admin_accounts);
+  drawApproval("Procurator", data.procurator_name, data.procurator_decision, data.procurator_at, data.procurator_note, "APPROVED", data.procurator_accounts);
 
   if (y > 240) { doc.addPage(); y = 20; }
   doc.setFont("helvetica", "bold");
@@ -184,11 +211,33 @@ export function buildFinanceRequestPDF(data: FinanceRequestPDFData): jsPDF {
   y += 2;
   doc.line(14, y, pageW - 14, y);
   y += 4;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text("Rule: either of the two authorizers may authorize.", 14, y);
+  y += 5;
 
-  drawApproval("Vicar General", data.vicar_general_name, data.vicar_general_decision, data.vicar_general_at, data.vicar_general_note, "AUTHORIZED");
+  drawApproval(
+    "Vicar General",
+    signedBishop ? null : data.vicar_general_name,
+    signedBishop ? null : data.vicar_general_decision,
+    signedBishop ? null : data.vicar_general_at,
+    signedBishop ? null : data.vicar_general_note,
+    "AUTHORIZED",
+    data.vicar_general_accounts,
+  );
+  drawApproval(
+    "The Bishop",
+    signedBishop ? data.vicar_general_name : null,
+    signedBishop ? data.vicar_general_decision : null,
+    signedBishop ? data.vicar_general_at : null,
+    signedBishop ? data.vicar_general_note : null,
+    "AUTHORIZED",
+    data.bishop_accounts,
+  );
 
   return doc;
 }
+
 
 export function downloadFinanceRequestPDF(data: FinanceRequestPDFData) {
   const doc = buildFinanceRequestPDF(data);
