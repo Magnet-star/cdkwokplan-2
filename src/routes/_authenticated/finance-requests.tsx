@@ -68,7 +68,7 @@ interface FinanceRoleRecipient {
   id: string;
   full_name: string;
   department_name: string | null;
-  role: "finance_admin" | "procurator" | "vicar_general";
+  role: "finance_admin" | "procurator" | "vicar_general" | "bishop";
 }
 
 const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "", payment_method: "cash" });
@@ -100,6 +100,7 @@ function FinanceRequestsPage() {
     isSuperAdmin ||
     roles.includes("finance_admin") ||
     roles.includes("vicar_general") ||
+    roles.includes("bishop") ||
     roles.includes("procurator");
   // CDK ACCOUNTS (administrator role) is a viewer office that observes and
   // downloads fully-authorized requests, but never approves/authorizes.
@@ -125,12 +126,12 @@ function FinanceRequestsPage() {
     // would otherwise misroute approvals to the Finance Administrator slot.
     const name = (profile?.full_name ?? "").toLowerCase();
     if (/procurator/.test(name)) return "procurator";
-    if (/vicar/.test(name)) return "vicar";
+    if (/vicar|bishop/.test(name)) return "vicar";
     if (/cdk\s*finance|finance\s*admin/.test(name)) return "finance";
     // Fall back to department name, again checking the more-specific offices first.
     const n = (departmentName ?? "").toLowerCase();
     if (/procurator/.test(n)) return "procurator";
-    if (/vicar/.test(n)) return "vicar";
+    if (/vicar|bishop/.test(n)) return "vicar";
     if (/finance/.test(n)) return "finance";
     return null;
   }, [profile?.full_name, departmentName]);
@@ -141,6 +142,7 @@ function FinanceRequestsPage() {
   const canSeeIncoming = (isSuperAdmin && cdkOffice !== null)
     || roles.includes("finance_admin")
     || roles.includes("vicar_general")
+    || roles.includes("bishop")
     || roles.includes("procurator")
     || isAccountsViewer;
 
@@ -478,16 +480,20 @@ function FinanceRequestsPage() {
                         </>
                       )}
                       <div className="font-medium pt-1">Authorizer</div>
-                      {roleRecipients.filter((x) => x.role === "vicar_general").length > 0 ? (
+                      {roleRecipients.filter((x) => x.role === "vicar_general" || x.role === "bishop").length > 0 ? (
                         roleRecipients
-                          .filter((x) => x.role === "vicar_general")
-                          .map((x) => <div key={x.id}>Vicar General: <strong>{x.full_name}</strong></div>)
+                          .filter((x) => x.role === "vicar_general" || x.role === "bishop")
+                          .map((x) => (
+                            <div key={`${x.id}-${x.role}`}>
+                              {x.role === "bishop" ? "The Bishop" : "Vicar General"}: <strong>{x.full_name}</strong>
+                            </div>
+                          ))
                       ) : (
                         <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
                       )}
                       <div className="font-medium pt-1">Disbursement</div>
                       <div>CDK Accounts: <strong>{recipients.accounts?.full_name ?? "— not configured —"}</strong></div>
-                      <p className="text-muted-foreground pt-1">Everyone listed will see the request. Either a Finance Administrator OR a Procurator approval marks it Approved; the Vicar General authorizes; CDK Accounts handles disbursement.</p>
+                      <p className="text-muted-foreground pt-1">Everyone listed will see the request. Either a Finance Administrator OR a Procurator approval marks it Approved; the Vicar General or The Bishop authorizes; CDK Accounts handles disbursement.</p>
                     </div>
                   </div>
                 </div>
@@ -987,7 +993,7 @@ function RequestCard({
 
   const ownApproverRole: ApproverRole | null =
     roles.includes("finance_admin") ? "finance_admin"
-      : roles.includes("vicar_general") ? "vicar_general"
+      : (roles.includes("vicar_general") || roles.includes("bishop")) ? "vicar_general"
         : roles.includes("procurator") ? "procurator" : null;
   // A super admin can ONLY act for the role corresponding to their own CDK
   // office account (CDK Finance → finance_admin, Vicar General → vicar_general,
@@ -1002,7 +1008,7 @@ function RequestCard({
 
   const roleLabel = (role: ApproverRole) =>
     role === "finance_admin" ? "Finance Administrator"
-      : role === "vicar_general" ? "Vicar General" : "Procurator";
+      : role === "vicar_general" ? (roles.includes("bishop") && !roles.includes("vicar_general") ? "The Bishop (Authorizer)" : "Vicar General") : "Procurator";
 
   // The only account allowed in the "Account used" select is the signed-in
   // user's own account — this prevents a super admin from approving on

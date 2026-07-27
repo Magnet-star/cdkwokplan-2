@@ -32,10 +32,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator";
+type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator" | "bishop";
 
 const BASE_ROLES: Role[] = ["staff", "driver", "hod", "administrator", "super_admin"];
-const FINANCE_ROLES: Role[] = ["finance_admin", "procurator", "vicar_general"];
+const FINANCE_ROLES: Role[] = ["finance_admin", "procurator", "vicar_general", "bishop"];
 const ROLE_LABEL: Record<Role, string> = {
   super_admin: "super admin",
   administrator: "administrator",
@@ -45,6 +45,7 @@ const ROLE_LABEL: Record<Role, string> = {
   finance_admin: "Finance Approval — Finance Administrator",
   procurator: "Finance Approval — Procurator",
   vicar_general: "Finance Authorizer — Vicar General",
+  bishop: "Finance Authorizer — The Bishop",
 };
 
 function AdminPage() {
@@ -643,16 +644,18 @@ function AdminPage() {
                         </label>
                       ))}
                     </div>
-                    <Label className="mt-3 block">Finance role (optional)</Label>
-                    <p className="text-xs text-muted-foreground">Giving any finance role automatically adds this account to the finance request recipients card.</p>
-                    <div className="flex flex-wrap gap-3 pt-2">
-                      {FINANCE_ROLES.map((r) => (
-                        <label key={r} className="flex items-center gap-2 text-sm">
-                          <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
-                          {ROLE_LABEL[r]}
-                        </label>
-                      ))}
-                    </div>
+                    <details className="mt-3 rounded-md border p-3">
+                      <summary className="cursor-pointer text-sm font-medium">Finance administration</summary>
+                      <p className="pt-2 text-xs text-muted-foreground">Giving any finance role automatically adds this account to the finance request recipients card.</p>
+                      <div className="flex flex-wrap gap-3 pt-2">
+                        {FINANCE_ROLES.map((r) => (
+                          <label key={r} className="flex items-center gap-2 text-sm">
+                            <Checkbox checked={nu.roles.includes(r)} onCheckedChange={() => toggleNewRole(r)} />
+                            {ROLE_LABEL[r]}
+                          </label>
+                        ))}
+                      </div>
+                    </details>
                   </div>
                   <div className="md:col-span-2 flex gap-2">
                     <Button type="submit" disabled={creating}><UserPlus className="mr-1 h-4 w-4" />{creating ? "Creating…" : "Create user"}</Button>
@@ -720,9 +723,10 @@ function AdminPage() {
                             </Button>
                           ))}
                         </div>
-                        <div>
-                          <Label className="text-xs">Finance role (auto-listed as a finance request recipient)</Label>
-                          <div className="flex flex-wrap items-end gap-2 pt-1">
+                        <details className="rounded-md border p-3">
+                          <summary className="cursor-pointer text-sm font-medium">Finance administration</summary>
+                          <p className="pt-2 text-xs text-muted-foreground">Auto-listed as a finance request recipient.</p>
+                          <div className="flex flex-wrap items-end gap-2 pt-2">
                             {FINANCE_ROLES.map((r) => (
                               <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
                                 {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
@@ -730,7 +734,7 @@ function AdminPage() {
                               </Button>
                             ))}
                           </div>
-                        </div>
+                        </details>
                       </div>
                     </div>
                   ) : (
