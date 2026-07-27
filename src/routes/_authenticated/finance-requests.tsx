@@ -462,11 +462,32 @@ function FinanceRequestsPage() {
                   <div>
                     <Label>Recipients (auto)</Label>
                     <div className="rounded-md border p-2 text-xs space-y-1">
-                      <div>CDK Finance: <strong>{recipients.finance?.full_name ?? "— not configured —"}</strong></div>
-                      <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
-                      <div>CDK Procurator: <strong>{recipients.procurator?.full_name ?? "— not configured —"}</strong></div>
+                      <div className="font-medium">Approval privilege</div>
+                      {roleRecipients.filter((x) => x.role === "finance_admin" || x.role === "procurator").length > 0 ? (
+                        roleRecipients
+                          .filter((x) => x.role === "finance_admin" || x.role === "procurator")
+                          .map((x) => (
+                            <div key={`${x.id}-${x.role}`}>
+                              {x.role === "finance_admin" ? "Finance Administrator" : "Procurator"}: <strong>{x.full_name}</strong>
+                            </div>
+                          ))
+                      ) : (
+                        <>
+                          <div>CDK Finance: <strong>{recipients.finance?.full_name ?? "— not configured —"}</strong></div>
+                          <div>CDK Procurator: <strong>{recipients.procurator?.full_name ?? "— not configured —"}</strong></div>
+                        </>
+                      )}
+                      <div className="font-medium pt-1">Authorizer</div>
+                      {roleRecipients.filter((x) => x.role === "vicar_general").length > 0 ? (
+                        roleRecipients
+                          .filter((x) => x.role === "vicar_general")
+                          .map((x) => <div key={x.id}>Vicar General: <strong>{x.full_name}</strong></div>)
+                      ) : (
+                        <div>Vicar General: <strong>{recipients.vicar?.full_name ?? "— not configured —"}</strong></div>
+                      )}
+                      <div className="font-medium pt-1">Disbursement</div>
                       <div>CDK Accounts: <strong>{recipients.accounts?.full_name ?? "— not configured —"}</strong></div>
-                      <p className="text-muted-foreground pt-1">All four will see the request. Either CDK Finance Administrator OR CDK Procurator approval marks it Approved; Vicar General authorizes; CDK Accounts handles disbursement.</p>
+                      <p className="text-muted-foreground pt-1">Everyone listed will see the request. Either a Finance Administrator OR a Procurator approval marks it Approved; the Vicar General authorizes; CDK Accounts handles disbursement.</p>
                     </div>
                   </div>
                 </div>
