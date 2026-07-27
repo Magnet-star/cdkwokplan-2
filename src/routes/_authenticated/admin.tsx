@@ -701,13 +701,26 @@ function AdminPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex flex-wrap items-end gap-2">
-                        {(["super_admin","administrator","hod","staff","driver","finance_admin","vicar_general","procurator"] as Role[]).map((r) => (
-                          <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
-                            {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
-                            {r.replace("_", " ")}
-                          </Button>
-                        ))}
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-end gap-2">
+                          {BASE_ROLES.map((r) => (
+                            <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
+                              {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
+                              {ROLE_LABEL[r]}
+                            </Button>
+                          ))}
+                        </div>
+                        <div>
+                          <Label className="text-xs">Finance role (auto-listed as a finance request recipient)</Label>
+                          <div className="flex flex-wrap items-end gap-2 pt-1">
+                            {FINANCE_ROLES.map((r) => (
+                              <Button key={r} variant={userRoles.includes(r) ? "default" : "outline"} size="sm" onClick={() => toggleRole(u.id, r)} disabled={locked}>
+                                {userRoles.includes(r) ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : <ShieldOff className="mr-1 h-3.5 w-3.5" />}
+                                {ROLE_LABEL[r]}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ) : (
