@@ -36,6 +36,12 @@ export interface FinanceRequestPDFData {
   procurator_decision?: string | null;
   procurator_note?: string | null;
   procurator_at?: string | null;
+
+  // Configured office accounts (names) shown on the PDF
+  finance_admin_accounts?: string[];
+  procurator_accounts?: string[];
+  vicar_general_accounts?: string[];
+  bishop_accounts?: string[];
 }
 
 const DIOCESE = "Catholic Diocese of Kitale";
