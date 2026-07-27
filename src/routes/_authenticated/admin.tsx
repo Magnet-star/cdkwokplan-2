@@ -34,6 +34,19 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator";
 
+const BASE_ROLES: Role[] = ["staff", "driver", "hod", "administrator", "super_admin"];
+const FINANCE_ROLES: Role[] = ["finance_admin", "procurator", "vicar_general"];
+const ROLE_LABEL: Record<Role, string> = {
+  super_admin: "super admin",
+  administrator: "administrator",
+  hod: "hod",
+  staff: "staff",
+  driver: "driver",
+  finance_admin: "Finance Approval — Finance Administrator",
+  procurator: "Finance Approval — Procurator",
+  vicar_general: "Finance Authorizer — Vicar General",
+};
+
 function AdminPage() {
   const { isSuperAdmin, isProtectedSuperAdmin, isAdministrator, user } = useAuth();
   const canEdit = isSuperAdmin;
