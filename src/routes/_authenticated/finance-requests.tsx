@@ -64,6 +64,12 @@ interface CdkRecipients {
   procurator: SuperAdminOption | null;
   accounts: SuperAdminOption | null;
 }
+interface FinanceRoleRecipient {
+  id: string;
+  full_name: string;
+  department_name: string | null;
+  role: "finance_admin" | "procurator" | "vicar_general";
+}
 
 const emptyItem = (): ItemRow => ({ activity: "", amount: "", activity_date: "", payment_method: "cash" });
 
