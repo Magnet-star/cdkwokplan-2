@@ -271,6 +271,12 @@ function FinanceRequestsPage() {
     void refresh();
   };
 
+  const officeAccounts = (role: FinanceRoleRecipient["role"], fallback?: string | null): string[] => {
+    const names = roleRecipients.filter((x) => x.role === role).map((x) => x.full_name);
+    if (names.length === 0 && fallback) names.push(fallback);
+    return Array.from(new Set(names));
+  };
+
   const toPDFData = (r: FRRow): FinanceRequestPDFData => ({
     id: r.id, serial_number: r.serial_number, requester_name: r.requester_name, requester_signature: r.requester_signature,
     mpesa_phone: r.mpesa_phone, department_name: r.department_name, items: r.items ?? [],
