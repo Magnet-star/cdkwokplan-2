@@ -21,9 +21,9 @@ export interface WorkPlanPDFData {
   departmentName: string;
   hodPosition?: string | null;
   items: WorkPlanItemPDF[];
+  diocesanSecretaryName: string;
 }
 
-const DIOCESAN_SECRETARY = "REV. FR. JAMES ORANGA";
 const DIOCESE = "Catholic Diocese of Kitale";
 
 export function downloadWorkPlanPDF(plan: WorkPlanPDFData) {
@@ -150,7 +150,7 @@ export function downloadWorkPlanPDF(plan: WorkPlanPDFData) {
   };
 
   sigBlock(leftX, "Prepared By", "HOD Name", plan.hodName);
-  sigBlock(rightX, "Approved By", "Diocesan Secretary", DIOCESAN_SECRETARY);
+  sigBlock(rightX, "Approved By", "Diocesan Secretary", plan.diocesanSecretaryName);
 
   // Footer
   const pageCount = (doc as any).internal.getNumberOfPages();

@@ -13,12 +13,12 @@ export interface DeptWorkPlanPDF {
   items: WorkPlanItemPDF[];
 }
 
-const DIOCESAN_SECRETARY = "REV. FR. JAMES ORANGA";
 const DIOCESE = "Catholic Diocese of Kitale";
 
 export function buildAllDepartmentsWorkPlansPDF(
   plans: DeptWorkPlanPDF[],
   weekStartDate: string,
+  diocesanSecretaryName: string,
 ): { blob: Blob; filename: string } {
   const doc = new jsPDF();
 
@@ -67,7 +67,7 @@ export function buildAllDepartmentsWorkPlansPDF(
   // Per-department sections
   plans.forEach((plan) => {
     doc.addPage();
-    renderDepartmentSection(doc, plan, weekStart, weekEnd, pageW, pageH);
+    renderDepartmentSection(doc, plan, weekStart, weekEnd, pageW, pageH, diocesanSecretaryName);
   });
 
   // Footer
@@ -87,8 +87,9 @@ export function buildAllDepartmentsWorkPlansPDF(
 export function downloadAllDepartmentsWorkPlansPDF(
   plans: DeptWorkPlanPDF[],
   weekStartDate: string,
+  diocesanSecretaryName: string,
 ): { blob: Blob; filename: string } {
-  const result = buildAllDepartmentsWorkPlansPDF(plans, weekStartDate);
+  const result = buildAllDepartmentsWorkPlansPDF(plans, weekStartDate, diocesanSecretaryName);
   const url = URL.createObjectURL(result.blob);
   const a = document.createElement("a");
   a.href = url; a.download = result.filename;
@@ -105,6 +106,7 @@ function renderDepartmentSection(
   weekEnd: Date,
   pageW: number,
   pageH: number,
+  diocesanSecretaryName: string,
 ) {
   // Section header
   doc.setFillColor(102, 0, 0);
@@ -208,5 +210,5 @@ function renderDepartmentSection(
   };
 
   sigBlock(leftX, "Prepared By", "HOD Name", plan.hodName);
-  sigBlock(rightX, "Approved By", "Diocesan Secretary", DIOCESAN_SECRETARY);
+  sigBlock(rightX, "Approved By", "Diocesan Secretary", diocesanSecretaryName);
 }

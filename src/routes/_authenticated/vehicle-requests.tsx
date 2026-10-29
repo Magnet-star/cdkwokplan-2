@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,6 +16,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
 import { downloadDSWeeklyVehicleRequestsPDF, buildDSWeeklyVehicleRequestsPDF, type DSWeeklyVRRow } from "@/lib/weekly-ds-vehicle-pdf";
+import { getDiocesanSecretaryName } from "@/lib/diocesan-secretary.functions";
+
+async function downloadWithSecretaryName(
+  getName: () => Promise<string>,
+  download: (name: string) => void,
+) {
+  try {
+    download(await getName());
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : "Failed to download PDF");
+  }
+}
 
 interface TripRow {
   date_needed: string;
@@ -83,6 +96,7 @@ interface VR {
 
 function VehicleRequestsPage() {
   const { user, profile } = useAuth();
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const [list, setList] = useState<VR[]>([]);
   const [deptName, setDeptName] = useState<string | null>(null);
   const [hodName, setHodName] = useState<string | null>(null);
@@ -309,7 +323,7 @@ function VehicleRequestsPage() {
                           <Pencil className="mr-1 h-4 w-4" />Edit
                         </Button>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(r, meta)}>
+                      <Button size="sm" variant="outline" onClick={() => downloadWithSecretaryName(getSecretaryNameFn, (name) => downloadVehicleRequestPDF(r, meta, name))}>
                         <Download className="mr-1 h-4 w-4" />Download PDF
                       </Button>
                     </div>
@@ -364,7 +378,7 @@ function VehicleRequestsPage() {
                     </div>
                   )}
                   <div className="flex justify-end">
-                    <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(g.items, meta, g.weekStart)}>
+                    <Button size="sm" variant="outline" onClick={() => downloadWithSecretaryName(getSecretaryNameFn, (name) => downloadWeeklyVehicleRequestPDF(g.items, meta, g.weekStart, name))}>
                       <Download className="mr-1 h-4 w-4" />Download weekly form
                     </Button>
                   </div>
@@ -963,6 +977,7 @@ function PrepareWeeklyPdfDialog({
   existingPath?: string;
   onUploaded?: () => void;
 }) {
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const [assignments, setAssignments] = useState<Record<string, { vehicle: string; driver: string }>>({});
   const [uploading, setUploading] = useState(false);
 
@@ -1028,7 +1043,8 @@ function PrepareWeeklyPdfDialog({
         if (upErr) toast.error(`Failed to save allocation: ${upErr.message}`);
       }
 
-      const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd);
+      const diocesanSecretaryName = await getSecretaryNameFn();
+      const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStart, weekEnd, diocesanSecretaryName);
       doc.save(filename);
       const blob = doc.output("blob");
       const uploadPath = existingPath ?? `${weekStart}_to_${weekEnd}/${Date.now()}_${filename}`;
@@ -1041,6 +1057,8 @@ function PrepareWeeklyPdfDialog({
         toast.success(existingPath ? "PDF updated for all super admins" : "PDF downloaded and saved for other super admins");
         onUploaded?.();
       }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to download PDF");
     } finally {
       setUploading(false);
       onOpenChange(false);
@@ -1406,4 +1424,3 @@ function SavedWeeklyPdfs({ refreshKey, onEdit, allowDelete }: { refreshKey: numb
     </Card>
   );
 }
-

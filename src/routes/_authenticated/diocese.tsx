@@ -12,10 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Download, Church, Phone, Hash, ChevronRight, ChevronDown, History } from "lucide-react";
+import { Pencil, Plus, Trash2, Download, Church, Phone, Hash, ChevronRight, ChevronDown, History, FileSpreadsheet } from "lucide-react";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/_authenticated/diocese")({
   component: DiocesePage,
@@ -235,6 +236,24 @@ function DiocesePage() {
     doc.save(`Diocese_of_Kitale_At_a_Glance_${format(new Date(), "yyyy-MM-dd")}.pdf`);
   };
 
+  const downloadClergyExcel = () => {
+    const worksheet = XLSX.utils.aoa_to_sheet([
+      ["Name", "Category", "Home Parish", "Current Assignment", "Role", "Other Positions", "Phone Number"],
+      ...clergy.map((member) => [
+        member.full_name,
+        CATEGORY_LABEL[member.category] ?? member.category,
+        member.home_parish ?? "",
+        member.current_assignment ?? "",
+        member.assignment_role ? ROLE_LABEL[member.assignment_role] ?? member.assignment_role : "",
+        member.other_positions ?? "",
+        member.phone_number ?? "",
+      ]),
+    ]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Clergy");
+    XLSX.writeFile(workbook, `Diocese_of_Kitale_Clergy_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+  };
+
   const saveLeadership = async () => {
     if (!editLead) return;
     if (creatingLead) {
@@ -394,13 +413,16 @@ function DiocesePage() {
         </TabsContent>
 
         <TabsContent value="clergy" className="space-y-3">
-          {isSuperAdmin && (
-            <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button onClick={downloadClergyExcel} size="sm" variant="outline" disabled={loading}>
+              <FileSpreadsheet className="mr-2 h-4 w-4" /> Download Excel
+            </Button>
+            {isSuperAdmin && (
               <Button onClick={startNewClergy} size="sm">
                 <Plus className="mr-2 h-4 w-4" /> Add member
               </Button>
-            </div>
-          )}
+            )}
+          </div>
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading…</p>
           ) : clergy.length === 0 ? (

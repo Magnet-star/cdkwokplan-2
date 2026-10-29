@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Plus, ShieldCheck, ShieldOff, Check, X, Trash2, UserPlus, Copy, Pencil, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { downloadVehicleRequestPDF, downloadWeeklyVehicleRequestPDF } from "@/lib/vehicle-request-pdf";
 import { downloadWorkPlanPDF } from "@/lib/work-plan-pdf";
+import { getDiocesanSecretaryName } from "@/lib/diocesan-secretary.functions";
 import { AttendanceLogPanel } from "@/components/AttendanceLogPanel";
 import { TimeGroupedList } from "@/components/TimeGroupedList";
 import { StorageUsagePanel } from "@/components/StorageUsagePanel";
@@ -32,9 +33,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator" | "bishop";
+type Role = "super_admin" | "administrator" | "hod" | "staff" | "driver" | "finance_admin" | "vicar_general" | "procurator" | "bishop" | "diocesan_secretary";
 
-const BASE_ROLES: Role[] = ["staff", "driver", "hod", "administrator", "super_admin"];
+const BASE_ROLES: Role[] = ["staff", "driver", "hod", "administrator", "super_admin", "diocesan_secretary"];
 const FINANCE_ROLES: Role[] = ["finance_admin", "procurator", "vicar_general", "bishop"];
 const ROLE_LABEL: Record<Role, string> = {
   super_admin: "super admin",
@@ -46,7 +47,19 @@ const ROLE_LABEL: Record<Role, string> = {
   procurator: "Finance Approval — Procurator",
   vicar_general: "Finance Authorizer — Vicar General",
   bishop: "Finance Authorizer — The Bishop",
+  diocesan_secretary: "Diocesan Secretary",
 };
+
+async function downloadWithSecretaryName(
+  getName: () => Promise<string>,
+  download: (name: string) => void,
+) {
+  try {
+    download(await getName());
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : "Failed to download PDF");
+  }
+}
 
 function AdminPage() {
   const { isSuperAdmin, isProtectedSuperAdmin, isAdministrator, user } = useAuth();
@@ -883,6 +896,7 @@ function AdminPage() {
 }
 
 function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdate, canEdit = true }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; canEdit?: boolean }) {
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const [notes, setNotes] = useState("");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
@@ -905,7 +919,7 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
               {canEdit && <Button size="sm" onClick={() => onDecide(v.id, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve</Button>}
               {canEdit && <Button size="sm" variant="destructive" onClick={() => onDecide(v.id, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject</Button>}
               {canEdit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
-              <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
+              <Button size="sm" variant="outline" onClick={() => downloadWithSecretaryName(getSecretaryNameFn, (name) => downloadVehicleRequestPDF(v, userMeta(v.user_id), name))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
             </div>
           </>
         ) : (
@@ -918,6 +932,7 @@ function VehicleApproveCard({ v, userName, userMeta, onDecide, onDelete, onUpdat
 
 
 function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta, onDecideBulk, onDecide, onDelete, onUpdate, canEdit = true }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; canEdit?: boolean }) {
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const [notes, setNotes] = useState("");
   const [expanded, setExpanded] = useState(false);
   const meta = userMeta(userId);
@@ -953,7 +968,7 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
         <div className="flex flex-wrap gap-2">
           {canEdit && <Button size="sm" onClick={() => onDecideBulk(ids, "approved", notes)}><Check className="mr-1 h-4 w-4" /> Approve all {items.length} trips</Button>}
           {canEdit && <Button size="sm" variant="destructive" onClick={() => onDecideBulk(ids, "rejected", notes)}><X className="mr-1 h-4 w-4" /> Reject all</Button>}
-          <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(items, meta, weekStart)}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
+          <Button size="sm" variant="outline" onClick={() => downloadWithSecretaryName(getSecretaryNameFn, (name) => downloadWeeklyVehicleRequestPDF(items, meta, weekStart, name))}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
           {canEdit && <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Decide per day"}</Button>}
         </div>
 
@@ -972,6 +987,7 @@ function VehicleWeeklyApproveCard({ items, weekStart, userId, userName, userMeta
 
 
 function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta, onDelete, onUpdate, onDecide, onDecideBulk, canEdit = true }: { items: any[]; weekStart: string; userId: string; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; onDecideBulk: (ids: string[], s: "approved" | "rejected", notes?: string) => void; canEdit?: boolean }) {
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const [expanded, setExpanded] = useState(false);
   const meta = userMeta(userId);
   const statuses = Array.from(new Set(items.map((i) => i.status)));
@@ -1005,7 +1021,7 @@ function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta,
         </div>
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <Button size="sm" variant="outline" onClick={() => downloadWeeklyVehicleRequestPDF(items, meta, weekStart)}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
+          <Button size="sm" variant="outline" onClick={() => downloadWithSecretaryName(getSecretaryNameFn, (name) => downloadWeeklyVehicleRequestPDF(items, meta, weekStart, name))}><Download className="mr-1 h-3.5 w-3.5" /> Download weekly form</Button>
           {canEdit && statusLabel !== "approved" && <Button size="sm" onClick={() => onDecideBulk(ids, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark all approved</Button>}
           {canEdit && statusLabel !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecideBulk(ids, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark all rejected</Button>}
           {canEdit && <Button size="sm" variant="outline" onClick={() => setExpanded((s) => !s)}>{expanded ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}{expanded ? "Hide" : "Manage per day"}</Button>}
@@ -1024,6 +1040,7 @@ function VehicleWeeklyManageCard({ items, weekStart, userId, userName, userMeta,
 }
 
 function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide, canEdit = true }: { v: any; userName: (id: string) => string; userMeta: (id: string) => any; onDelete: (id: string) => void; onUpdate: (id: string, patch: Record<string, any>) => void; onDecide: (id: string, s: "approved" | "rejected", notes?: string) => void; canEdit?: boolean }) {
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ destination: v.destination, date_needed: v.date_needed, time_from: v.time_from ?? "", time_to: v.time_to ?? "", purpose: v.purpose, passengers: v.passengers ?? 1 });
   return (
@@ -1045,7 +1062,7 @@ function VehicleManageCard({ v, userName, userMeta, onDelete, onUpdate, onDecide
             {canEdit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
             {canEdit && v.status !== "approved" && <Button size="sm" onClick={() => onDecide(v.id, "approved")}><Check className="mr-1 h-3.5 w-3.5" /> Mark approved</Button>}
             {canEdit && v.status !== "rejected" && <Button size="sm" variant="secondary" onClick={() => onDecide(v.id, "rejected")}><X className="mr-1 h-3.5 w-3.5" /> Mark rejected</Button>}
-            <Button size="sm" variant="outline" onClick={() => downloadVehicleRequestPDF(v, userMeta(v.user_id))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
+            <Button size="sm" variant="outline" onClick={() => downloadWithSecretaryName(getSecretaryNameFn, (name) => downloadVehicleRequestPDF(v, userMeta(v.user_id), name))}><Download className="mr-1 h-3.5 w-3.5" /> PDF</Button>
             
           </div>
         )}
@@ -1074,6 +1091,7 @@ function VehicleEditFields({ form, setForm, onSave, onCancel }: { form: any; set
 
 function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, canEdit = true }: { plan: any; userName: (id: string) => string; users?: any[]; depts?: any[]; onChanged?: () => void; canEdit?: boolean }) {
   const { user, isProtectedSuperAdmin } = useAuth();
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[] | null>(null);
   const [editing, setEditing] = useState(false);
@@ -1149,24 +1167,30 @@ function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, c
     }
     const hod = users.find((u) => u.id === plan.user_id);
     const dept = depts.find((d) => d.id === (plan.department_id ?? hod?.department_id));
-    downloadWorkPlanPDF({
-      weekStartDate: plan.week_start_date,
-      status: plan.status,
-      signature: plan.signature,
-      submittedAt: plan.submitted_at,
-      hodName: hod?.full_name ?? plan.signature ?? userName(plan.user_id),
-      hodPosition: hod?.position ?? null,
-      departmentName: dept?.name ?? "—",
-      items: (loaded ?? []).map((it: any) => ({
-        activity_date: it.activity_date,
-        activity: it.activity,
-        location: it.location,
-        needs_vehicle: !!it.needs_vehicle,
-        needs_money: !!it.needs_money,
-        money_amount: it.money_amount,
-        notes: it.notes,
-      })),
-    });
+    try {
+      const diocesanSecretaryName = await getSecretaryNameFn();
+      downloadWorkPlanPDF({
+        weekStartDate: plan.week_start_date,
+        status: plan.status,
+        signature: plan.signature,
+        submittedAt: plan.submitted_at,
+        hodName: hod?.full_name ?? plan.signature ?? userName(plan.user_id),
+        hodPosition: hod?.position ?? null,
+        departmentName: dept?.name ?? "—",
+        diocesanSecretaryName,
+        items: (loaded ?? []).map((it: any) => ({
+          activity_date: it.activity_date,
+          activity: it.activity,
+          location: it.location,
+          needs_vehicle: !!it.needs_vehicle,
+          needs_money: !!it.needs_money,
+          money_amount: it.money_amount,
+          notes: it.notes,
+        })),
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to download PDF");
+    }
   };
 
 
@@ -1245,4 +1269,3 @@ function WorkPlanReadCard({ plan, userName, users = [], depts = [], onChanged, c
     </Card>
   );
 }
-

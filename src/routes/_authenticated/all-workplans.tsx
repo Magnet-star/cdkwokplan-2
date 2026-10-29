@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import {
   downloadAllDepartmentsWorkPlansPDF,
   type DeptWorkPlanPDF,
 } from "@/lib/all-workplans-pdf";
+import { getDiocesanSecretaryName } from "@/lib/diocesan-secretary.functions";
 
 export const Route = createFileRoute("/_authenticated/all-workplans")({
   component: AllWorkPlansPage,
@@ -29,6 +31,7 @@ interface WPRow {
 
 function AllWorkPlansPage() {
   const { canViewAll } = useAuth();
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const [departments, setDepartments] = useState<Record<string, string>>({});
   const [plans, setPlans] = useState<DeptWorkPlanPDF[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,12 +122,17 @@ function AllWorkPlansPage() {
     })();
   }, [currentWeekStart, departments]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (plans.length === 0) {
       toast.error("No submitted work plans for this week yet");
       return;
     }
-    downloadAllDepartmentsWorkPlansPDF(plans, currentWeekStart);
+    try {
+      const diocesanSecretaryName = await getSecretaryNameFn();
+      downloadAllDepartmentsWorkPlansPDF(plans, currentWeekStart, diocesanSecretaryName);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to download PDF");
+    }
   };
 
   if (!canViewAll) {

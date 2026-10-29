@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { format, startOfWeek, addDays, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Plus, Trash2, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { downloadWorkPlanPDF } from "@/lib/work-plan-pdf";
+import { getDiocesanSecretaryName } from "@/lib/diocesan-secretary.functions";
 
 export const Route = createFileRoute("/_authenticated/work-plans")({
   component: WorkPlansPage,
@@ -42,6 +44,7 @@ interface Plan {
 
 function WorkPlansPage() {
   const { user, profile } = useAuth();
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [plan, setPlan] = useState<Plan | null>(null);
   const [items, setItems] = useState<Item[]>([]);
@@ -174,24 +177,30 @@ function WorkPlansPage() {
       const { data: d } = await supabase.from("departments").select("name").eq("id", profile.department_id).maybeSingle();
       departmentName = (d as any)?.name ?? "—";
     }
-    downloadWorkPlanPDF({
-      weekStartDate: plan.week_start_date,
-      status: plan.status,
-      signature: plan.signature,
-      submittedAt: plan.submitted_at,
-      hodName: profile?.full_name ?? plan.signature ?? "",
-      hodPosition: profile?.position ?? null,
-      departmentName,
-      items: items.map((it) => ({
-        activity_date: it.activity_date,
-        activity: it.activity,
-        location: it.location || null,
-        needs_vehicle: it.needs_vehicle,
-        needs_money: it.needs_money,
-        money_amount: it.money_amount || null,
-        notes: it.notes || null,
-      })),
-    });
+    try {
+      const diocesanSecretaryName = await getSecretaryNameFn();
+      downloadWorkPlanPDF({
+        weekStartDate: plan.week_start_date,
+        status: plan.status,
+        signature: plan.signature,
+        submittedAt: plan.submitted_at,
+        hodName: profile?.full_name ?? plan.signature ?? "",
+        hodPosition: profile?.position ?? null,
+        departmentName,
+        diocesanSecretaryName,
+        items: items.map((it) => ({
+          activity_date: it.activity_date,
+          activity: it.activity,
+          location: it.location || null,
+          needs_vehicle: it.needs_vehicle,
+          needs_money: it.needs_money,
+          money_amount: it.money_amount || null,
+          notes: it.notes || null,
+        })),
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to download PDF");
+    }
   };
 
   const submitted = plan?.status === "submitted" || plan?.status === "approved";

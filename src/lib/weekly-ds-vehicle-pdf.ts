@@ -29,6 +29,7 @@ export function buildDSWeeklyVehicleRequestsPDF(
   rows: DSWeeklyVRRow[],
   weekStartISO: string,
   weekEndISO: string,
+  diocesanSecretaryName: string,
 ): { doc: jsPDF; filename: string } {
   const doc = new jsPDF({ orientation: "landscape" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -99,7 +100,7 @@ export function buildDSWeeklyVehicleRequestsPDF(
   doc.setDrawColor(120);
   doc.line(14, signY, 110, signY);
   doc.setFont("helvetica", "bold"); doc.setFontSize(10);
-  doc.text("REV. FR. JAMES ORANGA", 14, signY + 5);
+  doc.text(diocesanSecretaryName, 14, signY + 5);
   doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(0);
   doc.text("Diocesan Secretary - Authorized", 14, signY + 10);
 
@@ -119,8 +120,8 @@ export function downloadDSWeeklyVehicleRequestsPDF(
   rows: DSWeeklyVRRow[],
   weekStartISO: string,
   weekEndISO: string,
+  diocesanSecretaryName: string,
 ) {
-  const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStartISO, weekEndISO);
+  const { doc, filename } = buildDSWeeklyVehicleRequestsPDF(rows, weekStartISO, weekEndISO, diocesanSecretaryName);
   doc.save(filename);
 }
-

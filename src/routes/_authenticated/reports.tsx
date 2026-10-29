@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { generateReportPDF } from "@/lib/report-pdf";
+import { getDiocesanSecretaryName } from "@/lib/diocesan-secretary.functions";
 import { Download, FileBarChart, Upload, Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfWeek } from "date-fns";
@@ -22,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 function ReportsPage() {
+  const getSecretaryNameFn = useServerFn(getDiocesanSecretaryName);
   const { user, profile, isSuperAdmin, isProtectedSuperAdmin, isAdministrator, isHod } = useAuth();
   const now = new Date();
   const [period, setPeriod] = useState<"monthly" | "weekly">("monthly");
@@ -86,10 +89,11 @@ function ReportsPage() {
             const p = people.find((x) => x.id === targetUserId)!;
             return { userId: p.id, fullName: p.full_name, departmentId: p.department_id, departmentName: departments.find((d) => d.id === p.department_id)?.name ?? null, position: p.position, hodName: p.department_id ? (hodByDept[p.department_id] ?? null) : null };
           })();
+      const diocesanSecretaryName = await getSecretaryNameFn();
       if (period === "monthly") {
-        await generateReportPDF(target, { kind: "monthly", year, monthIdx0: month });
+        await generateReportPDF(target, { kind: "monthly", year, monthIdx0: month }, diocesanSecretaryName);
       } else {
-        await generateReportPDF(target, { kind: "weekly", weekStart: new Date(weekStart) });
+        await generateReportPDF(target, { kind: "weekly", weekStart: new Date(weekStart) }, diocesanSecretaryName);
       }
       toast.success("Report downloaded");
     } catch (e: any) {

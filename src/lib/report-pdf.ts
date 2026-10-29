@@ -12,8 +12,6 @@ export interface ReportTarget {
   hodName?: string | null;
 }
 
-const DIOCESAN_SECRETARY = "REV. FR. JAMES ORANGA";
-
 export type ReportPeriod =
   | { kind: "monthly"; year: number; monthIdx0: number }
   | { kind: "weekly"; weekStart: Date };
@@ -29,7 +27,7 @@ function rangeFor(period: ReportPeriod): { start: Date; end: Date; label: string
   return { start, end, label: `Week of ${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`, filename: `Weekly_Report_${format(start, "yyyy-MM-dd")}` };
 }
 
-export async function generateReportPDF(target: ReportTarget, period: ReportPeriod) {
+export async function generateReportPDF(target: ReportTarget, period: ReportPeriod, diocesanSecretaryName: string) {
   const { start, end, label, filename } = rangeFor(period);
   const startStr = format(start, "yyyy-MM-dd");
   const endStr = format(end, "yyyy-MM-dd");
@@ -294,7 +292,7 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
   doc.line(pageW - 90, sigY, pageW - 14, sigY);
   doc.setFont("helvetica", "bold"); doc.setFontSize(10);
   doc.text(target.hodName ?? "—", 14, sigY + 5);
-  doc.text(DIOCESAN_SECRETARY, pageW - 90, sigY + 5);
+  doc.text(diocesanSecretaryName, pageW - 90, sigY + 5);
   doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(0);
   doc.text(`HOD — ${target.departmentName ?? "Department"}`, 14, sigY + 10);
   doc.text("Diocesan Secretary", pageW - 90, sigY + 10);
@@ -310,12 +308,12 @@ export async function generateReportPDF(target: ReportTarget, period: ReportPeri
 }
 
 // Backwards compatible wrapper
-export async function generateMonthlyReportPDF(target: ReportTarget, year: number, monthIdx0: number) {
-  return generateReportPDF(target, { kind: "monthly", year, monthIdx0 });
+export async function generateMonthlyReportPDF(target: ReportTarget, year: number, monthIdx0: number, diocesanSecretaryName: string) {
+  return generateReportPDF(target, { kind: "monthly", year, monthIdx0 }, diocesanSecretaryName);
 }
 
-export async function generateWeeklyReportPDF(target: ReportTarget, weekStart: Date) {
-  return generateReportPDF(target, { kind: "weekly", weekStart });
+export async function generateWeeklyReportPDF(target: ReportTarget, weekStart: Date, diocesanSecretaryName: string) {
+  return generateReportPDF(target, { kind: "weekly", weekStart }, diocesanSecretaryName);
 }
 
 // silence unused import in some builds

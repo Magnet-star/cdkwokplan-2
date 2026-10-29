@@ -1340,6 +1340,7 @@ export type Database = {
         | "vicar_general"
         | "procurator"
         | "bishop"
+        | "diocesan_secretary"
       finance_request_status:
         | "pending"
         | "approved"
@@ -1483,6 +1484,7 @@ export const Constants = {
         "vicar_general",
         "procurator",
         "bishop",
+        "diocesan_secretary",
       ],
       finance_request_status: [
         "pending",
