@@ -2424,7 +2424,7 @@ function WorkPlanReadCard({
                       <span>💰 KES {Number(it.money_amount ?? 0).toLocaleString()}</span>
                     )}
                   </div>
-                  {it.notes && <p className="mt-1 text-xs italic">{it.notes}</p>}
+                  {it.notes && <p className="mt-1 text-xs italic ">{it.notes}</p>}
                 </div>
               ),
             )}
